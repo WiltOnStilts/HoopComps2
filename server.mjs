@@ -520,8 +520,8 @@ const server = http.createServer(async (req, res) => {
   send(res, 404, { error: "Not found" });
 });
 
-const serverInstance = server.listen(PORT, () => {
-  console.log(`\n🏀 ${SITE_NAME} running at http://localhost:${PORT}\n`);
+const serverInstance = server.listen(PORT, "0.0.0.0", () => {
+  console.log(`\n🏀 ${SITE_NAME} running on port ${PORT}\n`);
   if (isDbReady()) {
     console.log(`  Multi-user: enabled (${countUsers()} accounts, ${storageMode()})`);
     console.log("  Collections sync to the cloud when users sign in\n");

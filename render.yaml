@@ -11,3 +11,5 @@ services:
         generateValue: true
       - key: SITE_NAME
         value: HoopComps
+      - key: USE_FILE_STORE
+        value: "1"

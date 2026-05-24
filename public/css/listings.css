@@ -1,0 +1,300 @@
+/* In-app listings & detail modal */
+
+.listing-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.listing-card-btn {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 14px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.listing-card-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.listing-card {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.85rem;
+}
+
+.listing-no-img {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  font-size: 1.75rem;
+}
+
+.listing-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #000;
+}
+
+.listing-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.source-badge,
+.type-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--blue);
+}
+
+.type-badge {
+  background: rgba(255, 107, 44, 0.15);
+  color: var(--accent);
+}
+
+.listing-body .title {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.listing-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.listing-side {
+  text-align: right;
+}
+
+.listing-side .price {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.35rem;
+  color: var(--success);
+}
+
+.view-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.comps-intro {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.comps-section {
+  margin-bottom: 1.5rem;
+}
+
+.comps-section-title {
+  margin: 0 0 0.75rem;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+.sources-credit {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.sources-credit h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.credit-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.panel-inner {
+  padding: 0;
+}
+
+/* Modal */
+body.modal-open {
+  overflow: hidden;
+}
+
+.listing-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.listing-modal.hidden {
+  display: none;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--court-light);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 1.25rem;
+  animation: slideUp 0.25s ease;
+}
+
+@media (min-width: 640px) {
+  .listing-modal {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .modal-panel {
+    border-radius: 20px;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-listing {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #000;
+}
+
+.modal-content h3 {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  line-height: 1.35;
+  padding-right: 2rem;
+}
+
+.modal-price {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2.25rem;
+  color: var(--success);
+  margin: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+  margin: 0.35rem 0;
+  color: var(--muted);
+}
+
+.detail-row span:first-child {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.modal-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0.75rem 0;
+}
+
+.modal-attribution {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 1rem 0 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.modal-external {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .listing-card {
+    grid-template-columns: 56px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .listing-side {
+    grid-column: 2;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+}

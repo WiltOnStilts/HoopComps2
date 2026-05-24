@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="arena" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#120a06"/>
+      <stop offset="45%" stop-color="#1f120b"/>
+      <stop offset="100%" stop-color="#2a1810"/>
+    </linearGradient>
+    <linearGradient id="hardwood" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b4423"/>
+      <stop offset="35%" stop-color="#8f5a30"/>
+      <stop offset="70%" stop-color="#7a4a28"/>
+      <stop offset="100%" stop-color="#5c3518"/>
+    </linearGradient>
+    <radialGradient id="spotlight" cx="50%" cy="18%" r="55%">
+      <stop offset="0%" stop-color="#ff8c42" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#ff6b2c" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ff6b2c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ballShade" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ffb347"/>
+      <stop offset="55%" stop-color="#e8751a"/>
+      <stop offset="100%" stop-color="#a84f0a"/>
+    </radialGradient>
+    <filter id="ballGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="woodGrain" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+      <rect width="8" height="8" fill="transparent"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#000" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1440" height="900" fill="url(#arena)"/>
+  <rect width="1440" height="900" fill="url(#spotlight)"/>
+
+  <!-- Court floor perspective -->
+  <path d="M0 620 L720 520 L1440 620 L1440 900 L0 900 Z" fill="url(#hardwood)"/>
+  <path d="M0 620 L720 520 L1440 620 L1440 900 L0 900 Z" fill="url(#woodGrain)" opacity="0.55"/>
+
+  <!-- Court lines -->
+  <g stroke="#f5dcc4" stroke-opacity="0.32" fill="none" stroke-width="3">
+    <line x1="0" y1="680" x2="1440" y2="680"/>
+    <line x1="720" y1="520" x2="720" y2="900"/>
+    <ellipse cx="720" cy="760" rx="120" ry="42" transform="skewY(-8)"/>
+    <path d="M420 900 Q720 780 1020 900" stroke-dasharray="12 8"/>
+    <path d="M180 900 Q720 700 1260 900" opacity="0.45"/>
+  </g>
+
+  <!-- Decorative arc (three-point feel) -->
+  <path d="M320 900 Q720 640 1120 900" fill="none" stroke="#ff6b2c" stroke-opacity="0.18" stroke-width="4"/>
+
+  <!-- Large hero basketball -->
+  <g filter="url(#ballGlow)" transform="translate(980 120)">
+    <circle cx="0" cy="0" r="155" fill="url(#ballShade)"/>
+    <path d="M-155 0 Q0 -95 155 0 Q0 95 -155 0" fill="none" stroke="#2a1408" stroke-opacity="0.55" stroke-width="5"/>
+    <path d="M0 -155 Q95 0 0 155 Q-95 0 0 -155" fill="none" stroke="#2a1408" stroke-opacity="0.55" stroke-width="5"/>
+    <ellipse cx="0" cy="0" rx="155" ry="48" fill="none" stroke="#2a1408" stroke-opacity="0.35" stroke-width="4" transform="rotate(-24)"/>
+    <ellipse cx="0" cy="0" rx="155" ry="48" fill="none" stroke="#2a1408" stroke-opacity="0.35" stroke-width="4" transform="rotate(24)"/>
+  </g>
+
+  <!-- Secondary ball (depth) -->
+  <g opacity="0.35" transform="translate(180 280) scale(0.55)">
+    <circle cx="0" cy="0" r="155" fill="url(#ballShade)"/>
+    <path d="M-155 0 Q0 -95 155 0 Q0 95 -155 0" fill="none" stroke="#2a1408" stroke-opacity="0.55" stroke-width="5"/>
+    <path d="M0 -155 Q95 0 0 155 Q-95 0 0 -155" fill="none" stroke="#2a1408" stroke-opacity="0.55" stroke-width="5"/>
+  </g>
+
+  <!-- Rim hint -->
+  <g transform="translate(720 430)" opacity="0.5">
+    <ellipse cx="0" cy="0" rx="70" ry="18" fill="none" stroke="#ff6b2c" stroke-width="5" stroke-opacity="0.55"/>
+    <path d="M-72 2 Q0 28 72 2" fill="none" stroke="#f5b942" stroke-width="3" stroke-opacity="0.4"/>
+  </g>
+
+  <!-- Arena light streaks -->
+  <g stroke="#ffd166" stroke-opacity="0.06" stroke-width="2">
+    <line x1="720" y1="0" x2="520" y2="900"/>
+    <line x1="720" y1="0" x2="920" y2="900"/>
+    <line x1="720" y1="0" x2="720" y2="900"/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hoopcomps
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SITE_NAME
+        value: HoopComps

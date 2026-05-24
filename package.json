@@ -1,0 +1,16 @@
+{
+  "name": "hoopcomps",
+  "version": "1.0.0",
+  "description": "HoopComps — basketball card value scout with multi-user cloud collections",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "postinstall": "node -e \"try{require('better-sqlite3')}catch(e){console.log('Run npm install for multi-user database support')}\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  }
+}

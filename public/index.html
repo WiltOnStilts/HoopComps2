@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1c1008" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HoopComps" />
+    <meta name="description" content="HoopComps — basketball card comps, cloud collections, and AI portfolio insights. Free to use." />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+    <title>HoopComps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/mobile.css" />
+    <link rel="stylesheet" href="/css/listings.css" />
+    <link rel="stylesheet" href="/css/social.css" />
+  </head>
+  <body>
+    <div class="court-bg" aria-hidden="true">
+      <div class="court-bg__graphic"></div>
+      <div class="court-bg__spotlight"></div>
+      <div class="court-bg__vignette"></div>
+    </div>
+
+    <div id="installBanner" class="install-banner hidden">
+      <div class="install-banner-inner">
+        <span>📲 Install HoopComps on your home screen</span>
+        <div class="install-actions">
+          <button type="button" class="btn-secondary btn-xs" id="installAppBtn">Install</button>
+          <button type="button" class="btn-ghost btn-xs" id="dismissInstallBtn">Not now</button>
+        </div>
+      </div>
+    </div>
+
+    <header class="top-bar">
+      <button type="button" class="logo-btn" data-nav="dashboard" aria-label="Home">
+        <span class="logo-ball">🏀</span>
+        <div class="logo-text">
+          <h1>HoopComps</h1>
+          <p>Scout basketball card values</p>
+        </div>
+      </button>
+      <nav class="desktop-nav" aria-label="Sections">
+        <button type="button" class="desktop-nav-item active" data-nav="dashboard">Home</button>
+        <button type="button" class="desktop-nav-item" data-nav="scout">Scout</button>
+        <button type="button" class="desktop-nav-item" data-nav="collection">Collection</button>
+        <button type="button" class="desktop-nav-item" data-nav="profile">Profile</button>
+        <button type="button" class="desktop-nav-item" data-nav="about">About</button>
+      </nav>
+      <div class="header-stats">
+        <span id="authStatusPill" class="auth-pill hidden">Guest</span>
+        <button type="button" class="btn-ghost btn-xs auth-header-btn" id="authHeaderBtn">Sign in</button>
+        <div class="stat-pill compact">
+          <span class="label">Collection</span>
+          <span class="value" id="collectionValuePill">—</span>
+        </div>
+        <div class="stat-pill compact">
+          <span class="label">Lv</span>
+          <span class="value" id="scoutLevel">1</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- DASHBOARD -->
+      <section class="view active" data-view="dashboard">
+        <div id="dashboardEbayBanner" class="banner-slot hidden"></div>
+
+        <div class="dashboard-top">
+          <div class="hero-card">
+            <p class="hero-label">Your collection</p>
+            <h2 class="hero-value" id="dashCollectionValue">—</h2>
+            <p class="hero-sub" id="dashValuedCount">0 / 0 priced</p>
+            <p class="hero-count"><span id="dashCardCount">0</span> cards tracked</p>
+          </div>
+
+          <div class="panel card-of-week" id="cardOfWeekPanel">
+            <div class="cow-layout">
+              <figure class="cow-visual" id="cowVisual">
+                <div class="cow-image-frame">
+                  <img id="cowImage" class="cow-image hidden" alt="" loading="lazy" />
+                  <div id="cowImagePlaceholder" class="cow-image-placeholder" aria-hidden="true">🃏</div>
+                </div>
+                <figcaption class="cow-image-caption hidden" id="cowImageCaption"></figcaption>
+              </figure>
+              <div class="cow-content">
+                <div class="cow-header">
+                  <div>
+                    <p class="cow-badge" id="cowBadge">🏆 Card of the Day</p>
+                    <h3 id="cowTitle">Loading spotlight…</h3>
+                    <p class="cow-sub" id="cowSub"></p>
+                    <p class="cow-owner" id="cowOwner"></p>
+                  </div>
+                  <div class="cow-estimate" id="cowEstimate">—</div>
+                </div>
+                <p class="cow-blurb" id="cowBlurb"></p>
+                <div class="price-variation-bar" id="cowVariation"></div>
+                <div class="cow-actions">
+                  <button type="button" class="btn-secondary" id="cowScoutBtn">Scout this card</button>
+                  <button type="button" class="btn-secondary" id="cowCommentBtn">Comment on this card</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="section-title">Quick actions</h3>
+        <div class="dash-grid">
+          <button type="button" class="dash-card accent" data-goto="scout">
+            <span class="dash-icon">🔍</span>
+            <span class="dash-name">Scout a card</span>
+            <span class="dash-desc">Check market value from title & details</span>
+          </button>
+          <button type="button" class="dash-card" data-goto="collection">
+            <span class="dash-icon">📦</span>
+            <span class="dash-name">My collection</span>
+            <span class="dash-desc">Add cards & total portfolio value</span>
+          </button>
+          <button type="button" class="dash-card" data-goto="profile">
+            <span class="dash-icon">👤</span>
+            <span class="dash-name">Profile</span>
+            <span class="dash-desc">Scout level, XP, streak & stats</span>
+          </button>
+          <button type="button" class="dash-card" id="dashLastScoutCard" data-goto="last-scout">
+            <span class="dash-icon">📋</span>
+            <span class="dash-name">Last scout report</span>
+            <span class="dash-desc" id="dashLastScout">No scouts yet</span>
+          </button>
+        </div>
+
+        <div class="panel compact-panel leaderboard-panel">
+          <h3>🏆 Collector leaderboard</h3>
+          <p class="hint">Public opt-in rankings by portfolio value</p>
+          <div id="leaderboardList" class="leaderboard-list"></div>
+        </div>
+
+        <div class="panel compact-panel">
+          <h3>Scout progress</h3>
+          <div class="progress-row">
+            <div class="stat-pill">
+              <span class="label">XP</span>
+              <span class="value" id="scoutXp">0</span>
+            </div>
+            <div class="stat-pill streak">
+              <span class="label">Streak</span>
+              <span class="value" id="scoutStreak">0🔥</span>
+            </div>
+          </div>
+        </div>
+
+        <details class="api-setup" id="apiSetup">
+          <summary>Unlock live eBay prices (Browse API)</summary>
+          <p id="apiSetupBody">
+            Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)
+          </p>
+          <code>EBAY_APP_ID=your_app_id
+EBAY_CLIENT_SECRET=your_cert_id
+node server.mjs</code>
+          <p class="setup-note muted-text">
+            App ID + Cert ID are under Production keys. Active listings use Browse API; sold comps need Marketplace Insights or the scout links.
+          </p>
+        </details>
+      </section>
+
+      <!-- SCOUT -->
+      <section class="view" data-view="scout">
+        <div id="scoutEbayBanner" class="banner-slot hidden"></div>
+
+        <div class="view-layout scout-layout">
+          <div class="panel form-panel">
+            <h2>Card Intel</h2>
+            <p class="hint">Enter title and details — we search sold comps and marketplaces.</p>
+
+            <form id="scoutForm">
+              <label class="field full">
+                <span>Card title *</span>
+                <input
+                  type="text"
+                  name="title"
+                  required
+                  placeholder="e.g. 2018 Panini Prizm Silver #280 Luka Doncic RC"
+                />
+              </label>
+              <div class="field-grid">
+                <label class="field">
+                  <span>Player</span>
+                  <input type="text" name="player" placeholder="Luka Dončić" />
+                </label>
+                <label class="field">
+                  <span>Year</span>
+                  <input type="text" name="year" placeholder="2018" />
+                </label>
+                <label class="field">
+                  <span>Set</span>
+                  <input type="text" name="set" placeholder="Panini Prizm" />
+                </label>
+                <label class="field">
+                  <span>Card #</span>
+                  <input type="text" name="cardNumber" placeholder="280" />
+                </label>
+                <label class="field">
+                  <span>Parallel</span>
+                  <input type="text" name="parallel" placeholder="Silver, Gold /10" />
+                </label>
+                <label class="field">
+                  <span>Serial</span>
+                  <input type="text" name="serial" placeholder="/99" />
+                </label>
+                <label class="field">
+                  <span>Grading</span>
+                  <select name="gradingCompany">
+                    <option value="">Raw</option>
+                    <option value="PSA">PSA</option>
+                    <option value="BGS">BGS</option>
+                    <option value="SGC">SGC</option>
+                    <option value="CGC">CGC</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Grade</span>
+                  <input type="text" name="grade" placeholder="10" />
+                </label>
+                <label class="field">
+                  <span>Cert #</span>
+                  <input type="text" name="certNumber" />
+                </label>
+                <label class="field full">
+                  <span>Notes</span>
+                  <input type="text" name="notes" placeholder="Auto, patch, etc." />
+                </label>
+              </div>
+              <button type="submit" class="btn-scout" id="scoutBtn">
+                <span class="btn-text">Scout Market Value</span>
+                <span class="btn-loading hidden">Scouting…</span>
+              </button>
+            </form>
+          </div>
+
+          <div class="scout-results-col">
+            <section class="panel empty-state" id="scoutEmptyState">
+              <div class="empty-icon">🏟️</div>
+              <h2>Scout report appears here</h2>
+              <p class="muted-text">Submit a card to see comps, tiers, and listings — all in this app.</p>
+            </section>
+
+            <section class="panel results-panel hidden" id="resultsPanel">
+              <div class="results-header">
+                <h2>Scout Report</h2>
+                <p class="query-display" id="queryDisplay"></p>
+                <button type="button" class="btn-secondary" id="addToCollectionBtn" disabled>
+                  + Add to collection
+                </button>
+              </div>
+              <div class="valuation-hero" id="valuationHero"></div>
+              <div class="stats-row" id="statsRow"></div>
+              <div class="tabs scroll-tabs">
+                <button class="tab active" data-tab="all">All comps</button>
+                <button class="tab" data-tab="sold">Sold</button>
+                <button class="tab" data-tab="active">Active</button>
+                <button class="tab" data-tab="guide">Guide</button>
+                <button class="tab" data-tab="markets">Markets</button>
+              </div>
+              <div class="price-variation-panel" id="priceVariationPanel"></div>
+              <div class="tab-content active" id="tab-all"></div>
+              <div class="tab-content" id="tab-sold"></div>
+              <div class="tab-content" id="tab-active"></div>
+              <div class="tab-content" id="tab-guide"></div>
+              <div class="tab-content" id="tab-markets"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLLECTION -->
+      <section class="view" data-view="collection">
+        <div id="collectionEbayBanner" class="banner-slot hidden"></div>
+
+        <div class="hero-card collection-hero">
+          <p class="hero-label">Estimated collection value</p>
+          <h2 class="hero-value" id="collectionTotalValue">—</h2>
+          <p class="hero-sub" id="collectionSummary">Add your first card</p>
+          <div class="collection-hero-actions">
+            <button type="button" class="btn-scout btn-sm" id="refreshCollectionBtn">
+              Refresh all values
+            </button>
+            <button type="button" class="btn-secondary btn-sm ai-btn" id="aiEstimateBtn">
+              🤖 AI collection insight
+            </button>
+          </div>
+        </div>
+
+        <div class="panel ai-insights-panel hidden" id="aiInsightsPanel">
+          <h3>AI Portfolio Analysis</h3>
+          <div id="aiInsightsContent" class="ai-content"></div>
+        </div>
+
+        <div class="collection-panels">
+        <div class="panel">
+          <h3>Your cards</h3>
+          <div id="collectionList" class="collection-list"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Add manually</h3>
+          <form id="manualAddForm" class="manual-form">
+            <label class="field full">
+              <span>Card title *</span>
+              <input type="text" name="title" required placeholder="Card title" />
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>Player</span>
+                <input type="text" name="player" />
+              </label>
+              <label class="field">
+                <span>Year</span>
+                <input type="text" name="year" />
+              </label>
+              <label class="field">
+                <span>Est. value ($)</span>
+                <input type="number" id="manualValue" min="0" step="1" placeholder="Optional" />
+              </label>
+            </div>
+            <button type="submit" class="btn-secondary full-width">Add to collection</button>
+          </form>
+        </div>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="view" data-view="profile">
+        <div class="profile-layout">
+        <div class="profile-header panel">
+          <div class="avatar">🏀</div>
+          <div>
+            <h2 id="profileName">Scout</h2>
+            <p class="muted-text">Level <span id="profileLevel">1</span> · <span id="profileXp">0</span> XP</p>
+          </div>
+          <button type="button" class="btn-secondary profile-auth-btn" id="profileAuthBtn">Sign in</button>
+        </div>
+
+        <label class="field full panel">
+          <span>Display name</span>
+          <input type="text" id="profileNameInput" placeholder="Your name" />
+        </label>
+
+        <div class="panel profile-prefs">
+          <h3>Collector profile</h3>
+          <p class="hint">Your collector preferences — for your profile and leaderboard.</p>
+          <div class="field-grid">
+            <label class="field">
+              <span>Favorite player</span>
+              <input type="text" id="profileFavoritePlayer" placeholder="e.g. Luka Dončić" />
+            </label>
+            <label class="field">
+              <span>Favorite team</span>
+              <input type="text" id="profileFavoriteTeam" placeholder="e.g. Lakers" />
+            </label>
+            <label class="field full">
+              <span>Collector style</span>
+              <select id="profileCollectorStyle">
+                <option value="investor">Investor — value & comps</option>
+                <option value="pc">Personal collection — favorites</option>
+                <option value="flipper">Flipper — buy low, sell high</option>
+                <option value="prospect">Prospect hunter — rookies & young stars</option>
+              </select>
+            </label>
+            <label class="field full checkbox-field" id="publicLeaderboardRow">
+              <input type="checkbox" id="profilePublicLb" />
+              <span>Show my collection value on the public leaderboard</span>
+            </label>
+          </div>
+          <button type="button" class="btn-secondary" id="saveProfileBtn">Save profile</button>
+          <p id="authHint" class="auth-hint hidden muted-text">Sign in to sync your collection across devices.</p>
+        </div>
+
+        <div class="hero-card">
+          <p class="hero-label">Collection value</p>
+          <h2 class="hero-value" id="profileCollectionValue">—</h2>
+          <p class="hero-sub">
+            <span id="profileCardCount">0</span> cards ·
+            <span id="profileValuedCount">0</span> with estimates
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3>Stats</h3>
+          <div class="stats-row profile-stats">
+            <div class="mini-stat">
+              <span class="label">Scouts run</span>
+              <span class="val" id="profileScouts">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="label">Day streak</span>
+              <span class="val" id="profileStreak">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="label">Scout level</span>
+              <span class="val" id="profileLevelStat">1</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <button type="button" class="dash-card" data-goto="scout">
+            <span class="dash-icon">🔍</span>
+            <span class="dash-name">Scout a card</span>
+          </button>
+          <button type="button" class="dash-card" data-goto="collection">
+            <span class="dash-icon">📦</span>
+            <span class="dash-name">View collection</span>
+          </button>
+        </div>
+
+        <div id="profileSocialGuest" class="panel social-panel hidden">
+          <h3>Friends &amp; posts</h3>
+          <p class="hint">Sign in to add friends, view their collections, and post about your latest pulls.</p>
+        </div>
+
+        <div id="profileSocialSignedIn">
+          <div class="panel social-panel">
+            <h3>Friends</h3>
+            <p class="hint">Add collectors by email. Friends can view each other's collections and posts.</p>
+            <div class="friend-add-row">
+              <input type="email" id="friendEmailInput" placeholder="friend@email.com" autocomplete="email" />
+              <button type="button" class="btn-secondary" id="addFriendBtn">Add friend</button>
+            </div>
+            <p class="section-label">Your friends</p>
+            <div class="friend-list" id="friendsList"></div>
+            <p class="section-label">Requests</p>
+            <div class="request-list" id="friendRequestsList"></div>
+          </div>
+
+          <div class="panel social-panel">
+            <h3>Your collector feed</h3>
+            <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
+            <div class="post-compose">
+              <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
+              <div class="post-compose-grid">
+                <label class="field">
+                  <span>Recent card (optional)</span>
+                  <select id="postRecentCard"></select>
+                </label>
+                <label class="field">
+                  <span>Or card title</span>
+                  <input type="text" id="postCardTitle" placeholder="2026 Topps Flagship #202" />
+                </label>
+                <label class="field">
+                  <span>Est. value ($)</span>
+                  <input type="number" id="postCardValue" min="0" step="0.01" placeholder="Optional" />
+                </label>
+              </div>
+              <button type="button" class="btn-secondary" id="publishPostBtn">Post update</button>
+            </div>
+            <p class="section-label">Your posts</p>
+            <div class="post-list" id="profilePostsList"></div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="view" data-view="about" id="aboutApp">
+        <article class="panel about-panel">
+          <header class="about-header">
+            <p class="about-badge">About HoopComps</p>
+            <h2>Scout basketball card values</h2>
+          </header>
+
+          <section class="about-block">
+            <h3>What it is</h3>
+            <p>
+              HoopComps is a basketball card value scout built for collectors, flippers, and investors.
+              Enter any card — raw, graded, parallel, or rookie — and pull market comps from eBay, Amazon,
+              and major hobby marketplaces. Track your collection, estimate total portfolio value, compete
+              on the leaderboard, and get AI-powered insights on what you own.
+            </p>
+          </section>
+
+          <section class="about-block">
+            <h3>How to use it</h3>
+            <ol class="about-steps">
+              <li>
+                <strong>Scout</strong> — Go to Scout, enter the card title (and player, year, grade if you know them),
+                then tap <em>Scout Market Value</em>. Review sold/active comps, price variation, and market links.
+              </li>
+              <li>
+                <strong>Save</strong> — Hit <em>+ Add to collection</em> on any scout report to track that card and its estimate.
+              </li>
+              <li>
+                <strong>Collection</strong> — See your total portfolio value, refresh all estimates, or run
+                <em>AI collection insight</em> for a full breakdown.
+              </li>
+              <li>
+                <strong>Profile</strong> — Set your favorite player and team, create a free account
+                to sync across devices, and opt into the public leaderboard.
+              </li>
+              <li>
+                <strong>Home</strong> — Your dashboard shows collection value at a glance, today’s Card of the Day
+                (same spotlight for every user, pulled from featured collectors’ cloud collections), quick actions, and
+                collector rankings.
+              </li>
+            </ol>
+          </section>
+
+          <section class="about-block about-meta">
+            <div class="about-credits">
+              <p><strong>Built by</strong> Wilt Harold</p>
+              <p><strong>Released</strong> May 2026</p>
+              <p><strong>Made in</strong> Kansas City</p>
+              <p>
+                <strong>Questions?</strong>
+                <a href="mailto:builtwilt@icloud.com">builtwilt@icloud.com</a>
+              </p>
+            </div>
+            <p class="about-disclaimer muted-text">
+              Estimates come from public market data — always verify before buying or selling.
+            </p>
+          </section>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main">
+      <button type="button" class="nav-item active" data-nav="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="scout">
+        <span class="nav-icon">🔍</span>
+        <span>Scout</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="collection">
+        <span class="nav-icon">📦</span>
+        <span>Collection</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="profile">
+        <span class="nav-icon">👤</span>
+        <span>Profile</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="about">
+        <span class="nav-icon">ℹ️</span>
+        <span>About</span>
+      </button>
+      <button type="button" class="nav-item nav-auth mobile-only hidden" id="mobileAuthHint">
+        <span class="nav-icon">☁️</span>
+        <span>Sign in</span>
+      </button>
+    </nav>
+
+    <footer class="app-footer">
+      <p>HoopComps — estimates from public market data. Verify before buying or selling.</p>
+      <p class="footer-monetize muted-text">Free to use · Optional affiliate links may earn commission at no extra cost to you.</p>
+    </footer>
+
+    <div id="authModal" class="listing-modal auth-modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-backdrop"></div>
+      <div class="modal-panel auth-panel">
+        <button type="button" class="modal-close" id="authModalClose" aria-label="Close">×</button>
+        <h2 id="authModalTitle">Sign in</h2>
+        <p class="hint">Sync your collection across phones, tablets, and desktop — free.</p>
+        <form id="authForm">
+          <label class="field full">
+            <span>Email</span>
+            <input type="email" id="authEmail" required autocomplete="email" placeholder="you@example.com" />
+          </label>
+          <label class="field full auth-name-field">
+            <span>Display name (optional)</span>
+            <input type="text" id="authDisplayName" autocomplete="name" placeholder="Your scout name" />
+          </label>
+          <label class="field full">
+            <span>Password</span>
+            <input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="6+ characters" />
+          </label>
+          <p id="authError" class="auth-error"></p>
+          <button type="submit" class="btn-scout" id="authSubmitBtn">Sign in</button>
+        </form>
+        <p id="authSwitchText" class="auth-switch muted-text"></p>
+      </div>
+    </div>
+
+    <div id="codCommentsModal" class="listing-modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-backdrop"></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" id="codCommentsClose" aria-label="Close">×</button>
+        <h2 id="codCommentsTitle">Card of the Day conversation</h2>
+        <p class="daily-reset-note">Today's thread only — conversations and comment agreements reset at midnight UTC when the Card of the Day changes.</p>
+        <div class="comment-list" id="codCommentsList"></div>
+        <div id="codCommentSignIn" class="social-empty hidden">Sign in to join today's Card of the Day conversation.</div>
+        <div id="codCommentBan" class="comment-ban-notice hidden">
+          <p id="codCommentBanText"></p>
+          <button type="button" class="btn-secondary hidden" id="codTestUnbanBtn">Restore access (one-time test)</button>
+        </div>
+        <div id="codCommentAgreement" class="cod-comment-agreement hidden">
+          <p class="agreement-lead">Before you comment today, please agree to our community rules:</p>
+          <p class="agreement-text" id="codAgreementText"></p>
+          <label class="checkbox-field agreement-check">
+            <input type="checkbox" id="codAgreementCheck" />
+            <span>I agree — no bullying, harassment, hate speech, threats, or personal attacks.</span>
+          </label>
+          <button type="button" class="btn-secondary" id="codAgreementSubmit" disabled>Continue to comments</button>
+        </div>
+        <div id="codCommentCompose" class="comment-compose hidden">
+          <input type="text" id="codCommentInput" maxlength="1000" placeholder="Share your take on today's card…" />
+          <button type="button" class="btn-secondary" id="codCommentSubmit">Post</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="friendModal" class="listing-modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-backdrop"></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" id="friendModalClose" aria-label="Close">×</button>
+        <div id="friendModalBody"></div>
+      </div>
+    </div>
+
+    <div id="listingModal" class="listing-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-backdrop"></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+        <div class="modal-body"></div>
+      </div>
+    </div>
+
+    <script src="/js/app.js" type="module"></script>
+  </body>
+</html>

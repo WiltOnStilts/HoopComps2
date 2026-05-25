@@ -1,36 +1,36 @@
 import {
-  loadState,
-  saveState,
-  replaceState,
-  onStateChange,
-  addToCollection,
-  removeFromCollection,
-  updateCollectionEntry,
-  collectionTotal,
-  collectionValuedCount,
-  awardXp,
+ loadState,
+ saveState,
+ replaceState,
+ onStateChange,
+ addToCollection,
+ removeFromCollection,
+ updateCollectionEntry,
+ collectionTotal,
+ collectionValuedCount,
+ awardXp,
 } from "./storage.js";
 import {
-  formatUsd,
-  escapeHtml,
-  formToCard,
-  fillScoutForm,
-  renderScoutResults,
-  setupResultTabs,
+ formatUsd,
+ escapeHtml,
+ formToCard,
+ fillScoutForm,
+ renderScoutResults,
+ setupResultTabs,
 } from "./scout-ui.js";
 import { initListingModal } from "./listings-ui.js";
 import { initPwa } from "./pwa.js";
 import {
-  loadStoredSession,
-  isLoggedIn,
-  getCurrentUser,
-  register,
-  login,
+ loadStoredSession,
+ isLoggedIn,
+ getCurrentUser,
+ register,
+ login,
   logout,
-  fetchCloudState,
+  refreshCloudState,
   scheduleCloudSync,
-  fetchLeaderboard,
-  setAuthChangeHandler,
+ fetchLeaderboard,
+ setAuthChangeHandler,
 } from "./auth.js";
 import { renderProfileSocial, initSocialUI } from "./social-ui.js";
 
@@ -44,847 +44,875 @@ let cardOfDayData = null;
 let profileFormSavedSnapshot = null;
 
 function getProfileFormValues() {
-  return {
-    displayName: $("profileNameInput")?.value.trim() || "Scout",
-    favoritePlayer: $("profileFavoritePlayer")?.value.trim() || "",
-    favoriteTeam: $("profileFavoriteTeam")?.value.trim() || "",
-    collectorStyle: $("profileCollectorStyle")?.value || "investor",
-    publicLeaderboard: Boolean($("profilePublicLb")?.checked),
-  };
+ return {
+ displayName: $("profileNameInput")?.value.trim() || "Scout",
+ favoritePlayer: $("profileFavoritePlayer")?.value.trim() || "",
+ favoriteTeam: $("profileFavoriteTeam")?.value.trim() || "",
+ collectorStyle: $("profileCollectorStyle")?.value || "investor",
+ publicLeaderboard: Boolean($("profilePublicLb")?.checked),
+ };
 }
 
 function profileFormValuesEqual(a, b) {
-  return (
-    a.displayName === b.displayName &&
-    a.favoritePlayer === b.favoritePlayer &&
-    a.favoriteTeam === b.favoriteTeam &&
-    a.collectorStyle === b.collectorStyle &&
-    a.publicLeaderboard === b.publicLeaderboard
-  );
+ return (
+ a.displayName === b.displayName &&
+ a.favoritePlayer === b.favoritePlayer &&
+ a.favoriteTeam === b.favoriteTeam &&
+ a.collectorStyle === b.collectorStyle &&
+ a.publicLeaderboard === b.publicLeaderboard
+ );
 }
 
 function syncProfileSaveButton() {
-  const btn = $("saveProfileBtn");
-  if (!btn) return;
-  const current = getProfileFormValues();
-  if (!profileFormSavedSnapshot) {
-    profileFormSavedSnapshot = current;
-  }
-  btn.disabled = profileFormValuesEqual(current, profileFormSavedSnapshot);
+ const btn = $("saveProfileBtn");
+ if (!btn) return;
+ const current = getProfileFormValues();
+ if (!profileFormSavedSnapshot) {
+ profileFormSavedSnapshot = current;
+ }
+ btn.disabled = profileFormValuesEqual(current, profileFormSavedSnapshot);
 }
 
 function captureProfileFormSnapshot() {
-  profileFormSavedSnapshot = getProfileFormValues();
-  syncProfileSaveButton();
+ profileFormSavedSnapshot = getProfileFormValues();
+ syncProfileSaveButton();
 }
 
 const VIEWS = ["dashboard", "scout", "collection", "profile", "about"];
 
 function $(id) {
-  return document.getElementById(id);
+ return document.getElementById(id);
 }
 
 function navigate(view) {
-  if (!VIEWS.includes(view)) view = "dashboard";
-  document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
-  document.querySelector(`[data-view="${view}"]`)?.classList.add("active");
-  document.querySelectorAll(".nav-item, .desktop-nav-item").forEach((n) => {
-    n.classList.toggle("active", n.dataset.nav === view);
-  });
-  if (view === "dashboard") renderDashboard();
-  if (view === "collection") renderCollection();
-  if (view === "profile") renderProfile();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+ if (!VIEWS.includes(view)) view = "dashboard";
+ document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+ document.querySelector(`[data-view="${view}"]`)?.classList.add("active");
+ document.querySelectorAll(".nav-item, .desktop-nav-item").forEach((n) => {
+ n.classList.toggle("active", n.dataset.nav === view);
+ });
+ if (view === "dashboard") renderDashboard();
+ if (view === "collection") renderCollection();
+ if (view === "profile") renderProfile();
+ window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function ebayTipHtml() {
-  if (health.ebayConfigured) return "";
-  return `<strong>${escapeHtml(health.ebayTip)}</strong> — <a href="${health.ebaySignupUrl}" target="_blank" rel="noopener">Get a free App ID</a>, then run <code>${escapeHtml(health.ebaySetupCommand)}</code>`;
+ if (health.ebayConfigured) return "";
+ return ` ${escapeHtml(health.ebayTip)} — Get a free App ID, then run ${escapeHtml(health.ebaySetupCommand)} `;
 }
 
 function updateHeaderStats() {
-  $("scoutLevel").textContent = state.level ?? 1;
-  $("scoutXp").textContent = state.xp ?? 0;
-  $("scoutStreak").textContent = `${state.streak ?? 0}🔥`;
-  const total = collectionTotal(state);
-  const pill = $("collectionValuePill");
-  if (pill) {
-    pill.textContent = total > 0 ? formatUsd(total) : "—";
-  }
+ $("scoutLevel").textContent = state.level ?? 1;
+ $("scoutXp").textContent = state.xp ?? 0;
+ $("scoutStreak").textContent = `${state.streak ?? 0}🔥`;
+ const total = collectionTotal(state);
+ const pill = $("collectionValuePill");
+ if (pill) {
+ pill.textContent = total > 0 ? formatUsd(total) : "—";
+ }
 }
 
 function renderEbayBanner(containerId) {
-  const el = $(containerId);
-  if (!el) return;
-  if (health.ebayConfigured) {
-    el.classList.add("hidden");
-    el.innerHTML = "";
-    return;
-  }
-  el.classList.remove("hidden");
-  el.innerHTML = `
-    <div class="ebay-banner">
-      <span class="ebay-banner-icon">💡</span>
-      <div class="ebay-banner-text">
-        <p class="ebay-banner-title">${escapeHtml(health.ebayTip)}</p>
-        <p class="ebay-banner-sub">
-          <a href="${health.ebaySignupUrl}" target="_blank" rel="noopener">Sign up free at developer.ebay.com</a>,
-          then restart: <code>${escapeHtml(health.ebaySetupCommand)}</code>
-        </p>
-      </div>
-    </div>
-  `;
+ const el = $(containerId);
+ if (!el) return;
+ if (health.ebayConfigured) {
+ el.classList.add("hidden");
+ el.innerHTML = "";
+ return;
+ }
+ el.classList.remove("hidden");
+ el.innerHTML = `
+ 
+ 💡 
+ 
+ ${escapeHtml(health.ebayTip)} 
+ 
+ Sign up free at developer.ebay.com,
+ then restart: ${escapeHtml(health.ebaySetupCommand)} 
+ 
+ 
+ 
+ `;
 }
 
 function renderDashboard() {
-  renderEbayBanner("dashboardEbayBanner");
-  const total = collectionTotal(state);
-  const coll = state.collection || [];
-  const valued = collectionValuedCount(state);
+ renderEbayBanner("dashboardEbayBanner");
+ const total = collectionTotal(state);
+ const coll = state.collection || [];
+ const valued = collectionValuedCount(state);
 
-  $("dashCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
-  $("dashCardCount").textContent = coll.length;
-  $("dashValuedCount").textContent = `${valued} / ${coll.length} priced`;
+ $("dashCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
+ $("dashCardCount").textContent = coll.length;
+ $("dashValuedCount").textContent = `${valued} / ${coll.length} priced`;
 
-  const last = state.lastScout;
-  const lastEl = $("dashLastScout");
-  if (last?.data) {
-    const est = last.data.valuation?.estimate;
-    lastEl.innerHTML = `
-      <p class="dash-last-title">${escapeHtml(last.card?.title || last.data.query)}</p>
-      <p class="dash-last-est">${est != null ? formatUsd(est) : "View report"}</p>
-    `;
-    $("dashLastScoutCard").classList.remove("disabled");
-  } else {
-    lastEl.textContent = "No scouts yet — try your first card!";
-    $("dashLastScoutCard").classList.add("disabled");
-  }
+ const last = state.lastScout;
+ const lastEl = $("dashLastScout");
+ if (last?.data) {
+ const est = last.data.valuation?.estimate;
+ lastEl.innerHTML = `
+ ${escapeHtml(last.card?.title || last.data.query)} 
+ ${est != null ? formatUsd(est) : "View report"} 
+ `;
+ $("dashLastScoutCard").classList.remove("disabled");
+ } else {
+ lastEl.textContent = "No scouts yet — try your first card!";
+ $("dashLastScoutCard").classList.add("disabled");
+ }
 
-  loadCardOfDay();
-  loadLeaderboard();
+ loadCardOfDay();
+ loadLeaderboard();
 }
 
 async function loadLeaderboard() {
-  const el = $("leaderboardList");
-  if (!el) return;
-  const entries = await fetchLeaderboard();
-  if (!entries.length) {
-    el.innerHTML = `<p class="muted-text">No public collections yet. Opt in on your Profile to compete.</p>`;
-    return;
-  }
-  el.innerHTML = entries
-    .map(
-      (e, i) => `
-    <div class="lb-row">
-      <span class="lb-rank">#${i + 1}</span>
-      <span class="lb-name">${escapeHtml(e.name)}</span>
-      <span class="lb-meta">${e.cardCount} cards · Lv ${e.level}</span>
-      <span class="lb-value">${formatUsd(e.total)}</span>
-    </div>`
-    )
-    .join("");
+ const el = $("leaderboardList");
+ if (!el) return;
+ const entries = await fetchLeaderboard();
+ if (!entries.length) {
+ el.innerHTML = ` No public collections yet. Opt in on your Profile to compete. `;
+ return;
+ }
+ el.innerHTML = entries
+ .map(
+ (e, i) => `
+ 
+ #${i + 1} 
+ ${escapeHtml(e.name)} 
+ ${e.cardCount} cards · Lv ${e.level} 
+ ${formatUsd(e.total)} 
+ `
+ )
+ .join("");
 }
 
 function renderAuthUI() {
+  loadStoredSession();
   const btn = $("authHeaderBtn");
   const pill = $("authStatusPill");
   const user = getCurrentUser();
+  const signedIn = isLoggedIn();
 
-  if (isLoggedIn() && user) {
+  if (signedIn) {
     if (btn) btn.textContent = "Sign out";
     $("profileAuthBtn").textContent = "Sign out";
     if (pill) {
       pill.classList.remove("hidden");
-      pill.textContent = user.displayName || user.email?.split("@")[0] || "Signed in";
+      pill.textContent = user?.displayName || user?.email?.split("@")[0] || "Signed in";
       pill.style.cursor = "default";
     }
-    $("publicLeaderboardRow")?.classList.remove("hidden");
-    $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
-    $("mobileAuthHint")?.classList.add("hidden");
-  } else {
-    if (btn) btn.textContent = "Sign in";
-    $("profileAuthBtn").textContent = "Sign in";
-    if (pill) {
-      pill.classList.add("hidden");
-    }
-    $("publicLeaderboardRow")?.classList.add("hidden");
-    if (health.multiUserEnabled) {
-      $("mobileAuthHint")?.classList.remove("hidden");
-    } else {
-      $("mobileAuthHint")?.classList.add("hidden");
-    }
-  }
+ $("publicLeaderboardRow")?.classList.remove("hidden");
+ $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
+ $("mobileAuthHint")?.classList.add("hidden");
+ } else {
+ if (btn) btn.textContent = "Sign in";
+ $("profileAuthBtn").textContent = "Sign in";
+ if (pill) {
+ pill.classList.add("hidden");
+ }
+ $("publicLeaderboardRow")?.classList.add("hidden");
+ if (health.multiUserEnabled) {
+ $("mobileAuthHint")?.classList.remove("hidden");
+ } else {
+ $("mobileAuthHint")?.classList.add("hidden");
+ }
+ }
 
-  if (health.multiUserEnabled === false) {
-    $("authHint")?.classList.remove("hidden");
-  }
+ if (health.multiUserEnabled === false) {
+ $("authHint")?.classList.remove("hidden");
+ }
 }
 
 function openAuthModal(mode = "login") {
-  $("authModal")?.classList.remove("hidden");
-  document.body.classList.add("modal-open");
-  $("authModalTitle").textContent = mode === "register" ? "Create account" : "Sign in";
-  $("authSubmitBtn").textContent = mode === "register" ? "Create account" : "Sign in";
-  $("authSubmitBtn").dataset.mode = mode;
-  document.querySelector(".auth-name-field")?.classList.toggle("hidden", mode !== "register");
-  $("authSwitchText").innerHTML =
-    mode === "register"
-      ? `Already have an account? <button type="button" class="link-btn" data-auth-switch="login">Sign in</button>`
-      : `New here? <button type="button" class="link-btn" data-auth-switch="register">Create free account</button>`;
-  $("authError").textContent = "";
+ $("authModal")?.classList.remove("hidden");
+ document.body.classList.add("modal-open");
+ $("authModalTitle").textContent = mode === "register" ? "Create account" : "Sign in";
+ $("authSubmitBtn").textContent = mode === "register" ? "Create account" : "Sign in";
+ $("authSubmitBtn").dataset.mode = mode;
+ document.querySelector(".auth-name-field")?.classList.toggle("hidden", mode !== "register");
+ $("authSwitchText").innerHTML =
+ mode === "register"
+ ? `Already have an account? Sign in `
+ : `New here? Create free account `;
+ $("authError").textContent = "";
 }
 
 function closeAuthModal() {
-  $("authModal")?.classList.add("hidden");
-  document.body.classList.remove("modal-open");
+ $("authModal")?.classList.add("hidden");
+ document.body.classList.remove("modal-open");
 }
 
 function applyCloudState(nextState) {
-  state = replaceState(nextState);
-  lastScoutData = state.lastScout?.data || null;
-  lastScoutCard = state.lastScout?.card || null;
-  updateHeaderStats();
-  renderDashboard();
-  renderCollection();
-  renderProfile();
-  renderAuthUI();
-  if (state.lastScout?.card) fillScoutForm($("scoutForm"), state.lastScout.card);
-  $("profileNameInput").value = state.profile?.displayName || "";
-  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
-  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
-  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
-  $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
-  captureProfileFormSnapshot();
+ state = replaceState(nextState);
+ lastScoutData = state.lastScout?.data || null;
+ lastScoutCard = state.lastScout?.card || null;
+ updateHeaderStats();
+ renderDashboard();
+ renderCollection();
+ renderProfile();
+ renderAuthUI();
+ if (state.lastScout?.card) fillScoutForm($("scoutForm"), state.lastScout.card);
+ $("profileNameInput").value = state.profile?.displayName || "";
+ $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
+ $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
+ $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
+ $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
+ captureProfileFormSnapshot();
 }
 
 async function loadCardOfDay() {
-  try {
-    const res = await fetch("/api/card-of-day");
-    cardOfDayData = await res.json();
-    renderCardOfDay(cardOfDayData);
-  } catch {
-    $("cowTitle").textContent = "Card spotlight unavailable";
-    $("cowSub").textContent = "Start the server to load today's featured card.";
-  }
+ try {
+ const res = await fetch("/api/card-of-day");
+ cardOfDayData = await res.json();
+ renderCardOfDay(cardOfDayData);
+ } catch {
+ $("cowTitle").textContent = "Card spotlight unavailable";
+ $("cowSub").textContent = "Start the server to load today's featured card.";
+ }
 }
 
 function renderCardOfDay(data) {
-  const badge = $("cowBadge");
-  const dayLabel = data?.dayLabel || data?.weekLabel || "Today";
+ const badge = $("cowBadge");
+ const dayLabel = data?.dayLabel || data?.weekLabel || "Today";
 
-  if (!data?.card) {
-    if (badge) badge.textContent = "🏆 Card of the Day";
-    $("cowTitle").textContent = data?.headline || "Card of the Day";
-    $("cowSub").textContent = `${dayLabel} · ${data?.profileHint || "Featured collectors"}`;
-    const ownerEl = $("cowOwner");
-    if (ownerEl) {
-      ownerEl.textContent = "";
-      ownerEl.classList.add("hidden");
-    }
-    $("cowBlurb").textContent = data?.blurb || "Check back soon for today's spotlight card.";
-    $("cowEstimate").textContent = "—";
-    renderCardOfDayImage(null, null);
-    const varEl = $("cowVariation");
-    if (varEl) {
-      varEl.innerHTML = "";
-      varEl.classList.add("hidden");
-    }
-    return;
-  }
+ if (!data?.card) {
+ if (badge) badge.textContent = "🏆 Card of the Day";
+ $("cowTitle").textContent = data?.headline || "Card of the Day";
+ $("cowSub").textContent = `${dayLabel} · ${data?.profileHint || "Featured collectors"}`;
+ const ownerEl = $("cowOwner");
+ if (ownerEl) {
+ ownerEl.textContent = "";
+ ownerEl.classList.add("hidden");
+ }
+ $("cowBlurb").textContent = data?.blurb || "Check back soon for today's spotlight card.";
+ $("cowEstimate").textContent = "—";
+ renderCardOfDayImage(null, null);
+ const varEl = $("cowVariation");
+ if (varEl) {
+ varEl.innerHTML = "";
+ varEl.classList.add("hidden");
+ }
+ return;
+ }
 
-  const { card, profileHint, scout, possessionLabel, headline, blurb, savedEstimate, cardImage } = data;
+ const { card, profileHint, scout, possessionLabel, headline, blurb, savedEstimate, cardImage } = data;
 
-  if (badge) badge.textContent = "🏆 Card of the Day";
+ if (badge) badge.textContent = "🏆 Card of the Day";
 
-  $("cowTitle").textContent = headline || card.title;
+ $("cowTitle").textContent = headline || card.title;
 
-  const ownerEl = $("cowOwner");
-  if (ownerEl) {
-    if (possessionLabel) {
-      ownerEl.textContent = possessionLabel;
-      ownerEl.classList.remove("hidden");
-    } else {
-      ownerEl.textContent = "";
-      ownerEl.classList.add("hidden");
-    }
-  }
+ const ownerEl = $("cowOwner");
+ if (ownerEl) {
+ if (possessionLabel) {
+ ownerEl.textContent = possessionLabel;
+ ownerEl.classList.remove("hidden");
+ } else {
+ ownerEl.textContent = "";
+ ownerEl.classList.add("hidden");
+ }
+ }
 
-  renderCardOfDayImage(card, cardImage);
+ renderCardOfDayImage(card, cardImage);
 
-  $("cowSub").textContent = `${dayLabel} · ${profileHint}`;
-  $("cowBlurb").textContent = blurb || "";
+ $("cowSub").textContent = `${dayLabel} · ${profileHint}`;
+ $("cowBlurb").textContent = blurb || "";
 
-  const est = scout?.valuation?.estimate ?? savedEstimate;
-  $("cowEstimate").textContent = est != null ? formatUsd(est) : "Scout for value";
+ const est = scout?.valuation?.estimate ?? savedEstimate;
+ $("cowEstimate").textContent = est != null ? formatUsd(est) : "Scout for value";
 
-  const pv = scout?.valuation?.priceVariation;
-  const varEl = $("cowVariation");
-  if (pv && varEl) {
-    varEl.innerHTML = renderPriceVariationHtml(pv);
-    varEl.classList.remove("hidden");
-  } else if (varEl) {
-    varEl.innerHTML = "";
-    varEl.classList.add("hidden");
-  }
+ const pv = scout?.valuation?.priceVariation;
+ const varEl = $("cowVariation");
+ if (pv && varEl) {
+ varEl.innerHTML = renderPriceVariationHtml(pv);
+ varEl.classList.remove("hidden");
+ } else if (varEl) {
+ varEl.innerHTML = "";
+ varEl.classList.add("hidden");
+ }
 }
 
 function renderCardOfDayImage(card, cardImage) {
-  const imgEl = $("cowImage");
-  const placeholderEl = $("cowImagePlaceholder");
-  const captionEl = $("cowImageCaption");
-  if (!imgEl || !placeholderEl) return;
+ const imgEl = $("cowImage");
+ const placeholderEl = $("cowImagePlaceholder");
+ const captionEl = $("cowImageCaption");
+ if (!imgEl || !placeholderEl) return;
 
-  const url = cardImage?.url;
-  if (url) {
-    imgEl.src = url;
-    imgEl.alt = card?.title ? `${card.title} card photo` : "Card of the Day";
-    imgEl.classList.remove("hidden");
-    placeholderEl.classList.add("hidden");
+ const url = cardImage?.url;
+ if (url) {
+ imgEl.src = url;
+ imgEl.alt = card?.title ? `${card.title} card photo` : "Card of the Day";
+ imgEl.classList.remove("hidden");
+ placeholderEl.classList.add("hidden");
 
-    if (captionEl) {
-      const source = cardImage.source || "Marketplace";
-      const listing = cardImage.listingTitle;
-      const listingSnippet =
-        listing && listing.length > 72 ? `${listing.slice(0, 69)}…` : listing;
-      captionEl.textContent = listingSnippet
-        ? `Exact eBay match · ${listingSnippet}`
-        : cardImage?.exactMatch
-          ? "Exact eBay match"
-          : source === "collection"
-            ? "Photo saved from collector's entry"
-            : `Photo via ${source}`;
-      captionEl.classList.remove("hidden");
-    }
+ if (captionEl) {
+ const source = cardImage.source || "Marketplace";
+ const listing = cardImage.listingTitle;
+ const listingSnippet =
+ listing && listing.length > 72 ? `${listing.slice(0, 69)}…` : listing;
+ captionEl.textContent = listingSnippet
+ ? `Exact eBay match · ${listingSnippet}`
+ : cardImage?.exactMatch
+ ? "Exact eBay match"
+ : source === "collection"
+ ? "Photo saved from collector's entry"
+ : `Photo via ${source}`;
+ captionEl.classList.remove("hidden");
+ }
 
-    imgEl.onerror = () => {
-      imgEl.classList.add("hidden");
-      placeholderEl.classList.remove("hidden");
-      if (captionEl) {
-        captionEl.textContent = "Card photo unavailable";
-        captionEl.classList.remove("hidden");
-      }
-    };
-  } else {
-    imgEl.removeAttribute("src");
-    imgEl.classList.add("hidden");
-    placeholderEl.classList.remove("hidden");
-    if (captionEl) {
-      captionEl.textContent = "";
-      captionEl.classList.add("hidden");
-    }
-  }
+ imgEl.onerror = () => {
+ imgEl.classList.add("hidden");
+ placeholderEl.classList.remove("hidden");
+ if (captionEl) {
+ captionEl.textContent = "Card photo unavailable";
+ captionEl.classList.remove("hidden");
+ }
+ };
+ } else {
+ imgEl.removeAttribute("src");
+ imgEl.classList.add("hidden");
+ placeholderEl.classList.remove("hidden");
+ if (captionEl) {
+ captionEl.textContent = "";
+ captionEl.classList.add("hidden");
+ }
+ }
 }
 
 function renderPriceVariationHtml(pv) {
-  if (!pv) return "";
-  const soldPct = pv.soldMedian && pv.spread ? ((pv.soldMedian - (pv.soldRange?.low ?? pv.soldMedian)) / pv.spread) * 100 : 50;
-  const activePct = pv.activeMedian && pv.spread ? ((pv.activeMedian - (pv.soldRange?.low ?? pv.activeMedian)) / pv.spread) * 100 : 50;
+ if (!pv) return "";
+ const soldPct = pv.soldMedian && pv.spread ? ((pv.soldMedian - (pv.soldRange?.low ?? pv.soldMedian)) / pv.spread) * 100 : 50;
+ const activePct = pv.activeMedian && pv.spread ? ((pv.activeMedian - (pv.soldRange?.low ?? pv.activeMedian)) / pv.spread) * 100 : 50;
 
-  return `
-    <div class="pv-label">${escapeHtml(pv.label)}</div>
-    <div class="pv-track">
-      <div class="pv-marker sold" style="left: ${Math.min(95, Math.max(5, soldPct))}%">
-        <span>Sold ${formatUsd(pv.soldMedian)}</span>
-      </div>
-      <div class="pv-marker active" style="left: ${Math.min(95, Math.max(5, activePct))}%">
-        <span>Active ${formatUsd(pv.activeMedian)}</span>
-      </div>
-    </div>
-    ${pv.spreadPct != null ? `<p class="pv-spread">Spread: ${Math.round(pv.spreadPct)}% · Active vs sold: ${pv.activeVsSoldPct != null ? (pv.activeVsSoldPct > 0 ? "+" : "") + Math.round(pv.activeVsSoldPct) + "%" : "—"}</p>` : ""}
-  `;
+ return `
+ ${escapeHtml(pv.label)} 
+ 
+ 
+ Sold ${formatUsd(pv.soldMedian)} 
+ 
+ 
+ Active ${formatUsd(pv.activeMedian)} 
+ 
+ 
+ ${pv.spreadPct != null ? ` Spread: ${Math.round(pv.spreadPct)}% · Active vs sold: ${pv.activeVsSoldPct != null ? (pv.activeVsSoldPct > 0 ? "+" : "") + Math.round(pv.activeVsSoldPct) + "%" : "—"} ` : ""}
+ `;
 }
 
 function renderCollection() {
-  renderEbayBanner("collectionEbayBanner");
-  const coll = state.collection || [];
-  const total = collectionTotal(state);
-  const valued = collectionValuedCount(state);
+ renderEbayBanner("collectionEbayBanner");
+ const coll = state.collection || [];
+ const total = collectionTotal(state);
+ const valued = collectionValuedCount(state);
 
-  $("collectionTotalValue").textContent = total > 0 ? formatUsd(total) : "—";
-  $("collectionSummary").textContent =
-    coll.length === 0
-      ? "Add cards from a scout report or manually below."
-      : `${valued} of ${coll.length} cards have estimated values`;
+ $("collectionTotalValue").textContent = total > 0 ? formatUsd(total) : "—";
+ $("collectionSummary").textContent =
+ coll.length === 0
+ ? "Add cards from a scout report or manually below."
+ : `${valued} of ${coll.length} cards have estimated values`;
 
-  const list = $("collectionList");
-  if (!coll.length) {
-    list.innerHTML = `<div class="empty-collection"><span>📦</span><p>Your collection is empty</p></div>`;
-    return;
-  }
+ const list = $("collectionList");
+ if (!coll.length) {
+ list.innerHTML = ` 📦 Your collection is empty `;
+ return;
+ }
 
-  list.innerHTML = coll
-    .map((item) => {
-      const title = item.card?.title || "Untitled card";
-      const tier = item.tier;
-      return `
-      <article class="collection-item" data-id="${item.id}">
-        <div class="collection-item-main">
-          <h4>${escapeHtml(title)}</h4>
-          <p class="collection-meta">${escapeHtml([item.card?.player, item.card?.year, item.card?.parallel].filter(Boolean).join(" · "))}</p>
-          ${tier ? `<span class="tier-chip" style="color:${tier.color}">${tier.emoji} ${tier.tier}</span>` : ""}
-        </div>
-        <div class="collection-item-value">
-          <span class="label">Est. value</span>
-          <span class="val">${formatUsd(item.estimatedValue)}</span>
-        </div>
-        <div class="collection-item-actions">
-          <button type="button" class="btn-ghost" data-action="scout-again" data-id="${item.id}">Re-scout</button>
-          <button type="button" class="btn-ghost danger" data-action="remove" data-id="${item.id}">Remove</button>
-        </div>
-      </article>
-    `;
-    })
-    .join("");
+ list.innerHTML = coll
+ .map((item) => {
+ const title = item.card?.title || "Untitled card";
+ const tier = item.tier;
+ return `
+ 
+ 
+ ${escapeHtml(title)} 
+ ${escapeHtml([item.card?.player, item.card?.year, item.card?.parallel].filter(Boolean).join(" · "))} 
+ ${tier ? ` ${tier.emoji} ${tier.tier} ` : ""}
+ 
+ 
+ Est. value 
+ ${formatUsd(item.estimatedValue)} 
+ 
+ 
+ Re-scout 
+ Remove 
+ 
+ 
+ `;
+ })
+ .join("");
 
-  list.querySelectorAll("[data-action=remove]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      removeFromCollection(state, btn.dataset.id);
-      state = loadState();
-      renderCollection();
-      updateHeaderStats();
-      renderDashboard();
-      renderProfile();
-    });
-  });
+ list.querySelectorAll("[data-action=remove]").forEach((btn) => {
+ btn.addEventListener("click", () => {
+ removeFromCollection(state, btn.dataset.id);
+ state = loadState();
+ renderCollection();
+ updateHeaderStats();
+ renderDashboard();
+ renderProfile();
+ });
+ });
 
-  list.querySelectorAll("[data-action=scout-again]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const item = state.collection.find((c) => c.id === btn.dataset.id);
-      if (!item) return;
-      navigate("scout");
-      fillScoutForm($("scoutForm"), item.card);
-    });
-  });
+ list.querySelectorAll("[data-action=scout-again]").forEach((btn) => {
+ btn.addEventListener("click", () => {
+ const item = state.collection.find((c) => c.id === btn.dataset.id);
+ if (!item) return;
+ navigate("scout");
+ fillScoutForm($("scoutForm"), item.card);
+ });
+ });
 }
 
 function renderProfile() {
-  $("profileName").textContent = state.profile?.displayName || "Scout";
-  $("profileLevel").textContent = state.level ?? 1;
-  const levelStat = $("profileLevelStat");
-  if (levelStat) levelStat.textContent = state.level ?? 1;
-  $("profileXp").textContent = state.xp ?? 0;
-  $("profileStreak").textContent = state.streak ?? 0;
-  $("profileScouts").textContent = state.scoutCount ?? 0;
+ $("profileName").textContent = state.profile?.displayName || "Scout";
+ $("profileLevel").textContent = state.level ?? 1;
+ const levelStat = $("profileLevelStat");
+ if (levelStat) levelStat.textContent = state.level ?? 1;
+ $("profileXp").textContent = state.xp ?? 0;
+ $("profileStreak").textContent = state.streak ?? 0;
+ $("profileScouts").textContent = state.scoutCount ?? 0;
 
-  const coll = state.collection || [];
-  const total = collectionTotal(state);
-  $("profileCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
-  $("profileCardCount").textContent = coll.length;
-  $("profileValuedCount").textContent = collectionValuedCount(state);
-  renderProfileSocial(state);
+ const coll = state.collection || [];
+ const total = collectionTotal(state);
+ $("profileCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
+ $("profileCardCount").textContent = coll.length;
+ $("profileValuedCount").textContent = collectionValuedCount(state);
+ renderProfileSocial(state);
 }
 
 async function checkHealth() {
-  try {
-    const res = await fetch("/api/health");
-    health = await res.json();
-    document.title = APP_NAME;
-    const h1 = document.querySelector(".logo-text h1");
-    if (h1) h1.textContent = APP_NAME;
-    const tagline = document.querySelector(".logo-text p");
-    if (tagline && health.tagline) tagline.textContent = health.tagline;
-    const setupBody = $("apiSetupBody");
-    if (setupBody && health.ebayTip) setupBody.textContent = health.ebayTip;
+ try {
+ const res = await fetch("/api/health");
+ health = await res.json();
+ document.title = APP_NAME;
+ const h1 = document.querySelector(".logo-text h1");
+ if (h1) h1.textContent = APP_NAME;
+ const tagline = document.querySelector(".logo-text p");
+ if (tagline && health.tagline) tagline.textContent = health.tagline;
+ const setupBody = $("apiSetupBody");
+ if (setupBody && health.ebayTip) setupBody.textContent = health.ebayTip;
 
-    if (health.ebayAppIdSet && !health.ebayClientSecretSet) {
-      const secretBanner = `
-        <div class="ebay-banner">
-          <span class="ebay-banner-icon">🔑</span>
-          <div class="ebay-banner-text">
-            <p class="ebay-banner-title">Add your eBay Cert ID (Client Secret)</p>
-            <p class="ebay-banner-sub">Copy the <strong>Cert ID</strong> from <a href="https://developer.ebay.com/my/keys" target="_blank" rel="noopener">developer.ebay.com → Keys</a> into <code>EBAY_CLIENT_SECRET</code> in <code>.env</code>, then restart the server.</p>
-          </div>
-        </div>`;
-      for (const id of ["dashboardEbayBanner", "scoutEbayBanner", "collectionEbayBanner"]) {
-        const el = $(id);
-        if (el) {
-          el.classList.remove("hidden");
-          el.innerHTML = secretBanner;
-        }
-      }
-    } else {
-      renderEbayBanner("dashboardEbayBanner");
-      renderEbayBanner("scoutEbayBanner");
-      renderEbayBanner("collectionEbayBanner");
-    }
+ if (health.ebayAppIdSet && !health.ebayClientSecretSet) {
+ const secretBanner = `
+ 
+ 🔑 
+ 
+ Add your eBay Cert ID (Client Secret) 
+ Copy the Cert ID from developer.ebay.com → Keys into EBAY_CLIENT_SECRET in.env, then restart the server. 
+ 
+ `;
+ for (const id of ["dashboardEbayBanner", "scoutEbayBanner", "collectionEbayBanner"]) {
+ const el = $(id);
+ if (el) {
+ el.classList.remove("hidden");
+ el.innerHTML = secretBanner;
+ }
+ }
+ } else {
+ renderEbayBanner("dashboardEbayBanner");
+ renderEbayBanner("scoutEbayBanner");
+ renderEbayBanner("collectionEbayBanner");
+ }
 
-    if (!health.ebayConfigured) $("apiSetup")?.setAttribute("open", "");
-    renderAuthUI();
-  } catch {
-    health.ebayTip =
-      "Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)";
-    health.ebaySetupCommand =
-      "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs";
-    health.ebaySignupUrl = "https://developer.ebay.com/my/keys";
-  }
+ if (!health.ebayConfigured) $("apiSetup")?.setAttribute("open", "");
+ renderAuthUI();
+ } catch {
+ health.ebayTip =
+ "Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)";
+ health.ebaySetupCommand =
+ "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs";
+ health.ebaySignupUrl = "https://developer.ebay.com/my/keys";
+ }
 }
 
 async function runScout(card) {
-  const res = await fetch("/api/scout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(card),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Scout failed");
-  return data;
+ const res = await fetch("/api/scout", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify(card),
+ });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error || "Scout failed");
+ return data;
 }
 
 async function handleScoutSubmit(e) {
-  e.preventDefault();
-  const card = formToCard($("scoutForm"));
-  const scoutBtn = $("scoutBtn");
-  const btnText = scoutBtn.querySelector(".btn-text");
-  const btnLoading = scoutBtn.querySelector(".btn-loading");
+ e.preventDefault();
+ const card = formToCard($("scoutForm"));
+ const scoutBtn = $("scoutBtn");
+ const btnText = scoutBtn.querySelector(".btn-text");
+ const btnLoading = scoutBtn.querySelector(".btn-loading");
 
-  scoutBtn.disabled = true;
-  btnText.classList.add("hidden");
-  btnLoading.classList.remove("hidden");
+ scoutBtn.disabled = true;
+ btnText.classList.add("hidden");
+ btnLoading.classList.remove("hidden");
 
-  try {
-    const data = await runScout(card);
-    const exactData = renderScoutResults(data, {
-      ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
-    });
-    lastScoutData = exactData;
-    lastScoutCard = exactData.card || card;
+ try {
+ const data = await runScout(card);
+ const exactData = renderScoutResults(data, {
+ ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
+ });
+ lastScoutData = exactData;
+ lastScoutCard = exactData.card || card;
 
-    state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
-    state.scoutCount = (state.scoutCount || 0) + 1;
-    saveState(state);
+ state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
+ state.scoutCount = (state.scoutCount || 0) + 1;
+ saveState(state);
 
-    const addBtn = $("addToCollectionBtn");
-    addBtn.disabled = false;
+ const addBtn = $("addToCollectionBtn");
+ addBtn.disabled = false;
 
-    const compBonus =
-      exactData.sources.ebaySold?.stats?.count || exactData.sources.ebayActive?.stats?.count
-        ? 15
-        : 0;
-    awardXp(state, 25 + compBonus);
-    state = loadState();
-    updateHeaderStats();
-    renderDashboard();
-  } catch (err) {
-    alert(err.message || "Something went wrong");
-  } finally {
-    scoutBtn.disabled = false;
-    btnText.classList.remove("hidden");
-    btnLoading.classList.add("hidden");
-  }
+ const compBonus =
+ exactData.sources.ebaySold?.stats?.count || exactData.sources.ebayActive?.stats?.count
+ ? 15
+ : 0;
+ awardXp(state, 25 + compBonus);
+ state = loadState();
+ updateHeaderStats();
+ renderDashboard();
+ } catch (err) {
+ alert(err.message || "Something went wrong");
+ } finally {
+ scoutBtn.disabled = false;
+ btnText.classList.remove("hidden");
+ btnLoading.classList.add("hidden");
+ }
 }
 
 function handleAddToCollection() {
-  if (!lastScoutCard) {
-    alert("Scout a card first, then add it to your collection.");
-    return;
-  }
-  const estimate = lastScoutData?.valuation?.estimate ?? null;
-  addToCollection(state, {
-    card: lastScoutCard,
-    estimatedValue: estimate,
-    scoutData: lastScoutData,
-  });
-  state = loadState();
-  updateHeaderStats();
-  const btn = $("addToCollectionBtn");
-  btn.textContent = "✓ Added to collection";
-  setTimeout(() => {
-    btn.textContent = "+ Add to collection";
-  }, 2000);
-  renderDashboard();
-  loadCardOfDay();
+ if (!lastScoutCard) {
+ alert("Scout a card first, then add it to your collection.");
+ return;
+ }
+ const estimate = lastScoutData?.valuation?.estimate ?? null;
+ addToCollection(state, {
+ card: lastScoutCard,
+ estimatedValue: estimate,
+ scoutData: lastScoutData,
+ });
+ state = loadState();
+ updateHeaderStats();
+ const btn = $("addToCollectionBtn");
+ btn.textContent = "✓ Added to collection";
+ setTimeout(() => {
+ btn.textContent = "+ Add to collection";
+ }, 2000);
+ renderDashboard();
+ loadCardOfDay();
 }
 
 async function runAiInsights() {
-  const coll = state.collection || [];
-  const panel = $("aiInsightsPanel");
-  const content = $("aiInsightsContent");
-  const btn = $("aiEstimateBtn");
+ const coll = state.collection || [];
+ const panel = $("aiInsightsPanel");
+ const content = $("aiInsightsContent");
+ const btn = $("aiEstimateBtn");
 
-  if (!coll.length) {
-    alert("Add cards to your collection first.");
-    return;
-  }
+ if (!coll.length) {
+ alert("Add cards to your collection first.");
+ return;
+ }
 
-  btn.disabled = true;
-  btn.textContent = "Analyzing…";
-  panel.classList.remove("hidden");
-  content.innerHTML = `<p class="muted-text">Running AI portfolio analysis across ${coll.length} cards…</p>`;
+ btn.disabled = true;
+ btn.textContent = "Analyzing…";
+ panel.classList.remove("hidden");
+ content.innerHTML = ` Running AI portfolio analysis across ${coll.length} cards… `;
 
-  try {
-    const res = await fetch("/api/collection/ai-insights", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries: coll }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Analysis failed");
+ try {
+ const res = await fetch("/api/collection/ai-insights", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ entries: coll }),
+ });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error || "Analysis failed");
 
-    let html = `<p class="ai-summary">${escapeHtml(data.summary)}</p>`;
+ let html = ` ${escapeHtml(data.summary)} `;
 
-    if (data.aiNarrative) {
-      html += `<div class="ai-narrative">${escapeHtml(data.aiNarrative).replace(/\n/g, "<br>")}</div>`;
-    }
+ if (data.aiNarrative) {
+ html += ` ${escapeHtml(data.aiNarrative).replace(/\n/g, " ")} `;
+ }
 
-    if (data.insights?.length) {
-      html += `<div class="ai-insights-list">${data.insights
-        .map(
-          (i) =>
-            `<div class="ai-insight ${i.type}"><strong>${escapeHtml(i.title)}</strong><p>${escapeHtml(i.text)}</p></div>`
-        )
-        .join("")}</div>`;
-    }
+ if (data.insights?.length) {
+ html += ` ${data.insights
+ .map(
+ (i) =>
+ ` ${escapeHtml(i.title)} ${escapeHtml(i.text)} `
+ )
+ .join("")} `;
+ }
 
-    if (data.topCards?.length) {
-      html += `<h4>Top holdings</h4><ul class="ai-top-list">${data.topCards
-        .map((c) => `<li>${escapeHtml(c.title)} — <strong>${formatUsd(c.estimate)}</strong></li>`)
-        .join("")}</ul>`;
-    }
+ if (data.topCards?.length) {
+ html += ` Top holdings ${data.topCards
+ .map((c) => ` ${escapeHtml(c.title)} — ${formatUsd(c.estimate)} `)
+ .join("")} `;
+ }
 
-    if (data.recommendations?.length) {
-      html += `<h4>Recommendations</h4><ul class="ai-rec-list">${data.recommendations
-        .map((r) => `<li>${escapeHtml(r)}</li>`)
-        .join("")}</ul>`;
-    }
+ if (data.recommendations?.length) {
+ html += ` Recommendations ${data.recommendations
+ .map((r) => ` ${escapeHtml(r)} `)
+ .join("")} `;
+ }
 
-    html += `<p class="ai-mode muted-text">Analysis mode: ${data.mode === "openai" ? "OpenAI enhanced" : "Smart market heuristics"}</p>`;
-    content.innerHTML = html;
-  } catch (err) {
-    content.innerHTML = `<p class="alert-box">${escapeHtml(err.message)}</p>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "🤖 AI collection insight";
-  }
+ html += ` Analysis mode: ${data.mode === "openai" ? "OpenAI enhanced" : "Smart market heuristics"} `;
+ content.innerHTML = html;
+ } catch (err) {
+ content.innerHTML = ` ${escapeHtml(err.message)} `;
+ } finally {
+ btn.disabled = false;
+ btn.textContent = "🤖 AI collection insight";
+ }
 }
 async function refreshCollectionValues() {
-  const coll = state.collection || [];
-  if (!coll.length) return;
+ const coll = state.collection || [];
+ if (!coll.length) return;
 
-  const btn = $("refreshCollectionBtn");
-  btn.disabled = true;
-  btn.textContent = "Estimating…";
+ const btn = $("refreshCollectionBtn");
+ btn.disabled = true;
+ btn.textContent = "Estimating…";
 
-  try {
-    const res = await fetch("/api/collection/estimate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries: coll }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Estimate failed");
+ try {
+ const res = await fetch("/api/collection/estimate", {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ entries: coll }),
+ });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error || "Estimate failed");
 
-    for (const item of data.items) {
-      const patch = { lastScoutedAt: new Date().toISOString() };
-      if (item.estimate != null) patch.estimatedValue = item.estimate;
-      if (item.tier) patch.tier = item.tier;
-      updateCollectionEntry(state, item.id, patch);
-    }
-    state = loadState();
-    renderCollection();
-    renderProfile();
-    updateHeaderStats();
-    renderDashboard();
+ for (const item of data.items) {
+ const patch = { lastScoutedAt: new Date().toISOString() };
+ if (item.estimate != null) patch.estimatedValue = item.estimate;
+ if (item.tier) patch.tier = item.tier;
+ updateCollectionEntry(state, item.id, patch);
+ }
+ state = loadState();
+ renderCollection();
+ renderProfile();
+ updateHeaderStats();
+ renderDashboard();
 
-    if (data.total != null) {
-      $("collectionTotalValue").textContent = formatUsd(data.total);
-    }
-  } catch (err) {
-    alert(err.message || "Could not refresh values");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Refresh all values";
-  }
+ if (data.total != null) {
+ $("collectionTotalValue").textContent = formatUsd(data.total);
+ }
+ } catch (err) {
+ alert(err.message || "Could not refresh values");
+ } finally {
+ btn.disabled = false;
+ btn.textContent = "Refresh all values";
+ }
 }
 
 function handleManualAdd(e) {
-  e.preventDefault();
-  const card = formToCard($("manualAddForm"));
-  if (!card.title?.trim()) return;
+ e.preventDefault();
+ const card = formToCard($("manualAddForm"));
+ if (!card.title?.trim()) return;
 
-  const manualVal = parseFloat($("manualValue").value);
-  addToCollection(state, {
-    card,
-    estimatedValue: Number.isFinite(manualVal) ? manualVal : null,
-  });
-  state = loadState();
-  $("manualAddForm").reset();
-  renderCollection();
-  updateHeaderStats();
-  renderDashboard();
-  renderProfile();
+ const manualVal = parseFloat($("manualValue").value);
+ addToCollection(state, {
+ card,
+ estimatedValue: Number.isFinite(manualVal) ? manualVal : null,
+ });
+ state = loadState();
+ $("manualAddForm").reset();
+ renderCollection();
+ updateHeaderStats();
+ renderDashboard();
+ renderProfile();
 }
 
 function initNavigation() {
-  document.querySelectorAll("[data-nav]").forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      navigate(el.dataset.nav);
-    });
-  });
+ document.querySelectorAll("[data-nav]").forEach((el) => {
+ el.addEventListener("click", (e) => {
+ e.preventDefault();
+ navigate(el.dataset.nav);
+ });
+ });
 
-  document.querySelectorAll("[data-goto]").forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      const target = el.dataset.goto;
-      if (target === "last-scout" && state.lastScout?.data) {
-        navigate("scout");
-        lastScoutData = state.lastScout.data;
-        lastScoutCard = state.lastScout.card;
-        renderScoutResults(state.lastScout.data, {
-          ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
-        });
-        if (state.lastScout.card) fillScoutForm($("scoutForm"), state.lastScout.card);
-      } else {
-        navigate(target);
-      }
-    });
-  });
+ document.querySelectorAll("[data-goto]").forEach((el) => {
+ el.addEventListener("click", (e) => {
+ e.preventDefault();
+ const target = el.dataset.goto;
+ if (target === "last-scout" && state.lastScout?.data) {
+ navigate("scout");
+ lastScoutData = state.lastScout.data;
+ lastScoutCard = state.lastScout.card;
+ renderScoutResults(state.lastScout.data, {
+ ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
+ });
+ if (state.lastScout.card) fillScoutForm($("scoutForm"), state.lastScout.card);
+ } else {
+ navigate(target);
+ }
+ });
+ });
 }
 
 function initProfileForm() {
-  $("profileNameInput").value = state.profile?.displayName || "";
-  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
-  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
-  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
-  $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
-  captureProfileFormSnapshot();
+ $("profileNameInput").value = state.profile?.displayName || "";
+ $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
+ $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
+ $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
+ $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
+ captureProfileFormSnapshot();
 
-  for (const id of [
-    "profileNameInput",
-    "profileFavoritePlayer",
-    "profileFavoriteTeam",
-    "profileCollectorStyle",
-    "profilePublicLb",
-  ]) {
-    $(id)?.addEventListener("input", syncProfileSaveButton);
-    $(id)?.addEventListener("change", syncProfileSaveButton);
-  }
+ for (const id of [
+ "profileNameInput",
+ "profileFavoritePlayer",
+ "profileFavoriteTeam",
+ "profileCollectorStyle",
+ "profilePublicLb",
+ ]) {
+ $(id)?.addEventListener("input", syncProfileSaveButton);
+ $(id)?.addEventListener("change", syncProfileSaveButton);
+ }
 
-  $("saveProfileBtn").addEventListener("click", () => {
-    state.profile = state.profile || {};
-    state.profile.displayName = $("profileNameInput").value.trim() || "Scout";
-    state.profile.favoritePlayer = $("profileFavoritePlayer").value.trim();
-    state.profile.favoriteTeam = $("profileFavoriteTeam").value.trim();
-    state.profile.collectorStyle = $("profileCollectorStyle").value;
-    state.profile.publicLeaderboard = $("profilePublicLb")?.checked || false;
-    saveState(state);
-    captureProfileFormSnapshot();
-    renderProfile();
-    updateHeaderStats();
-    loadLeaderboard();
-  });
+ $("saveProfileBtn").addEventListener("click", () => {
+ state.profile = state.profile || {};
+ state.profile.displayName = $("profileNameInput").value.trim() || "Scout";
+ state.profile.favoritePlayer = $("profileFavoritePlayer").value.trim();
+ state.profile.favoriteTeam = $("profileFavoriteTeam").value.trim();
+ state.profile.collectorStyle = $("profileCollectorStyle").value;
+ state.profile.publicLeaderboard = $("profilePublicLb")?.checked || false;
+ saveState(state);
+ captureProfileFormSnapshot();
+ renderProfile();
+ updateHeaderStats();
+ loadLeaderboard();
+ });
 }
 
 function initAuth() {
-  loadStoredSession();
+ loadStoredSession();
 
-  onStateChange((s) => {
-    if (isLoggedIn()) {
-      scheduleCloudSync(s, { publicLeaderboard: s.profile?.publicLeaderboard });
-    }
-  });
+ onStateChange((s) => {
+ if (isLoggedIn()) {
+ scheduleCloudSync(s, { publicLeaderboard: s.profile?.publicLeaderboard });
+ }
+ });
 
-  setAuthChangeHandler(({ user, state: cloudState, mode }) => {
-    if (mode === "logout") {
-      closeAuthModal();
-      renderAuthUI();
-      return;
-    }
-    if (cloudState) applyCloudState(cloudState);
-    closeAuthModal();
-    renderAuthUI();
-    loadLeaderboard();
-    renderProfileSocial(state);
-  });
+ setAuthChangeHandler(({ user, state: cloudState, mode }) => {
+ if (mode === "logout") {
+ closeAuthModal();
+ renderAuthUI();
+ return;
+ }
+ if (cloudState) applyCloudState(cloudState);
+ closeAuthModal();
+ renderAuthUI();
+ loadLeaderboard();
+ renderProfileSocial(state);
+ });
 
-  $("authHeaderBtn")?.addEventListener("click", () => {
-    if (isLoggedIn()) {
-      logout();
-      return;
-    }
-    openAuthModal("login");
-  });
+ $("authHeaderBtn")?.addEventListener("click", () => {
+ if (isLoggedIn()) {
+ logout();
+ return;
+ }
+ openAuthModal("login");
+ });
 
-  $("profileAuthBtn")?.addEventListener("click", () => {
-    if (isLoggedIn()) {
-      logout();
-      return;
-    }
-    openAuthModal("login");
-  });
+ $("profileAuthBtn")?.addEventListener("click", () => {
+ if (isLoggedIn()) {
+ logout();
+ return;
+ }
+ openAuthModal("login");
+ });
 
-  $("mobileAuthHint")?.addEventListener("click", () => openAuthModal("login"));
+ $("mobileAuthHint")?.addEventListener("click", () => openAuthModal("login"));
 
-  $("authModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeAuthModal);
-  $("authModalClose")?.addEventListener("click", closeAuthModal);
+ $("authModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeAuthModal);
+ $("authModalClose")?.addEventListener("click", closeAuthModal);
 
-  $("authForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const mode = $("authSubmitBtn")?.dataset.mode || "login";
-    const email = $("authEmail").value.trim();
-    const password = $("authPassword").value;
-    const displayName = $("authDisplayName")?.value?.trim();
-    $("authError").textContent = "";
-    $("authSubmitBtn").disabled = true;
-    try {
-      const guestState = loadState();
-      if (mode === "register") {
-        await register({ email, password, displayName, guestState });
-      } else {
-        await login({ email, password, guestState });
-      }
-    } catch (err) {
-      $("authError").textContent = err.message;
-    } finally {
-      $("authSubmitBtn").disabled = false;
-    }
-  });
+ $("authForm")?.addEventListener("submit", async (e) => {
+ e.preventDefault();
+ const mode = $("authSubmitBtn")?.dataset.mode || "login";
+ const email = $("authEmail").value.trim();
+ const password = $("authPassword").value;
+ const displayName = $("authDisplayName")?.value?.trim();
+ $("authError").textContent = "";
+ $("authSubmitBtn").disabled = true;
+ try {
+ const guestState = loadState();
+ if (mode === "register") {
+ await register({ email, password, displayName, guestState });
+ } else {
+ await login({ email, password, guestState });
+ }
+ } catch (err) {
+ $("authError").textContent = err.message;
+ } finally {
+ $("authSubmitBtn").disabled = false;
+ }
+ });
 
-  document.addEventListener("click", (e) => {
-    const sw = e.target.closest("[data-auth-switch]");
-    if (sw) openAuthModal(sw.dataset.authSwitch);
-  });
+ document.addEventListener("click", (e) => {
+ const sw = e.target.closest("[data-auth-switch]");
+ if (sw) openAuthModal(sw.dataset.authSwitch);
+ });
 }
 
 async function bootstrapSession() {
+  loadStoredSession();
+  renderAuthUI();
+
   if (isLoggedIn()) {
-    try {
-      const data = await fetchCloudState();
-      if (data?.state) applyCloudState(data.state);
-    } catch {
-      /* guest cache remains */
+    const cloudState = await refreshCloudState();
+    if (cloudState) {
+      applyCloudState(cloudState);
     }
   }
+
   renderAuthUI();
   renderProfileSocial(state);
 }
 
-function init() {
-  initNavigation();
-  initPwa();
-  initAuth();
-  setupResultTabs();
-  initListingModal();
-  initSocialUI({ getState: () => state, openAuthModal });
-  $("scoutForm").addEventListener("submit", handleScoutSubmit);
-  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
-  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
-  $("aiEstimateBtn").addEventListener("click", runAiInsights);
-  $("manualAddForm").addEventListener("submit", handleManualAdd);
-  $("cowScoutBtn")?.addEventListener("click", () => {
-    if (!cardOfDayData?.card) return;
-    navigate("scout");
-    fillScoutForm($("scoutForm"), cardOfDayData.card);
-    $("scoutForm").requestSubmit();
-  });
-  initProfileForm();
-
-  updateHeaderStats();
-  checkHealth().then(async () => {
-    await bootstrapSession();
+function setupSessionPersistence() {
+  window.addEventListener("pageshow", async () => {
+    loadStoredSession();
+    renderAuthUI();
+    if (!isLoggedIn()) return;
+    const cloudState = await refreshCloudState();
+    if (cloudState) applyCloudState(cloudState);
+    renderAuthUI();
     renderDashboard();
-    navigate("dashboard");
+    renderCollection();
+    renderProfile();
   });
+
+  window.addEventListener("online", () => {
+    if (!isLoggedIn()) return;
+    scheduleCloudSync(state, { publicLeaderboard: state.profile?.publicLeaderboard });
+    refreshCloudState().then((cloudState) => {
+      if (cloudState) applyCloudState(cloudState);
+    });
+  });
+}
+
+function init() {
+  loadStoredSession();
+  initNavigation();
+ initPwa();
+  initAuth();
+  setupSessionPersistence();
+  setupResultTabs();
+ initListingModal();
+ initSocialUI({ getState: () => state, openAuthModal });
+ $("scoutForm").addEventListener("submit", handleScoutSubmit);
+ $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
+ $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
+ $("aiEstimateBtn").addEventListener("click", runAiInsights);
+ $("manualAddForm").addEventListener("submit", handleManualAdd);
+ $("cowScoutBtn")?.addEventListener("click", () => {
+ if (!cardOfDayData?.card) return;
+ navigate("scout");
+ fillScoutForm($("scoutForm"), cardOfDayData.card);
+ $("scoutForm").requestSubmit();
+ });
+ initProfileForm();
+
+ updateHeaderStats();
+ checkHealth().then(async () => {
+ await bootstrapSession();
+ renderDashboard();
+ navigate("dashboard");
+ });
 }
 
 init();

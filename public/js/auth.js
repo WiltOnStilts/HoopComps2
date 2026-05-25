@@ -6,20 +6,26 @@ let authToken = null;
 let syncTimer = null;
 let onAuthChange = null;
 
-export function setAuthChangeHandler(fn) {
-  onAuthChange = fn;
+function decodeJwtPayload(token) {
+  try {
+    const body = token.split(".")[1];
+    if (!body) return null;
+    const json = atob(body.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
 }
 
-export function getAuthToken() {
-  return authToken || localStorage.getItem(TOKEN_KEY);
-}
-
-export function getCurrentUser() {
-  return currentUser;
-}
-
-export function isLoggedIn() {
-  return Boolean(getAuthToken());
+function userFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.sub) return null;
+  const email = payload.email || "";
+  return {
+    id: payload.sub,
+    email,
+    displayName: email.split("@")[0] || "Scout",
+  };
 }
 
 function persistSession(token, user) {
@@ -34,21 +40,59 @@ function persistSession(token, user) {
   }
 }
 
+export function setAuthChangeHandler(fn) {
+  onAuthChange = fn;
+}
+
+export function getAuthToken() {
+  return authToken || localStorage.getItem(TOKEN_KEY);
+}
+
+export function getCurrentUser() {
+  if (currentUser) return currentUser;
+  const token = getAuthToken();
+  if (!token) return null;
+  const user = userFromToken(token);
+  if (user) currentUser = user;
+  return currentUser;
+}
+
+export function isLoggedIn() {
+  return Boolean(getAuthToken());
+}
+
 export function loadStoredSession() {
   let token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem("compscourt_token");
   let userRaw = localStorage.getItem(USER_KEY) || localStorage.getItem("compscourt_user");
-  if (token && userRaw) {
-    authToken = token;
-    if (token !== localStorage.getItem(TOKEN_KEY)) {
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, userRaw);
-    }
+
+  if (token && token !== localStorage.getItem(TOKEN_KEY)) {
+    localStorage.setItem(TOKEN_KEY, token);
+    if (userRaw) localStorage.setItem(USER_KEY, userRaw);
+  }
+
+  if (!token) {
+    authToken = null;
+    currentUser = null;
+    return { token: null, user: null };
+  }
+
+  authToken = token;
+
+  if (userRaw) {
     try {
       currentUser = JSON.parse(userRaw);
     } catch {
       currentUser = null;
     }
   }
+
+  if (!currentUser) {
+    currentUser = userFromToken(token);
+    if (currentUser) {
+      localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+    }
+  }
+
   return { token: authToken, user: currentUser };
 }
 
@@ -62,7 +106,11 @@ export async function authFetch(path, options = {}) {
 
   const res = await fetch(path, { ...options, headers });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Request failed");
+  if (!res.ok) {
+    const err = new Error(data.error || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -82,7 +130,12 @@ export async function login({ email, password, guestState }) {
     body: JSON.stringify({ email, password, guestState }),
   });
   persistSession(data.token, data.user);
-  onAuthChange?.({ user: data.user, state: data.state, mode: "login", publicLeaderboard: data.publicLeaderboard });
+  onAuthChange?.({
+    user: data.user,
+    state: data.state,
+    mode: "login",
+    publicLeaderboard: data.publicLeaderboard,
+  });
   return data;
 }
 
@@ -96,9 +149,14 @@ export async function fetchCloudState() {
   try {
     return await authFetch("/api/user/state");
   } catch {
-    logout();
+    // Keep the saved session — never auto sign-out when the server is slow or offline.
     return null;
   }
+}
+
+export async function refreshCloudState() {
+  const data = await fetchCloudState();
+  return data?.state ?? null;
 }
 
 export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
@@ -111,7 +169,7 @@ export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
         body: JSON.stringify({ state, publicLeaderboard }),
       });
     } catch {
-      /* silent — will retry on next save */
+      /* local copy stays saved; will retry later */
     }
   }, 800);
 }

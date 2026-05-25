@@ -18,6 +18,7 @@ import {
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
 import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
+import { usesPostgresSocial } from "./lib/social-store.mjs";
 import {
   registerUser,
   loginUser,
@@ -163,19 +164,21 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && url === "/api/health") {
     const hasId = Boolean(process.env.EBAY_APP_ID);
     const hasSecret = Boolean(process.env.EBAY_CLIENT_SECRET);
+    const stats = isDbReady()
+      ? {
+          communityCards: (await getCommunityCardStats()).cardCount,
+          leaderboardEntries: (await getLeaderboard()).length,
+        }
+      : {};
     send(res, 200, {
       ok: true,
       siteName: SITE_NAME,
       tagline: "Scout basketball card values",
       multiUserEnabled: isDbReady(),
       storageMode: storageMode(),
-      userCount: isDbReady() ? countUsers() : 0,
-      ...(isDbReady()
-        ? {
-            communityCards: getCommunityCardStats().cardCount,
-            leaderboardEntries: getLeaderboard().length,
-          }
-        : {}),
+      socialStorageMode: usesPostgresSocial() ? "postgres" : isDbReady() ? "file" : "none",
+      userCount: isDbReady() ? await countUsers() : 0,
+      ...stats,
       ebayConfigured: hasId && hasSecret,
       ebayAppIdSet: hasId,
       ebayClientSecretSet: hasSecret,
@@ -197,17 +200,17 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const body = await readBody(req);
-      const result = registerUser({
+      const result = await registerUser({
         email: body.email,
         password: body.password,
         displayName: body.displayName,
       });
       if (body.guestState) {
-        const merged = alignStateWithAccountDisplayName(
+        const merged = await alignStateWithAccountDisplayName(
           result.user.id,
           mergeGuestIntoCloud(body.guestState, result.state)
         );
-        saveUserState(result.user.id, merged, {
+        await saveUserState(result.user.id, merged, {
           publicLeaderboard: merged.profile?.publicLeaderboard,
         });
         result.state = merged;
@@ -228,13 +231,13 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const body = await readBody(req);
-      const result = loginUser({ email: body.email, password: body.password });
+      const result = await loginUser({ email: body.email, password: body.password });
       if (body.guestState) {
-        const merged = alignStateWithAccountDisplayName(
+        const merged = await alignStateWithAccountDisplayName(
           result.user.id,
           mergeGuestIntoCloud(body.guestState, result.state)
         );
-        saveUserState(result.user.id, merged, {
+        await saveUserState(result.user.id, merged, {
           publicLeaderboard: merged.profile?.publicLeaderboard,
         });
         result.state = merged;
@@ -264,17 +267,17 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "Passwords do not match" });
         return;
       }
-      const result = resetPassword({
+      const result = await resetPassword({
         email,
         newPassword: body.newPassword,
         displayName: body.guestState?.profile?.displayName || body.displayName,
       });
       if (body.guestState) {
-        const merged = alignStateWithAccountDisplayName(
+        const merged = await alignStateWithAccountDisplayName(
           result.user.id,
           mergeGuestIntoCloud(body.guestState, result.state)
         );
-        saveUserState(result.user.id, merged, {
+        await saveUserState(result.user.id, merged, {
           publicLeaderboard: merged.profile?.publicLeaderboard,
         });
         result.state = merged;
@@ -289,13 +292,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url === "/api/user/state") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     if (req.method === "GET") {
-      const data = getUserState(user.id);
+      const data = await getUserState(user.id);
       send(res, 200, {
         state: data?.state,
         publicLeaderboard: data?.publicLeaderboard,
@@ -307,7 +310,7 @@ const server = http.createServer(async (req, res) => {
       try {
         const body = await readBody(req);
         if (!body.state) throw new Error("Missing state");
-        saveUserState(user.id, body.state, {
+        await saveUserState(user.id, body.state, {
           publicLeaderboard: body.publicLeaderboard ?? body.state?.profile?.publicLeaderboard,
         });
         const collection = body.state?.collection || [];
@@ -330,7 +333,7 @@ const server = http.createServer(async (req, res) => {
       send(res, 200, { entries: [] });
       return;
     }
-    send(res, 200, { entries: getLeaderboard() });
+    send(res, 200, { entries: await getLeaderboard() });
     return;
   }
 
@@ -339,8 +342,8 @@ const server = http.createServer(async (req, res) => {
     (url === "/api/card-of-day" || url === "/api/card-of-week")
   ) {
     try {
-      const communityCards = isDbReady() ? getAllCommunityCards() : [];
-      const { cards, spotlightUserIds } = buildSpotlightCommunityCards(
+      const communityCards = isDbReady() ? await getAllCommunityCards() : [];
+      const { cards, spotlightUserIds } = await buildSpotlightCommunityCards(
         communityCards,
         findUserByEmail
       );
@@ -363,13 +366,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && url === "/api/social/friends") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     try {
-      send(res, 200, getSocialOverview(user.id));
+      send(res, 200, await getSocialOverview(user.id));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -377,14 +380,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/social/friends/request") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     try {
       const body = await readBody(req);
-      send(res, 200, sendFriendRequest(user.id, body.email));
+      send(res, 200, await sendFriendRequest(user.id, body.email));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -392,14 +395,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/social/friends/respond") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     try {
       const body = await readBody(req);
-      send(res, 200, respondFriendRequest(user.id, body.requestId, body.action));
+      send(res, 200, await respondFriendRequest(user.id, body.requestId, body.action));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -407,14 +410,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "DELETE" && url?.startsWith("/api/social/friends/")) {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     const friendId = url.slice("/api/social/friends/".length);
     try {
-      send(res, 200, removeFriend(user.id, friendId));
+      send(res, 200, await removeFriend(user.id, friendId));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -422,14 +425,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && url?.startsWith("/api/social/users/")) {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     const targetId = url.slice("/api/social/users/".length);
     try {
-      send(res, 200, getFriendAccount(user.id, targetId));
+      send(res, 200, await getFriendAccount(user.id, targetId));
     } catch (e) {
       send(res, 403, { error: e.message });
     }
@@ -437,7 +440,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && url === "/api/social/profile-posts") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
@@ -445,7 +448,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const u = new URL(req.url, "http://localhost");
       const profileUserId = u.searchParams.get("userId") || user.id;
-      send(res, 200, listProfilePosts(user.id, profileUserId));
+      send(res, 200, await listProfilePosts(user.id, profileUserId));
     } catch (e) {
       send(res, 403, { error: e.message });
     }
@@ -453,7 +456,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/social/profile-posts") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
@@ -469,8 +472,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && url === "/api/card-of-day/comments") {
     try {
-      const viewer = requireUser(req);
-      send(res, 200, listCodComments(viewer?.id || null));
+      const viewer = await requireUser(req);
+      send(res, 200, await listCodComments(viewer?.id || null));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -478,13 +481,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/social/test-unban-comments") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in required" });
       return;
     }
     try {
-      send(res, 200, oneTimeTestUnban(user.id));
+      send(res, 200, await oneTimeTestUnban(user.id));
     } catch (e) {
       send(res, 403, { error: e.message });
     }
@@ -492,13 +495,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/card-of-day/comments/agree") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in to join the conversation" });
       return;
     }
     try {
-      send(res, 200, acceptCodCommentAgreement(user.id));
+      send(res, 200, await acceptCodCommentAgreement(user.id));
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -506,7 +509,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && url === "/api/card-of-day/comments") {
-    const user = requireUser(req);
+    const user = await requireUser(req);
     if (!user) {
       send(res, 401, { error: "Sign in to join the conversation" });
       return;
@@ -602,8 +605,10 @@ const server = http.createServer(async (req, res) => {
 const serverInstance = server.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🏀 ${SITE_NAME} running on port ${PORT}\n`);
   if (isDbReady()) {
-    console.log(`  Multi-user: enabled (${countUsers()} accounts, ${storageMode()})`);
-    console.log("  Collections sync to the cloud when users sign in\n");
+    countUsers().then((n) => {
+      console.log(`  Multi-user: enabled (${n} accounts, ${storageMode()})`);
+      console.log("  Collections sync to the cloud when users sign in\n");
+    });
   } else {
     console.log("  Multi-user: run npm install to enable accounts\n");
   }

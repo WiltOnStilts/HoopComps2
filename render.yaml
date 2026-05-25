@@ -11,7 +11,6 @@ services:
         generateValue: true
       - key: SITE_NAME
         value: HoopComps
-      - key: USE_FILE_STORE
-        value: "1"
       - key: SPOTLIGHT_USER_EMAILS
         value: builtwilt@icloud.com
+      # Set DATABASE_URL in the Render dashboard (Neon Postgres connection string)

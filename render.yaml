@@ -13,3 +13,5 @@ services:
         value: HoopComps
       - key: USE_FILE_STORE
         value: "1"
+      - key: SPOTLIGHT_USER_EMAILS
+        value: builtwilt@icloud.com

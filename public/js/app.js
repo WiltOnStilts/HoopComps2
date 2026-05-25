@@ -796,6 +796,7 @@ function initAuth() {
  closeAuthModal();
  renderAuthUI();
  loadLeaderboard();
+ loadCardOfDay();
  renderProfileSocial(state);
  });
 

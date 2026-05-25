@@ -3,3 +3,4 @@ node_modules/
 data/*.db
 data/*.db-*
 data/users.json
+data/spotlight-runtime.json

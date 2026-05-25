@@ -4,7 +4,8 @@
   "description": "HoopComps — basketball card value scout with multi-user cloud collections",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "export-spotlight": "node scripts/export-spotlight.mjs"
   },
   "engines": {
     "node": ">=18"

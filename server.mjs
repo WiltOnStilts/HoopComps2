@@ -11,7 +11,11 @@ import { fileURLToPath } from "url";
 import { buildQuery, scoutCard } from "./lib/scout.mjs";
 import { estimateCollection } from "./lib/collection.mjs";
 import { fetchListingDetail } from "./lib/ebay-browse.mjs";
-import { getCardOfDayWithScout, resolveSpotlightUserIds } from "./lib/card-of-day.mjs";
+import { getCardOfDayWithScout } from "./lib/card-of-day.mjs";
+import {
+  buildSpotlightCommunityCards,
+  persistSpotlightPool,
+} from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
 import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail } from "./lib/db.mjs";
 import {
@@ -264,11 +268,14 @@ const server = http.createServer(async (req, res) => {
   ) {
     try {
       const communityCards = isDbReady() ? getAllCommunityCards() : [];
-      const spotlightUserIds = isDbReady() ? resolveSpotlightUserIds(findUserByEmail) : [];
+      const { cards, spotlightUserIds } = buildSpotlightCommunityCards(
+        communityCards,
+        findUserByEmail
+      );
       const result = await getCardOfDayWithScout(
         scoutCard,
         ebayConfig(),
-        communityCards,
+        cards,
         spotlightUserIds
       );
       send(res, 200, result);

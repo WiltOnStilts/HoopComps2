@@ -31,7 +31,9 @@ import {
   scheduleCloudSync,
  fetchLeaderboard,
  setAuthChangeHandler,
+ pushCloudState,
 } from "./auth.js";
+import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, initSocialUI } from "./social-ui.js";
 
 const APP_NAME = "HoopComps";
@@ -849,15 +851,37 @@ function initAuth() {
  });
 }
 
+async function reconcileCloudState() {
+  if (!isLoggedIn()) return;
+  const localState = { ...state, collection: [...(state.collection || [])] };
+  const cloudState = await refreshCloudState();
+  if (!cloudState) return;
+
+  const merged = mergeLocalAndCloud(localState, cloudState);
+  applyCloudState(merged);
+
+  const localCount = localState.collection?.length || 0;
+  const cloudCount = cloudState.collection?.length || 0;
+  if (merged.collection.length > cloudCount || localCount > cloudCount) {
+    try {
+      await pushCloudState(merged, {
+        publicLeaderboard: merged.profile?.publicLeaderboard,
+      });
+      loadCardOfDay();
+    } catch {
+      scheduleCloudSync(merged, {
+        publicLeaderboard: merged.profile?.publicLeaderboard,
+      });
+    }
+  }
+}
+
 async function bootstrapSession() {
   loadStoredSession();
   renderAuthUI();
 
   if (isLoggedIn()) {
-    const cloudState = await refreshCloudState();
-    if (cloudState) {
-      applyCloudState(cloudState);
-    }
+    await reconcileCloudState();
   }
 
   renderAuthUI();
@@ -869,8 +893,7 @@ function setupSessionPersistence() {
     loadStoredSession();
     renderAuthUI();
     if (!isLoggedIn()) return;
-    const cloudState = await refreshCloudState();
-    if (cloudState) applyCloudState(cloudState);
+    await reconcileCloudState();
     renderAuthUI();
     renderDashboard();
     renderCollection();
@@ -879,10 +902,7 @@ function setupSessionPersistence() {
 
   window.addEventListener("online", () => {
     if (!isLoggedIn()) return;
-    scheduleCloudSync(state, { publicLeaderboard: state.profile?.publicLeaderboard });
-    refreshCloudState().then((cloudState) => {
-      if (cloudState) applyCloudState(cloudState);
-    });
+    reconcileCloudState();
   });
 }
 

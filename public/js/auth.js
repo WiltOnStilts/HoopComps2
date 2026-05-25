@@ -164,14 +164,19 @@ export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     try {
-      await authFetch("/api/user/state", {
-        method: "PUT",
-        body: JSON.stringify({ state, publicLeaderboard }),
-      });
+      await pushCloudState(state, { publicLeaderboard });
     } catch {
       /* local copy stays saved; will retry later */
     }
   }, 800);
+}
+
+export async function pushCloudState(state, { publicLeaderboard } = {}) {
+  if (!isLoggedIn()) return;
+  await authFetch("/api/user/state", {
+    method: "PUT",
+    body: JSON.stringify({ state, publicLeaderboard }),
+  });
 }
 
 export async function fetchLeaderboard() {

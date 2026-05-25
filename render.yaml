@@ -15,7 +15,3 @@ services:
         value: "1"
       - key: SPOTLIGHT_USER_EMAILS
         value: builtwilt@icloud.com
-    disk:
-      name: hoopcomps-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1

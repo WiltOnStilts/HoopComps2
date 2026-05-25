@@ -1,22 +1,14 @@
-const CACHE = "hoopcomps-v9";
+const CACHE = "hoopcomps-v10";
 const ASSETS = [
-  "/",
-  "/index.html",
   "/css/styles.css",
   "/css/mobile.css",
   "/css/listings.css",
-  "/js/app.js",
-  "/js/auth.js",
-  "/js/storage.js",
-  "/js/scout-ui.js",
-  "/js/scout-exact.js",
-  "/js/listings-ui.js",
-  "/js/utils.js",
-  "/js/pwa.js",
   "/manifest.json",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",
 ];
+
+const NETWORK_FIRST = ["/", "/index.html", "/js/"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -31,15 +23,37 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+function isNetworkFirst(pathname) {
+  return NETWORK_FIRST.some((prefix) =>
+    prefix.endsWith("/") ? pathname === prefix || pathname === "/index.html" : pathname.startsWith(prefix)
+  );
+}
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.pathname.startsWith("/api/")) return;
+  if (e.request.method !== "GET") return;
+
+  if (isNetworkFirst(url.pathname)) {
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetchPromise = fetch(e.request)
         .then((res) => {
-          if (res.ok && e.request.method === "GET") {
+          if (res.ok) {
             const clone = res.clone();
             caches.open(CACHE).then((c) => c.put(e.request, clone));
           }

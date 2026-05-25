@@ -37,7 +37,6 @@ import {
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, initSocialUI } from "./social-ui.js";
-import { initCardScan, refreshCardScanButton, resetScanUi } from "./card-scan.js";
 
 const APP_NAME = "HoopComps";
 
@@ -1032,8 +1031,30 @@ function setupSessionPersistence() {
   });
 }
 
+let refreshCardScanButton = () => {};
+
+async function initCardScanFeature() {
+  try {
+    const scan = await import("./card-scan.js");
+    scan.resetScanUi();
+    scan.initCardScan({
+      onScoutCard: async (card) => {
+        fillScoutForm($("scoutForm"), card);
+        try {
+          await performScout(card);
+        } catch (err) {
+          alert(err.message || "Something went wrong");
+        }
+      },
+    });
+    refreshCardScanButton = scan.refreshCardScanButton;
+    refreshCardScanButton();
+  } catch (err) {
+    console.warn("Card scan module unavailable", err);
+  }
+}
+
 function init() {
-  resetScanUi();
   loadStoredSession();
   initNavigation();
  initPwa();
@@ -1042,16 +1063,7 @@ function init() {
   setupResultTabs();
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
- initCardScan({
-   onScoutCard: async (card) => {
-     fillScoutForm($("scoutForm"), card);
-     try {
-       await performScout(card);
-     } catch (err) {
-       alert(err.message || "Something went wrong");
-     }
-   },
- });
+ initCardScanFeature();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);

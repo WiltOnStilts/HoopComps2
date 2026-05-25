@@ -192,6 +192,8 @@ function pickBest(...results) {
   const withValue = results.find((r) => r?.value);
   return withValue || results[0] || { value: "", strength: "missing" };
 }
+
+function extractSet(text) {
   const hay = lower(text);
   for (const phrase of SET_PHRASES) {
     if (hay.includes(phrase)) {

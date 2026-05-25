@@ -21,6 +21,7 @@ import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommu
 import {
   registerUser,
   loginUser,
+  resetPassword,
   requireUser,
   getUserState,
   saveUserState,
@@ -77,6 +78,18 @@ function loadEnvFile() {
 }
 
 loadEnvFile();
+
+const passwordResetCooldown = new Map();
+const PASSWORD_RESET_COOLDOWN_MS = 60_000;
+
+function canResetPassword(email) {
+  const key = email?.toLowerCase()?.trim();
+  if (!key) return false;
+  const last = passwordResetCooldown.get(key) || 0;
+  if (Date.now() - last < PASSWORD_RESET_COOLDOWN_MS) return false;
+  passwordResetCooldown.set(key, Date.now());
+  return true;
+}
 
 const PUBLIC = path.join(__dirname, "public");
 const PORT = Number(process.env.PORT) || 3847;
@@ -231,6 +244,42 @@ const server = http.createServer(async (req, res) => {
       send(res, 200, result);
     } catch (e) {
       send(res, 401, { error: e.message });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/auth/reset-password") {
+    if (!isDbReady()) {
+      send(res, 503, { error: "Multi-user not available — run npm install on the server" });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      const email = body.email?.toLowerCase()?.trim();
+      if (!canResetPassword(email)) {
+        send(res, 429, { error: "Please wait a minute before trying again" });
+        return;
+      }
+      if (body.confirmPassword && body.newPassword !== body.confirmPassword) {
+        send(res, 400, { error: "Passwords do not match" });
+        return;
+      }
+      const result = resetPassword({ email, newPassword: body.newPassword });
+      if (body.guestState) {
+        const merged = alignStateWithAccountDisplayName(
+          result.user.id,
+          mergeGuestIntoCloud(body.guestState, result.state)
+        );
+        saveUserState(result.user.id, merged, {
+          publicLeaderboard: merged.profile?.publicLeaderboard,
+        });
+        result.state = merged;
+        result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
+        result.user.displayName = merged.profile?.displayName || result.user.displayName;
+      }
+      send(res, 200, result);
+    } catch (e) {
+      send(res, 400, { error: e.message });
     }
     return;
   }

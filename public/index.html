@@ -580,9 +580,16 @@ node server.mjs</code>
             <span>Password</span>
             <input type="password" id="authPassword" required minlength="6" autocomplete="current-password" placeholder="6+ characters" />
           </label>
+          <label class="field full auth-confirm-field hidden">
+            <span>Confirm password</span>
+            <input type="password" id="authPasswordConfirm" minlength="6" autocomplete="new-password" placeholder="Re-enter password" />
+          </label>
           <p id="authError" class="auth-error"></p>
           <button type="submit" class="btn-scout" id="authSubmitBtn">Sign in</button>
         </form>
+        <p id="authForgotRow" class="auth-switch muted-text">
+          <a href="#" data-auth-switch="reset">Forgot password?</a>
+        </p>
         <p id="authSwitchText" class="auth-switch muted-text"></p>
       </div>
     </div>

@@ -26,7 +26,8 @@ import {
  getCurrentUser,
  register,
  login,
-  logout,
+ resetPassword,
+ logout,
  refreshCloudState,
  fetchCloudState,
  scheduleCloudSync,
@@ -243,14 +244,31 @@ function renderAuthUI() {
 function openAuthModal(mode = "login") {
  $("authModal")?.classList.remove("hidden");
  document.body.classList.add("modal-open");
- $("authModalTitle").textContent = mode === "register" ? "Create account" : "Sign in";
- $("authSubmitBtn").textContent = mode === "register" ? "Create account" : "Sign in";
+ const titles = {
+   register: "Create account",
+   login: "Sign in",
+   reset: "Reset password",
+ };
+ const buttons = {
+   register: "Create account",
+   login: "Sign in",
+   reset: "Set new password",
+ };
+ $("authModalTitle").textContent = titles[mode] || "Sign in";
+ $("authSubmitBtn").textContent = buttons[mode] || "Sign in";
  $("authSubmitBtn").dataset.mode = mode;
  document.querySelector(".auth-name-field")?.classList.toggle("hidden", mode !== "register");
- $("authSwitchText").innerHTML =
- mode === "register"
- ? `Already have an account? Sign in `
- : `New here? Create free account `;
+ document.querySelector(".auth-confirm-field")?.classList.toggle("hidden", mode !== "reset");
+ $("authForgotRow")?.classList.toggle("hidden", mode !== "login");
+ $("authPassword").autocomplete = mode === "register" || mode === "reset" ? "new-password" : "current-password";
+ $("authEmail").autocomplete = mode === "login" ? "username email" : "email";
+ if (mode === "reset") {
+   $("authSwitchText").innerHTML = `Remember it now? <a href="#" data-auth-switch="login">Sign in</a>`;
+ } else if (mode === "register") {
+   $("authSwitchText").innerHTML = `Already have an account? <a href="#" data-auth-switch="login">Sign in</a>`;
+ } else {
+   $("authSwitchText").innerHTML = `New here? <a href="#" data-auth-switch="register">Create free account</a>`;
+ }
  $("authError").textContent = "";
 }
 
@@ -846,8 +864,9 @@ function initAuth() {
  $("authForm")?.addEventListener("submit", async (e) => {
  e.preventDefault();
  const mode = $("authSubmitBtn")?.dataset.mode || "login";
- const email = $("authEmail").value.trim();
+ const email = $("authEmail").value.trim().toLowerCase();
  const password = $("authPassword").value;
+ const confirmPassword = $("authPasswordConfirm")?.value || "";
  const displayName = $("authDisplayName")?.value?.trim();
  $("authError").textContent = "";
  $("authSubmitBtn").disabled = true;
@@ -855,6 +874,11 @@ function initAuth() {
  const guestState = loadState();
  if (mode === "register") {
  await register({ email, password, displayName, guestState });
+ } else if (mode === "reset") {
+ if (password !== confirmPassword) {
+ throw new Error("Passwords do not match");
+ }
+ await resetPassword({ email, newPassword: password, confirmPassword, guestState });
  } else {
  await login({ email, password, guestState });
  }

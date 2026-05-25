@@ -114,6 +114,21 @@ export async function authFetch(path, options = {}) {
   return data;
 }
 
+export async function resetPassword({ email, newPassword, confirmPassword, guestState }) {
+  const data = await authFetch("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, newPassword, confirmPassword, guestState }),
+  });
+  persistSession(data.token, data.user);
+  onAuthChange?.({
+    user: data.user,
+    state: data.state,
+    mode: "reset",
+    publicLeaderboard: data.publicLeaderboard,
+  });
+  return data;
+}
+
 export async function register({ email, password, displayName, guestState }) {
   const data = await authFetch("/api/auth/register", {
     method: "POST",

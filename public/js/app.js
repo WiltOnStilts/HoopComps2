@@ -37,6 +37,7 @@ import {
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, initSocialUI } from "./social-ui.js";
+import { initCardScan, refreshCardScanButton } from "./card-scan.js";
 
 const APP_NAME = "HoopComps";
 
@@ -554,6 +555,7 @@ async function checkHealth() {
 
  if (!health.ebayConfigured) $("apiSetup")?.setAttribute("open", "");
  renderAuthUI();
+ refreshCardScanButton();
  } catch {
  health.ebayTip =
  "Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)";
@@ -574,47 +576,54 @@ async function runScout(card) {
  return data;
 }
 
+async function performScout(card) {
+  const scoutBtn = $("scoutBtn");
+  const btnText = scoutBtn.querySelector(".btn-text");
+  const btnLoading = scoutBtn.querySelector(".btn-loading");
+
+  scoutBtn.disabled = true;
+  btnText.classList.add("hidden");
+  btnLoading.classList.remove("hidden");
+
+  try {
+    const data = await runScout(card);
+    const exactData = renderScoutResults(data, {
+      ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
+    });
+    lastScoutData = exactData;
+    lastScoutCard = exactData.card || card;
+
+    state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
+    state.scoutCount = (state.scoutCount || 0) + 1;
+    saveState(state);
+
+    const addBtn = $("addToCollectionBtn");
+    addBtn.disabled = false;
+
+    const compBonus =
+      exactData.sources.ebaySold?.stats?.count || exactData.sources.ebayActive?.stats?.count
+        ? 15
+        : 0;
+    awardXp(state, 25 + compBonus);
+    state = loadState();
+    updateHeaderStats();
+    renderDashboard();
+  } finally {
+    scoutBtn.disabled = false;
+    btnText.classList.remove("hidden");
+    btnLoading.classList.add("hidden");
+  }
+}
+
 async function handleScoutSubmit(e) {
- e.preventDefault();
- const card = formToCard($("scoutForm"));
- const scoutBtn = $("scoutBtn");
- const btnText = scoutBtn.querySelector(".btn-text");
- const btnLoading = scoutBtn.querySelector(".btn-loading");
+  e.preventDefault();
+  const card = formToCard($("scoutForm"));
 
- scoutBtn.disabled = true;
- btnText.classList.add("hidden");
- btnLoading.classList.remove("hidden");
-
- try {
- const data = await runScout(card);
- const exactData = renderScoutResults(data, {
- ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
- });
- lastScoutData = exactData;
- lastScoutCard = exactData.card || card;
-
- state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
- state.scoutCount = (state.scoutCount || 0) + 1;
- saveState(state);
-
- const addBtn = $("addToCollectionBtn");
- addBtn.disabled = false;
-
- const compBonus =
- exactData.sources.ebaySold?.stats?.count || exactData.sources.ebayActive?.stats?.count
- ? 15
- : 0;
- awardXp(state, 25 + compBonus);
- state = loadState();
- updateHeaderStats();
- renderDashboard();
- } catch (err) {
- alert(err.message || "Something went wrong");
- } finally {
- scoutBtn.disabled = false;
- btnText.classList.remove("hidden");
- btnLoading.classList.add("hidden");
- }
+  try {
+    await performScout(card);
+  } catch (err) {
+    alert(err.message || "Something went wrong");
+  }
 }
 
 function handleAddToCollection() {
@@ -1036,6 +1045,17 @@ function init() {
   setupResultTabs();
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
+ initCardScan({
+   isScanEnabled: () => Boolean(health.cardScanEnabled),
+   onScoutCard: async (card) => {
+     fillScoutForm($("scoutForm"), card);
+     try {
+       await performScout(card);
+     } catch (err) {
+       alert(err.message || "Something went wrong");
+     }
+   },
+ });
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);

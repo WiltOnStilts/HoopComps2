@@ -1,8 +1,9 @@
-const CACHE = "hoopcomps-v11";
+const CACHE = "hoopcomps-v13";
 const ASSETS = [
   "/css/styles.css",
   "/css/mobile.css",
   "/css/listings.css",
+  "/css/card-scan.css",
   "/manifest.json",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",

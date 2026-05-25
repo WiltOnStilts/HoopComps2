@@ -17,6 +17,7 @@ import {
   persistSpotlightPool,
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
+import { scanCardFromImage, isCardScanConfigured } from "./lib/card-scan.mjs";
 import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
 import { usesPostgresSocial } from "./lib/social-store.mjs";
 import {
@@ -185,6 +186,7 @@ const server = http.createServer(async (req, res) => {
       ebayApi: "browse",
       priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
       openAiConfigured: Boolean(process.env.OPENAI_API_KEY),
+      cardScanEnabled: isCardScanConfigured(),
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",
@@ -556,6 +558,17 @@ const server = http.createServer(async (req, res) => {
       send(res, 200, result);
     } catch (e) {
       send(res, 400, { error: e.message || "Estimate failed" });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/scout/scan") {
+    try {
+      const body = await readBody(req);
+      const result = await scanCardFromImage(body);
+      send(res, 200, result);
+    } catch (e) {
+      send(res, 400, { error: e.message || "Card scan failed" });
     }
     return;
   }

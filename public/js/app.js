@@ -259,7 +259,7 @@ function openAuthModal(mode = "login") {
  $("authSubmitBtn").dataset.mode = mode;
  document.querySelector(".auth-name-field")?.classList.toggle("hidden", mode !== "register");
  document.querySelector(".auth-confirm-field")?.classList.toggle("hidden", mode !== "reset");
- $("authForgotRow")?.classList.toggle("hidden", mode !== "login");
+ $("authForgotBtn")?.classList.toggle("hidden", mode !== "login");
  $("authPassword").autocomplete = mode === "register" || mode === "reset" ? "new-password" : "current-password";
  $("authEmail").autocomplete = mode === "login" ? "username email" : "email";
  if (mode === "reset") {
@@ -860,6 +860,7 @@ function initAuth() {
 
  $("authModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeAuthModal);
  $("authModalClose")?.addEventListener("click", closeAuthModal);
+ $("authForgotBtn")?.addEventListener("click", () => openAuthModal("reset"));
 
  $("authForm")?.addEventListener("submit", async (e) => {
  e.preventDefault();
@@ -884,6 +885,9 @@ function initAuth() {
  }
  } catch (err) {
  $("authError").textContent = err.message;
+ if (mode === "login" && /password/i.test(err.message)) {
+   $("authForgotBtn")?.classList.remove("hidden");
+ }
  } finally {
  $("authSubmitBtn").disabled = false;
  }

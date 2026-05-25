@@ -969,6 +969,19 @@ select:focus {
   font-size: 0.85rem;
 }
 
+.auth-forgot-btn {
+  margin-top: 0.65rem;
+}
+
+.auth-forgot-btn.hidden {
+  display: none;
+}
+
+.auth-switch a {
+  color: var(--blue-light);
+  font-weight: 700;
+}
+
 .link-btn {
   background: none;
   border: none;

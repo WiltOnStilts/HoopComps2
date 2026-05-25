@@ -1,4 +1,4 @@
-const CACHE = "hoopcomps-v13";
+const CACHE = "hoopcomps-v14";
 const ASSETS = [
   "/css/styles.css",
   "/css/mobile.css",

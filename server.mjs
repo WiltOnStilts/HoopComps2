@@ -17,7 +17,7 @@ import {
   persistSpotlightPool,
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
-import { scanCardFromImage, isCardScanConfigured } from "./lib/card-scan.mjs";
+import { scanCardFromImage } from "./lib/card-scan.mjs";
 import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
 import { usesPostgresSocial } from "./lib/social-store.mjs";
 import {
@@ -186,7 +186,8 @@ const server = http.createServer(async (req, res) => {
       ebayApi: "browse",
       priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
       openAiConfigured: Boolean(process.env.OPENAI_API_KEY),
-      cardScanEnabled: isCardScanConfigured(),
+      cardScanEnabled: true,
+      cardScanMode: "client-ocr",
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",

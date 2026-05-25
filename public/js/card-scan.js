@@ -1,4 +1,6 @@
-/** Mobile card photo scan — front + back capture, vision extraction, review before scout */
+/** Mobile card photo scan — free on-device OCR (Tesseract.js), review before scout */
+
+import { parseOcrToCard } from "./card-scan-parse.js";
 
 const SCAN_FIELDS = [
   { key: "title", label: "Card title", full: true, required: true, placeholder: "2018 Panini Prizm Silver #280 Luka Doncic RC" },
@@ -197,23 +199,33 @@ function resizeImageFile(file, maxEdge = 1400, quality = 0.85) {
   });
 }
 
-async function blobToBase64(blob) {
-  const buffer = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+let tesseractModule = null;
+
+async function loadTesseract() {
+  if (tesseractModule) return tesseractModule;
+  tesseractModule = await import(
+    "https://cdn.jsdelivr.net/npm/tesseract.js@5.5.0/dist/tesseract.esm.min.js"
+  );
+  return tesseractModule;
 }
 
-async function fileToPayload(file, side) {
-  const blob = await resizeImageFile(file);
-  return {
-    side,
-    mimeType: "image/jpeg",
-    base64: await blobToBase64(blob),
-  };
+async function ocrImageFile(file, onProgress) {
+  const { createWorker } = await loadTesseract();
+  const worker = await createWorker("eng", 1, {
+    logger: (m) => {
+      if (m.status === "recognizing text" && onProgress) {
+        onProgress(Math.round(m.progress * 100));
+      }
+    },
+  });
+  try {
+    const {
+      data: { text },
+    } = await worker.recognize(file);
+    return text || "";
+  } finally {
+    await worker.terminate();
+  }
 }
 
 function confidenceClass(level) {
@@ -330,30 +342,32 @@ async function analyzePhotos({ includeBack = true } = {}) {
 
   setStep("analyzing");
   const status = $("scanAnalyzingStatus");
-  if (status) {
-    status.textContent = includeBack && backFile
-      ? "Reading front and back…"
-      : "Reading front photo…";
-  }
+  if (status) status.textContent = "Loading text scanner (first time may take a moment)…";
 
   try {
-    const images = [await fileToPayload(frontFile, "front")];
+    const frontBlob = await resizeImageFile(frontFile);
+    const frontForOcr = new File([frontBlob], "front.jpg", { type: "image/jpeg" });
+
+    if (status) status.textContent = "Reading front of card…";
+    const frontText = await ocrImageFile(frontForOcr, (pct) => {
+      if (status) status.textContent = `Reading front… ${pct}%`;
+    });
+
+    let backText = "";
     if (includeBack && backFile) {
-      images.push(await fileToPayload(backFile, "back"));
+      const backBlob = await resizeImageFile(backFile);
+      const backForOcr = new File([backBlob], "back.jpg", { type: "image/jpeg" });
+      if (status) status.textContent = "Reading back of card…";
+      backText = await ocrImageFile(backForOcr, (pct) => {
+        if (status) status.textContent = `Reading back… ${pct}%`;
+      });
     }
 
-    const res = await fetch("/api/scout/scan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Scan failed");
-
+    const data = parseOcrToCard(frontText, backText);
     renderReviewForm(data);
     setStep("review");
   } catch (err) {
-    alert(err.message || "Could not scan this card");
+    alert(err.message || "Could not read text from this photo — try better lighting or fill in manually");
     setStep(backFile || includeBack ? "capture-back" : "capture-front");
   }
 }
@@ -367,7 +381,7 @@ function openFilePicker(useCamera) {
   input.click();
 }
 
-export function initCardScan({ onScoutCard, isScanEnabled = () => true }) {
+export function initCardScan({ onScoutCard }) {
   const openBtn = $("openCardScanBtn");
   const sheet = $("cardScanSheet");
   if (!openBtn || !sheet) return;
@@ -381,10 +395,6 @@ export function initCardScan({ onScoutCard, isScanEnabled = () => true }) {
   window.addEventListener("resize", refreshVisibility);
 
   openBtn.addEventListener("click", () => {
-    if (!isScanEnabled()) {
-      alert("Card scanning needs OPENAI_API_KEY configured on the server.");
-      return;
-    }
     openSheet();
   });
 

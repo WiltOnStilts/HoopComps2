@@ -1046,7 +1046,6 @@ function init() {
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
  initCardScan({
-   isScanEnabled: () => Boolean(health.cardScanEnabled),
    onScoutCard: async (card) => {
      fillScoutForm($("scoutForm"), card);
      try {

@@ -37,7 +37,7 @@ import {
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, initSocialUI } from "./social-ui.js";
-import { initCardScan, refreshCardScanButton } from "./card-scan.js";
+import { initCardScan, refreshCardScanButton, resetScanUi } from "./card-scan.js";
 
 const APP_NAME = "HoopComps";
 
@@ -1019,15 +1019,11 @@ async function bootstrapSession() {
 }
 
 function setupSessionPersistence() {
-  window.addEventListener("pageshow", async () => {
+  window.addEventListener("pageshow", () => {
     loadStoredSession();
     renderAuthUI();
     if (!isLoggedIn()) return;
-    await reconcileCloudState();
-    renderAuthUI();
-    renderDashboard();
-    renderCollection();
-    renderProfile();
+    bootstrapSession();
   });
 
   window.addEventListener("online", () => {
@@ -1037,6 +1033,7 @@ function setupSessionPersistence() {
 }
 
 function init() {
+  resetScanUi();
   loadStoredSession();
   initNavigation();
  initPwa();
@@ -1069,12 +1066,12 @@ function init() {
  initProfileForm();
 
  updateHeaderStats();
- checkHealth().then(async () => {
- await bootstrapSession();
- renderDashboard();
- loadCardOfDay();
- loadLeaderboard();
- navigate("dashboard");
+ checkHealth().then(() => {
+   renderDashboard();
+   loadCardOfDay();
+   loadLeaderboard();
+   navigate("dashboard");
+   bootstrapSession();
  });
 }
 

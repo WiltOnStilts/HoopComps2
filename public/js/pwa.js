@@ -1,32 +1,8 @@
 let deferredPrompt = null;
-let swReloadTriggered = false;
 
 export function initPwa() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((reg) => {
-        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-
-        reg.addEventListener("updatefound", () => {
-          const installing = reg.installing;
-          if (!installing) return;
-          installing.addEventListener("statechange", () => {
-            if (installing.state === "installed" && navigator.serviceWorker.controller) {
-              reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-            }
-          });
-        });
-
-        setInterval(() => reg.update(), 60 * 60 * 1000);
-      })
-      .catch(() => {});
-
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (swReloadTriggered) return;
-      swReloadTriggered = true;
-      window.location.reload();
-    });
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
   }
 
   window.addEventListener("beforeinstallprompt", (e) => {

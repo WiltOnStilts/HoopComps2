@@ -31,10 +31,24 @@ function isMobileScanContext() {
   return window.matchMedia("(max-width: 768px)").matches;
 }
 
+let lastMobileScanContext = null;
+
+function debounce(fn, ms = 200) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
 let refreshScanVisibility = () => {};
 
 export function refreshCardScanButton() {
   refreshScanVisibility();
+}
+
+export function resetScanUi() {
+  resetUiOverlays();
 }
 
 function revokeUrl(url) {
@@ -74,6 +88,13 @@ function closeSheet() {
   resetCapture();
   const input = $("scanFileInput");
   if (input) input.value = "";
+}
+
+function resetUiOverlays() {
+  document.body.classList.remove("scan-sheet-open", "modal-open");
+  for (const id of ["cardScanSheet", "authModal", "listingModal", "friendModal", "codCommentsModal"]) {
+    $(id)?.classList.add("hidden");
+  }
 }
 
 function resetCapture() {
@@ -387,12 +408,15 @@ export function initCardScan({ onScoutCard }) {
   if (!openBtn || !sheet) return;
 
   function refreshVisibility() {
-    openBtn.classList.toggle("hidden", !isMobileScanContext());
+    const mobile = isMobileScanContext();
+    if (mobile === lastMobileScanContext) return;
+    lastMobileScanContext = mobile;
+    openBtn.classList.toggle("hidden", !mobile);
   }
 
   refreshVisibility();
   refreshScanVisibility = refreshVisibility;
-  window.addEventListener("resize", refreshVisibility);
+  window.addEventListener("resize", debounce(refreshVisibility, 250), { passive: true });
 
   openBtn.addEventListener("click", () => {
     openSheet();

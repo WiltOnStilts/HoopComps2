@@ -43,7 +43,9 @@ body.scan-sheet-open {
 }
 
 .scan-sheet.hidden {
-  display: none;
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden;
 }
 
 .scan-sheet-backdrop {

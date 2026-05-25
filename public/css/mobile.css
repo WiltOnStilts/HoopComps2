@@ -97,6 +97,13 @@ body {
   backdrop-filter: blur(16px);
 }
 
+.nav-item,
+.logo-btn,
+.btn-scout,
+.btn-secondary {
+  touch-action: manipulation;
+}
+
 .nav-item {
   flex: 1;
   display: flex;
@@ -902,9 +909,37 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  .court-bg__spotlight {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .court-bg__graphic {
+    opacity: 0.75;
+  }
+
+  .bottom-nav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(28, 16, 8, 0.98);
+  }
+
+  .modal-backdrop,
+  .scan-sheet-backdrop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .view {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .view,
-  .modal-panel {
+  .modal-panel,
+  .court-bg__spotlight {
     animation: none;
   }
 

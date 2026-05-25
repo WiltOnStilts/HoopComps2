@@ -27,8 +27,9 @@ import {
  register,
  login,
   logout,
-  refreshCloudState,
-  scheduleCloudSync,
+ refreshCloudState,
+ fetchCloudState,
+ scheduleCloudSync,
  fetchLeaderboard,
  setAuthChangeHandler,
  pushCloudState,
@@ -44,6 +45,7 @@ let lastScoutData = state.lastScout?.data || null;
 let lastScoutCard = state.lastScout?.card || null;
 let cardOfDayData = null;
 let profileFormSavedSnapshot = null;
+let cloudPushPromise = null;
 
 function getProfileFormValues() {
  return {
@@ -171,8 +173,22 @@ async function loadLeaderboard() {
  if (!el) return;
  const entries = await fetchLeaderboard();
  if (!entries.length) {
- el.innerHTML = ` No public collections yet. Opt in on your Profile to compete. `;
- return;
+   const cardCount = state.collection?.length || 0;
+   const optedIn = Boolean(state.profile?.publicLeaderboard);
+   if (!isLoggedIn()) {
+     el.innerHTML =
+       cardCount > 0
+         ? `<p class="muted-text">Sign in to upload your ${cardCount} card${cardCount === 1 ? "" : "s"} and join the leaderboard.</p>`
+         : `<p class="muted-text">Sign in and opt in on Profile to compete on the leaderboard.</p>`;
+   } else if (optedIn && cardCount > 0) {
+     el.innerHTML = `<p class="muted-text">Syncing your collection to the cloud…</p>`;
+     void pushLocalToCloud();
+   } else if (optedIn) {
+     el.innerHTML = `<p class="muted-text">Add cards to your collection to rank on the leaderboard.</p>`;
+   } else {
+     el.innerHTML = `<p class="muted-text">Turn on “Show my collection value on the public leaderboard” in Profile, then save.</p>`;
+   }
+   return;
  }
  el.innerHTML = entries
  .map(
@@ -764,7 +780,7 @@ function initProfileForm() {
  $(id)?.addEventListener("change", syncProfileSaveButton);
  }
 
- $("saveProfileBtn").addEventListener("click", () => {
+ $("saveProfileBtn").addEventListener("click", async () => {
  state.profile = state.profile || {};
  state.profile.displayName = $("profileNameInput").value.trim() || "Scout";
  state.profile.favoritePlayer = $("profileFavoritePlayer").value.trim();
@@ -775,6 +791,9 @@ function initProfileForm() {
  captureProfileFormSnapshot();
  renderProfile();
  updateHeaderStats();
+ if (isLoggedIn()) {
+   await pushLocalToCloud();
+ }
  loadLeaderboard();
  });
 }
@@ -788,7 +807,7 @@ function initAuth() {
  }
  });
 
- setAuthChangeHandler(({ user, state: cloudState, mode }) => {
+ setAuthChangeHandler(async ({ user, state: cloudState, mode }) => {
  if (mode === "logout") {
  closeAuthModal();
  renderAuthUI();
@@ -797,6 +816,7 @@ function initAuth() {
  if (cloudState) applyCloudState(cloudState);
  closeAuthModal();
  renderAuthUI();
+ await pushLocalToCloud();
  loadLeaderboard();
  loadCardOfDay();
  renderProfileSocial(state);
@@ -851,29 +871,72 @@ function initAuth() {
  });
 }
 
+function promptCloudSync() {
+ const cardCount = state.collection?.length || 0;
+ $("authError").textContent =
+   cardCount > 0
+     ? `Sign in again to upload your ${cardCount} saved card${cardCount === 1 ? "" : "s"} to the cloud.`
+     : "Sign in again to sync your profile to the cloud.";
+ openAuthModal("login");
+}
+
+async function pushLocalToCloud() {
+ if (!isLoggedIn()) return false;
+ const hasCards = (state.collection?.length || 0) > 0;
+ const optedIn = Boolean(state.profile?.publicLeaderboard);
+ if (!hasCards && !optedIn) return false;
+
+ if (cloudPushPromise) return cloudPushPromise;
+
+ cloudPushPromise = (async () => {
+   try {
+     await pushCloudState(state, { publicLeaderboard: optedIn });
+     await loadCardOfDay();
+     await loadLeaderboard();
+     return true;
+   } catch (err) {
+     if (err.status === 401) {
+       logout();
+       renderAuthUI();
+       promptCloudSync();
+     }
+     return false;
+   } finally {
+     cloudPushPromise = null;
+   }
+ })();
+
+ return cloudPushPromise;
+}
+
 async function reconcileCloudState() {
-  if (!isLoggedIn()) return;
-  const localState = { ...state, collection: [...(state.collection || [])] };
-  const cloudState = await refreshCloudState();
-  if (!cloudState) return;
+ if (!isLoggedIn()) return;
 
-  const merged = mergeLocalAndCloud(localState, cloudState);
-  applyCloudState(merged);
+ const localSnapshot = {
+   ...state,
+   collection: [...(state.collection || [])],
+   profile: { ...state.profile },
+ };
 
-  const localCount = localState.collection?.length || 0;
-  const cloudCount = cloudState.collection?.length || 0;
-  if (merged.collection.length > cloudCount || localCount > cloudCount) {
-    try {
-      await pushCloudState(merged, {
-        publicLeaderboard: merged.profile?.publicLeaderboard,
-      });
-      loadCardOfDay();
-    } catch {
-      scheduleCloudSync(merged, {
-        publicLeaderboard: merged.profile?.publicLeaderboard,
-      });
-    }
-  }
+ const cloudResult = await fetchCloudState();
+
+ if (cloudResult.unauthorized) {
+   logout();
+   renderAuthUI();
+   if (localSnapshot.collection.length) {
+     promptCloudSync();
+   }
+   return;
+ }
+
+ if (cloudResult.state) {
+   const merged = mergeLocalAndCloud(localSnapshot, cloudResult.state);
+   applyCloudState(merged);
+ }
+
+ if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard) {
+   await pushLocalToCloud();
+ }
 }
 
 async function bootstrapSession() {
@@ -932,6 +995,8 @@ function init() {
  checkHealth().then(async () => {
  await bootstrapSession();
  renderDashboard();
+ loadCardOfDay();
+ loadLeaderboard();
  navigate("dashboard");
  });
 }

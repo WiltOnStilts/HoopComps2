@@ -145,12 +145,19 @@ export function logout() {
 }
 
 export async function fetchCloudState() {
-  if (!isLoggedIn()) return null;
+  if (!isLoggedIn()) return { state: null, unauthorized: false };
   try {
-    return await authFetch("/api/user/state");
-  } catch {
-    // Keep the saved session — never auto sign-out when the server is slow or offline.
-    return null;
+    const data = await authFetch("/api/user/state");
+    return {
+      state: data.state ?? null,
+      publicLeaderboard: data.publicLeaderboard,
+      unauthorized: false,
+    };
+  } catch (err) {
+    if (err.status === 401) {
+      return { state: null, unauthorized: true };
+    }
+    return { state: null, unauthorized: false };
   }
 }
 
@@ -181,7 +188,9 @@ export async function pushCloudState(state, { publicLeaderboard } = {}) {
 
 export async function fetchLeaderboard() {
   try {
-    const data = await authFetch("/api/leaderboard");
+    const res = await fetch("/api/leaderboard");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return [];
     return data.entries || [];
   } catch {
     return [];

@@ -1,4 +1,4 @@
-const CACHE = "hoopcomps-v5";
+const CACHE = "hoopcomps-v6";
 const ASSETS = [
   "/",
   "/index.html",

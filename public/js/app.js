@@ -871,6 +871,28 @@ function initAuth() {
  });
 }
 
+function updateCloudSyncStatus(result, err) {
+ const el = $("cloudSyncStatus");
+ if (!el) return;
+ if (!isLoggedIn()) {
+   el.classList.add("hidden");
+   return;
+ }
+ if (err) {
+   el.textContent =
+     err.status === 401
+       ? "Cloud session expired — sign in again to upload your collection."
+       : "Could not save to cloud — check your connection and try Save profile.";
+   el.classList.remove("hidden");
+   el.classList.add("sync-error");
+   return;
+ }
+ if (result?.cardCount != null) {
+   el.textContent = `${result.cardCount} card${result.cardCount === 1 ? "" : "s"} saved to cloud`;
+   el.classList.remove("hidden", "sync-error");
+ }
+}
+
 function promptCloudSync() {
  const cardCount = state.collection?.length || 0;
  $("authError").textContent =
@@ -890,11 +912,13 @@ async function pushLocalToCloud() {
 
  cloudPushPromise = (async () => {
    try {
-     await pushCloudState(state, { publicLeaderboard: optedIn });
+     const result = await pushCloudState(state, { publicLeaderboard: optedIn });
+     updateCloudSyncStatus(result);
      await loadCardOfDay();
      await loadLeaderboard();
      return true;
    } catch (err) {
+     updateCloudSyncStatus(null, err);
      if (err.status === 401) {
        logout();
        renderAuthUI();

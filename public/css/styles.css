@@ -1003,6 +1003,10 @@ select:focus {
   font-size: 0.8rem;
 }
 
+.auth-hint.sync-error {
+  color: #f87171;
+}
+
 .leaderboard-list {
   display: flex;
   flex-direction: column;

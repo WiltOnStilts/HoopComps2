@@ -17,7 +17,7 @@ import {
   persistSpotlightPool,
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
-import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail } from "./lib/db.mjs";
+import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
 import {
   registerUser,
   loginUser,
@@ -157,6 +157,12 @@ const server = http.createServer(async (req, res) => {
       multiUserEnabled: isDbReady(),
       storageMode: storageMode(),
       userCount: isDbReady() ? countUsers() : 0,
+      ...(isDbReady()
+        ? {
+            communityCards: getCommunityCardStats().cardCount,
+            leaderboardEntries: getLeaderboard().length,
+          }
+        : {}),
       ebayConfigured: hasId && hasSecret,
       ebayAppIdSet: hasId,
       ebayClientSecretSet: hasSecret,
@@ -188,8 +194,11 @@ const server = http.createServer(async (req, res) => {
           result.user.id,
           mergeGuestIntoCloud(body.guestState, result.state)
         );
-        saveUserState(result.user.id, merged);
+        saveUserState(result.user.id, merged, {
+          publicLeaderboard: merged.profile?.publicLeaderboard,
+        });
         result.state = merged;
+        result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
         result.user.displayName = merged.profile?.displayName || result.user.displayName;
       }
       send(res, 200, result);
@@ -212,8 +221,11 @@ const server = http.createServer(async (req, res) => {
           result.user.id,
           mergeGuestIntoCloud(body.guestState, result.state)
         );
-        saveUserState(result.user.id, merged, { publicLeaderboard: result.publicLeaderboard });
+        saveUserState(result.user.id, merged, {
+          publicLeaderboard: merged.profile?.publicLeaderboard,
+        });
         result.state = merged;
+        result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
         result.user.displayName = merged.profile?.displayName || result.user.displayName;
       }
       send(res, 200, result);
@@ -245,7 +257,14 @@ const server = http.createServer(async (req, res) => {
         saveUserState(user.id, body.state, {
           publicLeaderboard: body.publicLeaderboard ?? body.state?.profile?.publicLeaderboard,
         });
-        send(res, 200, { ok: true });
+        const collection = body.state?.collection || [];
+        send(res, 200, {
+          ok: true,
+          cardCount: collection.length,
+          publicLeaderboard: Boolean(
+            body.publicLeaderboard ?? body.state?.profile?.publicLeaderboard
+          ),
+        });
       } catch (e) {
         send(res, 400, { error: e.message });
       }

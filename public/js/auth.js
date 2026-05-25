@@ -179,8 +179,8 @@ export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
 }
 
 export async function pushCloudState(state, { publicLeaderboard } = {}) {
-  if (!isLoggedIn()) return;
-  await authFetch("/api/user/state", {
+  if (!isLoggedIn()) return null;
+  return authFetch("/api/user/state", {
     method: "PUT",
     body: JSON.stringify({ state, publicLeaderboard }),
   });

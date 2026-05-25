@@ -264,7 +264,11 @@ const server = http.createServer(async (req, res) => {
         send(res, 400, { error: "Passwords do not match" });
         return;
       }
-      const result = resetPassword({ email, newPassword: body.newPassword });
+      const result = resetPassword({
+        email,
+        newPassword: body.newPassword,
+        displayName: body.guestState?.profile?.displayName || body.displayName,
+      });
       if (body.guestState) {
         const merged = alignStateWithAccountDisplayName(
           result.user.id,

@@ -247,14 +247,20 @@ function openAuthModal(mode = "login") {
  const titles = {
    register: "Create account",
    login: "Sign in",
-   reset: "Reset password",
+   reset: "Set your password",
+ };
+ const hints = {
+   register: "Sync your collection across phones, tablets, and desktop — free.",
+   login: "Sync your collection across phones, tablets, and desktop — free.",
+   reset: "Choose a password for this email. Your saved cards on this device will upload automatically.",
  };
  const buttons = {
    register: "Create account",
    login: "Sign in",
-   reset: "Set new password",
+   reset: "Save password & sign in",
  };
  $("authModalTitle").textContent = titles[mode] || "Sign in";
+ $("authModalHint").textContent = hints[mode] || hints.login;
  $("authSubmitBtn").textContent = buttons[mode] || "Sign in";
  $("authSubmitBtn").dataset.mode = mode;
  document.querySelector(".auth-name-field")?.classList.toggle("hidden", mode !== "register");

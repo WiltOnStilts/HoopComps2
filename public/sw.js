@@ -1,4 +1,4 @@
-const CACHE = "hoopcomps-v14";
+const CACHE = "hoopcomps-v15";
 const ASSETS = [
   "/css/styles.css",
   "/css/mobile.css",
@@ -10,6 +10,10 @@ const ASSETS = [
 ];
 
 const NETWORK_FIRST = ["/", "/index.html", "/js/"];
+
+self.addEventListener("message", (e) => {
+  if (e.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

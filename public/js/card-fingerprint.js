@@ -37,15 +37,60 @@ export function cardFingerprint(card = {}) {
   return parts.length ? parts.join("|") : `title:${norm(card.title || "unknown")}`;
 }
 
-export function uniqueScoutCount(state) {
-  const keys = Object.keys(state?.scannedCards || {});
-  if (keys.length > 0) return keys.length;
-  return state?.scoutCount || 0;
+/** Core identity for scan counts and collection dedupe — ignores varying notes/titles */
+export function scanFingerprint(card = {}) {
+  return cardFingerprint({
+    player: card.player,
+    year: card.year,
+    set: card.set,
+    cardNumber: card.cardNumber,
+    parallel: card.parallel,
+    serial: card.serial,
+    gradingCompany: card.gradingCompany,
+    grade: card.grade,
+    title: card.player?.trim() ? undefined : card.title,
+  });
 }
 
-export function findCollectionByFingerprint(state, card) {
-  const fp = cardFingerprint(card);
-  return (state.collection || []).find((entry) => cardFingerprint(entry.card) === fp) || null;
+export const SCAN_TRACKING_VERSION = 2;
+
+export function rebuildScannedCards(state) {
+  const rebuilt = {};
+  const stamp = (card, at) => {
+    if (!card) return;
+    const fp = scanFingerprint(card);
+    if (!fp || fp === "title:unknown") return;
+    const when = at || new Date().toISOString();
+    if (!rebuilt[fp] || new Date(when) < new Date(rebuilt[fp])) {
+      rebuilt[fp] = when;
+    }
+  };
+
+  for (const entry of state.collection || []) {
+    stamp(entry.card, entry.lastScoutedAt || entry.addedAt);
+  }
+  if (state.lastScout?.card) {
+    stamp(state.lastScout.card, state.lastScout.at);
+  }
+
+  state.scannedCards = rebuilt;
+  state.scoutCount = Object.keys(rebuilt).length;
+  return state;
+}
+
+export function migrateScanTracking(state) {
+  if (!state || typeof state !== "object") return state;
+  if (state.scanTrackingVersion >= SCAN_TRACKING_VERSION) {
+    state.scoutCount = Object.keys(state.scannedCards || {}).length;
+    return state;
+  }
+  rebuildScannedCards(state);
+  state.scanTrackingVersion = SCAN_TRACKING_VERSION;
+  return state;
+}
+
+export function uniqueScoutCount(state) {
+  return Object.keys(state?.scannedCards || {}).length;
 }
 
 export function mergeScannedCards(a = {}, b = {}) {
@@ -56,6 +101,28 @@ export function mergeScannedCards(a = {}, b = {}) {
     }
   }
   return merged;
+}
+
+export function mergedScanFields(cloudState, localState) {
+  const cloud = migrateScanTracking({
+    ...cloudState,
+    scannedCards: { ...(cloudState?.scannedCards || {}) },
+  });
+  const local = migrateScanTracking({
+    ...localState,
+    scannedCards: { ...(localState?.scannedCards || {}) },
+  });
+  const scannedCards = mergeScannedCards(cloud.scannedCards, local.scannedCards);
+  return {
+    scannedCards,
+    scoutCount: Object.keys(scannedCards).length,
+    scanTrackingVersion: SCAN_TRACKING_VERSION,
+  };
+}
+
+export function findCollectionByFingerprint(state, card) {
+  const fp = scanFingerprint(card);
+  return (state.collection || []).find((entry) => scanFingerprint(entry.card) === fp) || null;
 }
 
 function pickNewerIso(a, b) {
@@ -69,7 +136,7 @@ export function mergeCollectionByFingerprint(items = []) {
 
   for (const item of items) {
     if (!item?.card) continue;
-    const fp = cardFingerprint(item.card);
+    const fp = scanFingerprint(item.card);
     const prev = map.get(fp);
     if (!prev) {
       map.set(fp, { ...item, quantity: Math.max(1, item.quantity || 1) });

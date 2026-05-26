@@ -1,5 +1,10 @@
 import { pickImageFromScout } from "./card-image.js";
-import { cardFingerprint, uniqueScoutCount, mergeCollectionByFingerprint } from "./card-fingerprint.js";
+import {
+  scanFingerprint,
+  uniqueScoutCount,
+  mergeCollectionByFingerprint,
+  migrateScanTracking,
+} from "./card-fingerprint.js";
 
 const STORAGE_KEY = "hoopcomps";
 
@@ -69,6 +74,7 @@ function normalizeState(data) {
   };
 
   syncScoutCount(state);
+  migrateScanTracking(state);
   return state;
 }
 
@@ -114,7 +120,7 @@ export function getCollection(state) {
 
 export function registerUniqueScan(state, card) {
   if (!card) return false;
-  const fp = cardFingerprint(card);
+  const fp = scanFingerprint(card);
   if (!state.scannedCards || typeof state.scannedCards !== "object") {
     state.scannedCards = {};
   }
@@ -133,10 +139,10 @@ function clampQuantity(quantity) {
 
 export function addToCollection(state, { card, estimatedValue, scoutData, userPhotoUrl, quantity = 1 }) {
   const qty = clampQuantity(quantity);
-  const fp = cardFingerprint(card);
+  const fp = scanFingerprint(card);
   const ebayImage = scoutData ? pickImageFromScout(card, scoutData) : null;
   const photo = userPhotoUrl?.trim() || null;
-  const existing = getCollection(state).find((entry) => cardFingerprint(entry.card) === fp);
+  const existing = getCollection(state).find((entry) => scanFingerprint(entry.card) === fp);
 
   if (existing) {
     const nextQty = (existing.quantity || 1) + qty;

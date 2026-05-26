@@ -14,12 +14,17 @@ import {
  formatUsd,
  escapeHtml,
  formToCard,
- fillScoutForm,
  renderScoutResults,
  setupResultTabs,
 } from "./scout-ui.js";
 import { initListingModal } from "./listings-ui.js";
 import { initPwa } from "./pwa.js";
+import {
+  initScoutWizard,
+  fillScoutWizard,
+  cardFromScoutForm,
+  validateScoutCard,
+} from "./scout-wizard.js";
 import {
  loadStoredSession,
  isLoggedIn,
@@ -292,7 +297,7 @@ function applyCloudState(nextState) {
  renderCollection();
  renderProfile();
  renderAuthUI();
- if (state.lastScout?.card) fillScoutForm($("scoutForm"), state.lastScout.card);
+ if (state.lastScout?.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  $("profileNameInput").value = state.profile?.displayName || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
@@ -496,7 +501,7 @@ function renderCollection() {
  const item = state.collection.find((c) => c.id === btn.dataset.id);
  if (!item) return;
  navigate("scout");
- fillScoutForm($("scoutForm"), item.card);
+ fillScoutWizard($("scoutForm"), item.card);
  });
  });
 }
@@ -615,7 +620,12 @@ async function performScout(card) {
 
 async function handleScoutSubmit(e) {
   e.preventDefault();
-  const card = formToCard($("scoutForm"));
+  const card = cardFromScoutForm($("scoutForm"));
+  const validationError = validateScoutCard(card);
+  if (validationError) {
+    alert(validationError);
+    return;
+  }
 
   try {
     await performScout(card);
@@ -784,7 +794,7 @@ function initNavigation() {
  renderScoutResults(state.lastScout.data, {
  ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
  });
- if (state.lastScout.card) fillScoutForm($("scoutForm"), state.lastScout.card);
+ if (state.lastScout.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  } else {
  navigate(target);
  }
@@ -1039,6 +1049,8 @@ function init() {
   setupResultTabs();
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
+ initScoutWizard($("scoutForm"));
+ if (state.lastScout?.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
@@ -1047,7 +1059,7 @@ function init() {
  $("cowScoutBtn")?.addEventListener("click", () => {
  if (!cardOfDayData?.card) return;
  navigate("scout");
- fillScoutForm($("scoutForm"), cardOfDayData.card);
+ fillScoutWizard($("scoutForm"), cardOfDayData.card);
  $("scoutForm").requestSubmit();
  });
  initProfileForm();

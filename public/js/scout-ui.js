@@ -10,7 +10,7 @@ export function formToCard(form) {
 }
 
 export function fillScoutForm(form, card) {
-  if (!card) return;
+  if (!card || !form) return;
   for (const [key, value] of Object.entries(card)) {
     const el = form.elements.namedItem(key);
     if (el && value != null) el.value = value;

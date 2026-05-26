@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/css/mobile.css" />
     <link rel="stylesheet" href="/css/listings.css" />
     <link rel="stylesheet" href="/css/social.css" />
+    <link rel="stylesheet" href="/css/scout-wizard.css" />
   </head>
   <body>
     <div class="court-bg" aria-hidden="true">
@@ -176,67 +177,12 @@ node server.mjs</code>
         <div class="view-layout scout-layout">
           <div class="panel form-panel">
             <h2>Card Intel</h2>
-            <p class="hint">Enter title and details — we search sold comps and marketplaces.</p>
+            <p class="hint">Add your card one detail at a time — we build the search and find exact eBay matches.</p>
 
             <form id="scoutForm">
-              <label class="field full">
-                <span>Card title *</span>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  placeholder="e.g. 2018 Panini Prizm Silver #280 Luka Doncic RC"
-                />
-              </label>
-              <div class="field-grid">
-                <label class="field">
-                  <span>Player</span>
-                  <input type="text" name="player" placeholder="Luka Dončić" />
-                </label>
-                <label class="field">
-                  <span>Year</span>
-                  <input type="text" name="year" placeholder="2018" />
-                </label>
-                <label class="field">
-                  <span>Set</span>
-                  <input type="text" name="set" placeholder="Panini Prizm" />
-                </label>
-                <label class="field">
-                  <span>Card #</span>
-                  <input type="text" name="cardNumber" placeholder="280" />
-                </label>
-                <label class="field">
-                  <span>Parallel</span>
-                  <input type="text" name="parallel" placeholder="Silver, Gold /10" />
-                </label>
-                <label class="field">
-                  <span>Serial</span>
-                  <input type="text" name="serial" placeholder="/99" />
-                </label>
-                <label class="field">
-                  <span>Grading</span>
-                  <select name="gradingCompany">
-                    <option value="">Raw</option>
-                    <option value="PSA">PSA</option>
-                    <option value="BGS">BGS</option>
-                    <option value="SGC">SGC</option>
-                    <option value="CGC">CGC</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span>Grade</span>
-                  <input type="text" name="grade" placeholder="10" />
-                </label>
-                <label class="field">
-                  <span>Cert #</span>
-                  <input type="text" name="certNumber" />
-                </label>
-                <label class="field full">
-                  <span>Notes</span>
-                  <input type="text" name="notes" placeholder="Auto, patch, etc." />
-                </label>
-              </div>
-              <button type="submit" class="btn-scout" id="scoutBtn">
+              <input type="hidden" name="title" id="scoutBuiltTitle" value="" />
+              <div id="scoutWizardMount" class="scout-wizard-mount"></div>
+              <button type="submit" class="btn-scout hidden" id="scoutBtn">
                 <span class="btn-text">Scout Market Value</span>
                 <span class="btn-loading hidden">Scouting…</span>
               </button>
@@ -636,6 +582,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=21" type="module"></script>
+    <script src="/js/app.js?v=22" type="module"></script>
   </body>
 </html>

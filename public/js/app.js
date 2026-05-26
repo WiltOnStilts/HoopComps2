@@ -11,6 +11,8 @@ import {
  handleScoutRewards,
  getCoins,
  registerUniqueScan,
+ takePendingDailyEvents,
+ finalizeDailyNotifications,
 } from "./storage.js";
 import {
  formatUsd,
@@ -50,8 +52,9 @@ import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
 import { resolveCollectionImage } from "./card-image.js";
 import { uniqueScoutCount } from "./card-fingerprint.js";
-import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN } from "./economy.js";
-import { renderShop, updateProfileAvatarMount } from "./shop-ui.js";
+import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } from "./economy.js";
+import { renderShop, updateProfileAvatarMount, disposeShopAvatarPreview } from "./shop-ui.js";
+import { showDailyNotificationQueue } from "./daily-notifications.js";
 
 const APP_NAME = "HoopComps";
 
@@ -194,6 +197,7 @@ function navigate(view) {
  if (view === "collection") renderCollection();
  if (view === "profile") renderProfile();
  if (view === "shop") renderShopView();
+ else disposeShopAvatarPreview();
  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -383,6 +387,22 @@ function openAuthModal(mode = "login") {
 function closeAuthModal() {
  $("authModal")?.classList.add("hidden");
  document.body.classList.remove("modal-open");
+}
+
+async function maybeShowDailyLoginNotifications() {
+ if (!isLoggedIn()) return;
+ if (!shouldShowDailyNotifications(state)) {
+ takePendingDailyEvents();
+ return;
+ }
+
+ const events = takePendingDailyEvents();
+ if (!events.length) return;
+
+ await showDailyNotificationQueue(events);
+ state = finalizeDailyNotifications(state);
+ updateHeaderStats();
+ renderProfile();
 }
 
 function applyCloudState(nextState) {
@@ -1012,6 +1032,7 @@ function initAuth() {
  await pushLocalToCloud();
  loadLeaderboard();
  refreshSocialPanels();
+ await maybeShowDailyLoginNotifications();
  });
 
  $("authHeaderBtn")?.addEventListener("click", () => {
@@ -1177,6 +1198,7 @@ async function bootstrapSession() {
 
   renderAuthUI();
   refreshSocialPanels();
+  await maybeShowDailyLoginNotifications();
 }
 
 async function refreshSocialPanels() {

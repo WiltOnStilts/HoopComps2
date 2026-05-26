@@ -1,4 +1,8 @@
-/** Customizable profile avatars — catalog + render */
+/** Customizable profile avatars — catalog + 3D mount helpers */
+
+import { mountAvatar3D, disposeAvatar3D, refreshAvatar3D } from "./avatar-3d.js";
+
+export { mountAvatar3D, disposeAvatar3D, refreshAvatar3D };
 
 export const AVATAR_CATALOG = {
   face: [
@@ -41,6 +45,17 @@ export function avatarSelection(profile = {}) {
     hair: sel.hair || "buzz",
     clothes: sel.clothes || "jersey",
   };
+}
+
+export function renderAvatarInto(container, profile, options = {}) {
+  if (!container) return;
+  container.innerHTML = "";
+  container.classList.add("avatar-3d-mount");
+  const ok = mountAvatar3D(container, profile, options);
+  if (!ok) {
+    container.innerHTML = renderAvatarHtml(profile, options);
+    container.classList.remove("avatar-3d-mount");
+  }
 }
 
 export function renderAvatarHtml(profile, { size = "md", className = "" } = {}) {

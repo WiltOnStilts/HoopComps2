@@ -8,7 +8,9 @@ import {
 import {
   migrateEconomy,
   normalizeEconomy,
-  grantDailyCoins,
+  processDailySession,
+  markDailyNotificationsShown,
+  shouldShowDailyNotifications,
   recordScoutStreak,
   awardUniqueScanCoins,
 } from "./economy.js";
@@ -16,6 +18,7 @@ import {
 const STORAGE_KEY = "hoopcomps";
 
 let syncCallback = null;
+let pendingDailyEvents = [];
 
 export function onStateChange(fn) {
   syncCallback = fn;
@@ -39,19 +42,43 @@ export function loadState() {
     if ((legacyComps || legacy) && !raw) {
       localStorage.setItem(STORAGE_KEY, parsed);
     }
-    return maybeGrantDailyCoins(normalizeState(data));
+    return applyDailySession(normalizeState(data));
   } catch {
     return defaultState();
   }
 }
 
-function maybeGrantDailyCoins(state) {
-  const granted = grantDailyCoins(state);
-  if (granted > 0) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    notifyChange(state);
+function applyDailySession(state) {
+  const beforeKey = state.lastDailySessionKey;
+  const { state: next, events } = processDailySession(state);
+  const sessionAdvanced = next.lastDailySessionKey !== beforeKey;
+
+  if (events.length) {
+    pendingDailyEvents = [...pendingDailyEvents, ...events];
   }
-  return state;
+
+  if (sessionAdvanced || events.length) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    notifyChange(next);
+  }
+
+  return next;
+}
+
+export function peekPendingDailyEvents() {
+  return [...pendingDailyEvents];
+}
+
+export function takePendingDailyEvents() {
+  const events = [...pendingDailyEvents];
+  pendingDailyEvents = [];
+  return events;
+}
+
+export function finalizeDailyNotifications(state) {
+  const next = markDailyNotificationsShown({ ...state });
+  saveState(next);
+  return next;
 }
 
 function normalizeState(data) {

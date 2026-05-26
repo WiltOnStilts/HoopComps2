@@ -10,6 +10,12 @@ export function localDayKey(date = new Date()) {
   return date.toDateString();
 }
 
+function yesterdayLocalDayKey(fromDate = new Date()) {
+  const d = new Date(fromDate);
+  d.setDate(d.getDate() - 1);
+  return localDayKey(d);
+}
+
 export function tomorrowUtcDayKey(fromDate = new Date()) {
   const d = new Date(fromDate);
   d.setUTCDate(d.getUTCDate() + 1);
@@ -95,6 +101,56 @@ export function grantDailyCoins(state) {
   return COINS_DAILY_BONUS;
 }
 
+/**
+ * Once per local day: grant daily coins and resolve overnight streak (freeze or break).
+ * Returns events for first-login notifications.
+ */
+export function processDailySession(state) {
+  const today = localDayKey();
+  if (state.lastDailySessionKey === today) {
+    return { state, events: [] };
+  }
+
+  state.lastDailySessionKey = today;
+  const events = [];
+
+  const coinsGranted = grantDailyCoins(state);
+  if (coinsGranted > 0) {
+    events.push({ type: "coins", amount: coinsGranted });
+  }
+
+  if (state.lastScoutDate) {
+    const gap = daysBetweenLocalDates(state.lastScoutDate, today);
+    const previousStreak = state.streak || 0;
+
+    if (gap >= 2 && previousStreak > 0) {
+      if (gap === 2 && (state.streakFreezes || 0) > 0) {
+        state.streakFreezes -= 1;
+        state.lastScoutDate = yesterdayLocalDayKey();
+        events.push({
+          type: "freeze_used",
+          streak: state.streak,
+          freezesLeft: state.streakFreezes,
+        });
+      } else {
+        state.streak = 0;
+        events.push({ type: "streak_broken", previousStreak });
+      }
+    }
+  }
+
+  return { state, events };
+}
+
+export function markDailyNotificationsShown(state) {
+  state.lastDailyNotifyShownKey = localDayKey();
+  return state;
+}
+
+export function shouldShowDailyNotifications(state) {
+  return state.lastDailyNotifyShownKey !== localDayKey();
+}
+
 function daysBetweenLocalDates(a, b) {
   const da = new Date(a);
   const db = new Date(b);
@@ -103,7 +159,7 @@ function daysBetweenLocalDates(a, b) {
   return Math.round((db - da) / (24 * 60 * 60 * 1000));
 }
 
-/** Update streak when user scouts; consumes streak freeze if one day was missed */
+/** Update streak when user scouts; freeze for one missed day handled on daily session open */
 export function recordScoutStreak(state) {
   const today = localDayKey();
   if (state.lastScoutDate === today) return state;
@@ -209,6 +265,9 @@ export function mergedEconomyFields(cloudState = {}, localState = {}) {
     ownedAvatarParts: mergeOwnedAvatarParts(cloudState.ownedAvatarParts, localState.ownedAvatarParts),
     codBoost: mergeCodBoost(cloudState.codBoost, localState.codBoost),
     lastCoinDayKey: cloudState.lastCoinDayKey || localState.lastCoinDayKey || null,
+    lastDailySessionKey: cloudState.lastDailySessionKey || localState.lastDailySessionKey || null,
+    lastDailyNotifyShownKey:
+      cloudState.lastDailyNotifyShownKey || localState.lastDailyNotifyShownKey || null,
     lastScoutDate,
     economyVersion: Math.max(cloudState.economyVersion || 0, localState.economyVersion || 0, ECONOMY_VERSION),
   };

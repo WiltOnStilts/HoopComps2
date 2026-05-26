@@ -12,7 +12,7 @@ import {
   equipAvatarPart,
   COINS_HELP_TEXT,
 } from "./economy.js";
-import { AVATAR_CATALOG, renderAvatarHtml } from "./avatars.js";
+import { AVATAR_CATALOG, renderAvatarInto, disposeAvatar3D } from "./avatars.js";
 import { saveState } from "./storage.js";
 
 export function renderShop(state, { onChange } = {}) {
@@ -78,6 +78,12 @@ export function renderShop(state, { onChange } = {}) {
       <p class="hint shop-boost-note">Cost scales at ${COD_BOOST_COST_PER_PERCENT} coins per 1% (+10% = 1,000 · +20% = 2,000).</p>
     </div>
 
+    <div class="panel shop-section shop-avatar-hero">
+      <h3>Your collector avatar</h3>
+      <p class="hint">Drag to spin · Mix face, hair, and gear below</p>
+      <div id="shopAvatarPreviewMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
+    </div>
+
     ${["face", "hair", "clothes"]
       .map((category) => {
         const label = category.charAt(0).toUpperCase() + category.slice(1);
@@ -90,8 +96,8 @@ export function renderShop(state, { onChange } = {}) {
                   const isOwned = (owned[category] || []).includes(item.id);
                   const isEquipped = equipped[category] === item.id;
                   return `
-                    <article class="shop-avatar-item ${isEquipped ? "equipped" : ""}">
-                      <div class="shop-avatar-preview">${item.emoji}</div>
+                    <article class="shop-avatar-item ${isEquipped ? "equipped" : ""}" data-category="${category}" data-id="${item.id}">
+                      <div class="shop-avatar-swatch" style="--swatch:${item.tint || "#e85d04"}">${escapeHtml(item.label.slice(0, 1))}</div>
                       <strong>${escapeHtml(item.label)}</strong>
                       <span class="muted-text">${item.price === 0 ? "Free" : `${item.price} coins`}</span>
                       ${
@@ -143,10 +149,24 @@ export function renderShop(state, { onChange } = {}) {
       renderShop(state, { onChange });
     });
   });
+
+  const preview = document.getElementById("shopAvatarPreviewMount");
+  if (preview) {
+    renderAvatarInto(preview, state.profile, {
+      size: "hero",
+      autoRotate: true,
+      interactive: true,
+    });
+  }
 }
 
 export function updateProfileAvatarMount(state) {
   const mount = document.getElementById("profileAvatarMount");
   if (!mount) return;
-  mount.innerHTML = renderAvatarHtml(state.profile, { size: "lg" });
+  renderAvatarInto(mount, state.profile, { size: "lg", autoRotate: true, interactive: true });
+}
+
+export function disposeShopAvatarPreview() {
+  const preview = document.getElementById("shopAvatarPreviewMount");
+  if (preview) disposeAvatar3D(preview);
 }

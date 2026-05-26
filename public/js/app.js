@@ -9,6 +9,7 @@ import {
  collectionTotal,
  collectionValuedCount,
  awardXp,
+ registerUniqueScan,
 } from "./storage.js";
 import {
  formatUsd,
@@ -47,6 +48,7 @@ import {
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
 import { resolveCollectionImage } from "./card-image.js";
+import { uniqueScoutCount } from "./card-fingerprint.js";
 
 const APP_NAME = "HoopComps";
 
@@ -254,7 +256,7 @@ async function renderCommunity() {
  if (!el) return;
  const entries = await fetchLeaderboard();
  if (!entries.length) {
-   const scoutCount = state.scoutCount || 0;
+   const scoutCount = uniqueScoutCount(state);
    const optedIn = Boolean(state.profile?.publicLeaderboard);
    if (!isLoggedIn()) {
      el.innerHTML =
@@ -265,7 +267,7 @@ async function renderCommunity() {
      el.innerHTML = `<p class="muted-text">Syncing your scans to the cloud…</p>`;
      void pushLocalToCloud();
    } else if (optedIn) {
-     el.innerHTML = `<p class="muted-text">Scout cards to rank on the leaderboard.</p>`;
+     el.innerHTML = `<p class="muted-text">Scout different cards to rank on the leaderboard.</p>`;
    } else {
      el.innerHTML = `<p class="muted-text">Turn on “Show my scans on the public leaderboard” in Profile, then save.</p>`;
    }
@@ -277,7 +279,7 @@ async function renderCommunity() {
  
  #${i + 1} 
  ${escapeHtml(e.name)} 
- ${e.scoutCount} scan${e.scoutCount === 1 ? "" : "s"} · Lv ${e.level} 
+ ${e.scoutCount} unique scan${e.scoutCount === 1 ? "" : "s"} · Lv ${e.level} 
  `
  )
  .join("");
@@ -562,9 +564,12 @@ function renderCollection() {
  .map((item) => {
  const title = item.card?.title || "Untitled card";
  const tier = item.tier;
+ const qty = item.quantity || 1;
  const valueHtml =
    item.estimatedValue != null
-     ? `<p class="collection-card-value">${formatUsd(item.estimatedValue)}</p>`
+     ? qty > 1
+       ? `<p class="collection-card-value">${formatUsd(item.estimatedValue * qty)} <span class="collection-qty-note">${formatUsd(item.estimatedValue)} each · ×${qty}</span></p>`
+       : `<p class="collection-card-value">${formatUsd(item.estimatedValue)}</p>`
      : `<p class="collection-card-value unpriced">No estimate</p>`;
  return `
  <article class="collection-card" data-id="${escapeHtml(item.id)}">
@@ -611,7 +616,7 @@ function renderProfile() {
  if (levelStat) levelStat.textContent = state.level ?? 1;
  $("profileXp").textContent = state.xp ?? 0;
  $("profileStreak").textContent = state.streak ?? 0;
- $("profileScouts").textContent = state.scoutCount ?? 0;
+ $("profileScouts").textContent = uniqueScoutCount(state);
 
  const coll = state.collection || [];
  const total = collectionTotal(state);
@@ -694,8 +699,20 @@ async function performScout(card) {
     lastScoutCard = exactData.card || card;
 
     state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
-    state.scoutCount = (state.scoutCount || 0) + 1;
+    const isNewScan = registerUniqueScan(state, lastScoutCard);
     saveState(state);
+
+    const dupNotice = $("scoutDuplicateNotice");
+    if (dupNotice) {
+      if (isNewScan) {
+        dupNotice.classList.add("hidden");
+        dupNotice.textContent = "";
+      } else {
+        dupNotice.textContent =
+          "You already scanned this card — only unique cards count toward the leaderboard.";
+        dupNotice.classList.remove("hidden");
+      }
+    }
 
     const addBtn = $("addToCollectionBtn");
     addBtn.disabled = false;
@@ -737,17 +754,23 @@ function handleAddToCollection() {
  return;
  }
  const estimate = lastScoutData?.valuation?.estimate ?? null;
- addToCollection(state, {
+ const qty = Math.max(1, parseInt($("addCollectionQty")?.value, 10) || 1);
+ const result = addToCollection(state, {
  card: lastScoutCard,
  estimatedValue: estimate,
  scoutData: lastScoutData,
  userPhotoUrl: getPendingScoutPhotoUrl(),
+ quantity: qty,
  });
  clearPendingScoutPhoto();
  state = loadState();
  updateHeaderStats();
  const btn = $("addToCollectionBtn");
- btn.textContent = "✓ Added to collection";
+ if (result.merged) {
+   btn.textContent = `✓ Now ×${result.quantity} in collection`;
+ } else {
+   btn.textContent = qty > 1 ? `✓ Added ×${qty} to collection` : "✓ Added to collection";
+ }
  setTimeout(() => {
  btn.textContent = "+ Add to collection";
  }, 2000);
@@ -862,12 +885,17 @@ function handleManualAdd(e) {
  if (!card.title?.trim()) return;
 
  const manualVal = parseFloat($("manualValue").value);
- addToCollection(state, {
+ const qty = Math.max(1, parseInt($("manualQty")?.value, 10) || 1);
+ const result = addToCollection(state, {
  card,
  estimatedValue: Number.isFinite(manualVal) ? manualVal : null,
+ quantity: qty,
  });
  state = loadState();
  $("manualAddForm").reset();
+ if (result.merged) {
+   alert(`That card is already in your collection — quantity is now ×${result.quantity}.`);
+ }
  renderCollection();
  updateHeaderStats();
  renderDashboard();
@@ -910,6 +938,21 @@ function initCollectionBrowser() {
    collectionSortMode = e.target.value || "recent";
    renderCollection();
  });
+}
+
+function initMobileSessionHeader() {
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!document.body.classList.contains("mobile-signed-in")) return;
+      if (window.innerWidth > 768) {
+        document.body.classList.remove("mobile-header-hidden");
+        return;
+      }
+      document.body.classList.toggle("mobile-header-hidden", window.scrollY > 40);
+    },
+    { passive: true }
+  );
 }
 
 function initProfileForm() {
@@ -1072,7 +1115,7 @@ async function pushLocalToCloud() {
  if (!isLoggedIn()) return false;
  const hasCards = (state.collection?.length || 0) > 0;
  const optedIn = Boolean(state.profile?.publicLeaderboard);
- const hasScans = (state.scoutCount || 0) > 0;
+ const hasScans = uniqueScoutCount(state) > 0;
  const hasContact = Boolean(state.profile?.username?.trim() || state.profile?.phone?.trim());
  if (!hasCards && !optedIn && !hasContact && !hasScans) return false;
 
@@ -1126,7 +1169,7 @@ async function reconcileCloudState() {
    applyCloudState(merged);
  }
 
- if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard || (state.scoutCount || 0) > 0) {
+ if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard || uniqueScoutCount(state) > 0) {
    await pushLocalToCloud();
  }
 }
@@ -1200,6 +1243,7 @@ function init() {
  });
  initProfileForm();
  initCollectionBrowser();
+ initMobileSessionHeader();
 
  updateHeaderStats();
  checkHealth().then(() => {

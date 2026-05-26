@@ -167,9 +167,18 @@ async function handleScoutPhotoSelected(file) {
       preview.classList.remove("hidden");
     }
     clearBtn?.classList.remove("hidden");
+    keepScoutAtTop();
   } catch (err) {
     alert(err.message || "Could not use that photo");
   }
+}
+
+function keepScoutAtTop() {
+  if (window.innerWidth > 768) return;
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.body.classList.remove("mobile-header-hidden");
+  });
 }
 
 function wireScoutPhotoControls() {
@@ -258,6 +267,7 @@ function showStep(index) {
   }
 
   renderProgress();
+  if (onReview) keepScoutAtTop();
 }
 
 function validateCurrentStep() {

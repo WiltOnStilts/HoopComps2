@@ -1,4 +1,5 @@
 import { pickImageFromScout } from "./card-image.js";
+import { cardFingerprint, uniqueScoutCount, mergeCollectionByFingerprint } from "./card-fingerprint.js";
 
 const STORAGE_KEY = "hoopcomps";
 
@@ -10,6 +11,10 @@ export function onStateChange(fn) {
 
 function notifyChange(state) {
   syncCallback?.(state);
+}
+
+function syncScoutCount(state) {
+  state.scoutCount = uniqueScoutCount(state);
 }
 
 export function loadState() {
@@ -29,11 +34,17 @@ export function loadState() {
 }
 
 function normalizeState(data) {
-  return {
+  const scannedCards =
+    data.scannedCards && typeof data.scannedCards === "object" && !Array.isArray(data.scannedCards)
+      ? data.scannedCards
+      : {};
+
+  const state = {
     xp: 0,
     level: 1,
     streak: 0,
     scoutCount: 0,
+    scannedCards,
     profile: {
       displayName: "Scout",
       favoritePlayer: "",
@@ -42,7 +53,7 @@ function normalizeState(data) {
       publicLeaderboard: false,
       ...data.profile,
     },
-    collection: Array.isArray(data.collection) ? data.collection : [],
+    collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
     lastScout: data.lastScout ?? null,
     ...data,
     profile: {
@@ -53,8 +64,12 @@ function normalizeState(data) {
       publicLeaderboard: false,
       ...data.profile,
     },
-    collection: Array.isArray(data.collection) ? data.collection : [],
+    collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
+    scannedCards,
   };
+
+  syncScoutCount(state);
+  return state;
 }
 
 function defaultState() {
@@ -63,6 +78,7 @@ function defaultState() {
     level: 1,
     streak: 0,
     scoutCount: 0,
+    scannedCards: {},
     profile: {
       displayName: "Scout",
       favoritePlayer: "",
@@ -83,6 +99,7 @@ export function replaceState(next) {
 }
 
 export function saveState(state) {
+  syncScoutCount(state);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   notifyChange(state);
 }
@@ -95,14 +112,59 @@ export function getCollection(state) {
   return state.collection || [];
 }
 
-export function addToCollection(state, { card, estimatedValue, scoutData, userPhotoUrl }) {
+export function registerUniqueScan(state, card) {
+  if (!card) return false;
+  const fp = cardFingerprint(card);
+  if (!state.scannedCards || typeof state.scannedCards !== "object") {
+    state.scannedCards = {};
+  }
+  const isNew = !state.scannedCards[fp];
+  if (isNew) {
+    state.scannedCards[fp] = new Date().toISOString();
+  }
+  syncScoutCount(state);
+  saveState(state);
+  return isNew;
+}
+
+function clampQuantity(quantity) {
+  return Math.max(1, Math.min(999, Number(quantity) || 1));
+}
+
+export function addToCollection(state, { card, estimatedValue, scoutData, userPhotoUrl, quantity = 1 }) {
+  const qty = clampQuantity(quantity);
+  const fp = cardFingerprint(card);
   const ebayImage = scoutData ? pickImageFromScout(card, scoutData) : null;
   const photo = userPhotoUrl?.trim() || null;
+  const existing = getCollection(state).find((entry) => cardFingerprint(entry.card) === fp);
+
+  if (existing) {
+    const nextQty = (existing.quantity || 1) + qty;
+    const patch = {
+      quantity: nextQty,
+      estimatedValue: estimatedValue ?? existing.estimatedValue,
+      lastScoutedAt: scoutData ? new Date().toISOString() : existing.lastScoutedAt,
+      tier: scoutData?.valuation?.tier ?? existing.tier,
+    };
+    if (photo) {
+      patch.userPhotoUrl = photo;
+      patch.imageUrl = photo;
+      patch.imageSource = "photo";
+      patch.imageListingTitle = null;
+    } else if (ebayImage?.url && !existing.imageUrl) {
+      patch.imageUrl = ebayImage.url;
+      patch.imageSource = ebayImage.source ?? null;
+      patch.imageListingTitle = ebayImage.listingTitle ?? null;
+    }
+    updateCollectionEntry(state, existing.id, patch);
+    return { entry: { ...existing, ...patch }, merged: true, previousQty: existing.quantity || 1, quantity: nextQty };
+  }
+
   const entry = {
     id: uuid(),
     card,
     estimatedValue: estimatedValue ?? null,
-    quantity: 1,
+    quantity: qty,
     addedAt: new Date().toISOString(),
     lastScoutedAt: scoutData ? new Date().toISOString() : null,
     tier: scoutData?.valuation?.tier ?? null,
@@ -113,7 +175,7 @@ export function addToCollection(state, { card, estimatedValue, scoutData, userPh
   };
   state.collection = [entry, ...getCollection(state)];
   saveState(state);
-  return entry;
+  return { entry, merged: false, quantity: qty };
 }
 
 export function removeFromCollection(state, id) {

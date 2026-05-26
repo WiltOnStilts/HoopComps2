@@ -93,7 +93,7 @@
 
         <div class="panel compact-panel leaderboard-panel">
           <h3>🏆 Collector leaderboard</h3>
-          <p class="hint">Public opt-in rankings by cards scanned</p>
+          <p class="hint">Public opt-in rankings by unique cards scanned</p>
           <div id="leaderboardList" class="leaderboard-list"></div>
         </div>
 
@@ -295,6 +295,11 @@ node server.mjs</code>
                   + Add to collection
                 </button>
               </div>
+              <label class="field add-qty-field">
+                <span>How many do you have?</span>
+                <input type="number" id="addCollectionQty" min="1" max="999" value="1" />
+              </label>
+              <p id="scoutDuplicateNotice" class="scout-duplicate-notice hidden" role="status"></p>
               <div class="valuation-hero" id="valuationHero"></div>
               <div class="stats-row" id="statsRow"></div>
               <div class="tabs scroll-tabs">
@@ -382,6 +387,10 @@ node server.mjs</code>
                 <span>Est. value ($)</span>
                 <input type="number" id="manualValue" min="0" step="1" placeholder="Optional" />
               </label>
+              <label class="field">
+                <span>Quantity</span>
+                <input type="number" id="manualQty" min="1" max="999" value="1" />
+              </label>
             </div>
             <button type="submit" class="btn-secondary full-width">Add to collection</button>
           </form>
@@ -465,7 +474,7 @@ node server.mjs</code>
           <h3>Stats</h3>
           <div class="stats-row profile-stats">
             <div class="mini-stat">
-              <span class="label">Scouts run</span>
+              <span class="label">Unique scans</span>
               <span class="val" id="profileScouts">0</span>
             </div>
             <div class="mini-stat">

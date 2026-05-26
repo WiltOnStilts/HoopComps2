@@ -167,6 +167,9 @@ export function clearScoutResults() {
     addBtn.disabled = true;
     delete addBtn.dataset.ready;
   }
+  const dupNotice = document.getElementById("scoutDuplicateNotice");
+  dupNotice?.classList.add("hidden");
+  if (dupNotice) dupNotice.textContent = "";
 }
 
 export function setupResultTabs() {

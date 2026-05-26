@@ -500,6 +500,42 @@ body {
   font-weight: 600;
 }
 
+.collection-card-value.unpriced {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.collection-qty-note {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.add-qty-field {
+  max-width: 220px;
+  margin-bottom: 0.75rem;
+}
+
+.scout-duplicate-notice {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #fcd34d;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.scout-duplicate-notice.hidden {
+  display: none;
+}
+
 .collection-card-meta {
   margin: 0.2rem 0 0;
   font-size: 0.72rem;
@@ -632,15 +668,22 @@ body {
     padding: 0.85rem 1rem;
   }
 
-  /* Signed-in: full-width session bar at top; scrolls away (not sticky) */
+  /* Signed-in: full-width session bar at top; hides on scroll */
   body.mobile-signed-in .top-bar {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
     flex-wrap: nowrap;
     padding: 0;
     border-bottom: none;
     background: transparent;
     backdrop-filter: none;
+    transition: transform 0.22s ease;
+  }
+
+  body.mobile-signed-in.mobile-header-hidden .top-bar {
+    transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
   }
 
   body.mobile-signed-in .logo-btn,
@@ -893,6 +936,32 @@ body {
 
   .cow-estimate {
     font-size: 1.45rem;
+  }
+
+  .view[data-view="scout"] .form-panel {
+    padding: 1.1rem 1rem;
+  }
+
+  .view[data-view="scout"] .scout-wizard-input,
+  .view[data-view="scout"] .scout-wizard-step select {
+    font-size: 1rem;
+    padding: 0.6rem 0.75rem;
+    min-height: 44px;
+  }
+
+  .view[data-view="scout"] .scout-wizard-step {
+    min-height: auto;
+  }
+
+  .view[data-view="scout"] .scout-photo-preview {
+    max-width: min(220px, 72vw);
+  }
+
+  .view[data-view="scout"] .btn-secondary,
+  .view[data-view="scout"] .btn-ghost,
+  .view[data-view="scout"] .btn-scout {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.85rem;
   }
 
   .logo-text p {

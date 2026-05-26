@@ -554,7 +554,6 @@ async function checkHealth() {
 
  if (!health.ebayConfigured) $("apiSetup")?.setAttribute("open", "");
  renderAuthUI();
- refreshCardScanButton();
  } catch {
  health.ebayTip =
  "Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)";
@@ -1031,29 +1030,6 @@ function setupSessionPersistence() {
   });
 }
 
-let refreshCardScanButton = () => {};
-
-async function initCardScanFeature() {
-  try {
-    const scan = await import("./card-scan.js");
-    scan.resetScanUi();
-    scan.initCardScan({
-      onScoutCard: async (card) => {
-        fillScoutForm($("scoutForm"), card);
-        try {
-          await performScout(card);
-        } catch (err) {
-          alert(err.message || "Something went wrong");
-        }
-      },
-    });
-    refreshCardScanButton = scan.refreshCardScanButton;
-    refreshCardScanButton();
-  } catch (err) {
-    console.warn("Card scan module unavailable", err);
-  }
-}
-
 function init() {
   loadStoredSession();
   initNavigation();
@@ -1063,7 +1039,6 @@ function init() {
   setupResultTabs();
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
- initCardScanFeature();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);

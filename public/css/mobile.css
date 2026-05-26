@@ -925,8 +925,7 @@ body {
     background: rgba(28, 16, 8, 0.98);
   }
 
-  .modal-backdrop,
-  .scan-sheet-backdrop {
+  .modal-backdrop {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }

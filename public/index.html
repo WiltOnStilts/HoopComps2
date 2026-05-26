@@ -21,7 +21,6 @@
     <link rel="stylesheet" href="/css/mobile.css" />
     <link rel="stylesheet" href="/css/listings.css" />
     <link rel="stylesheet" href="/css/social.css" />
-    <link rel="stylesheet" href="/css/card-scan.css" />
   </head>
   <body>
     <div class="court-bg" aria-hidden="true">
@@ -178,11 +177,6 @@ node server.mjs</code>
           <div class="panel form-panel">
             <h2>Card Intel</h2>
             <p class="hint">Enter title and details — we search sold comps and marketplaces.</p>
-
-            <button type="button" class="scan-open-btn scan-mobile-only hidden" id="openCardScanBtn">
-              📷 Scan card (photo + details)
-            </button>
-            <input type="file" id="scanFileInput" accept="image/*" class="hidden" aria-hidden="true" />
 
             <form id="scoutForm">
               <label class="field full">
@@ -642,98 +636,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <div id="cardScanSheet" class="scan-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="cardScanTitle" data-step="capture">
-      <div class="scan-sheet-backdrop"></div>
-      <div class="scan-sheet-panel">
-        <div class="scan-sheet-header">
-          <h3 id="cardScanTitle">Scan card</h3>
-          <button type="button" class="scan-close-btn" id="scanCloseBtn" aria-label="Close">×</button>
-        </div>
-
-        <div data-scan-step="capture-front">
-          <p class="scan-step-label">Step 1 of 2 — Front</p>
-          <p class="scan-intro">Photograph your card — you'll fill in the details on the next screen before scouting.</p>
-          <div class="scan-preview-wrap">
-            <div class="scan-preview-placeholder" id="scanFrontPlaceholder">
-              <span>📷</span>
-              <span>No front photo yet</span>
-            </div>
-            <img id="scanFrontPreview" class="hidden" alt="Front of card" />
-          </div>
-          <div class="scan-actions">
-            <button type="button" class="btn-secondary" id="scanFrontCameraBtn">Take photo</button>
-            <button type="button" class="btn-secondary" id="scanFrontLibraryBtn">Photo library</button>
-          </div>
-          <div class="scan-actions scan-actions-full">
-            <button type="button" class="btn-scout" id="scanFrontContinueBtn" disabled>Continue to back</button>
-            <button type="button" class="btn-secondary hidden" id="scanFrontRetakeBtn">Retake front</button>
-            <button type="button" class="btn-ghost" id="scanCancelBtn">Cancel</button>
-          </div>
-        </div>
-
-        <div data-scan-step="capture-back" class="hidden">
-          <p class="scan-step-label">Step 2 of 2 — Back</p>
-          <p class="scan-intro">Back photo helps read the card number and set from the copyright line. Skip for graded slabs with a full label.</p>
-          <div class="scan-dual-thumbs">
-            <figure class="scan-thumb-figure">
-              <img id="scanFrontMini" class="scan-mini-thumb" alt="Front captured" />
-              <figcaption>Front ✓</figcaption>
-            </figure>
-            <figure class="scan-thumb-figure">
-              <div class="scan-preview-wrap scan-preview-mini">
-                <div class="scan-preview-placeholder" id="scanBackPlaceholder">
-                  <span>📷</span>
-                  <span>Back</span>
-                </div>
-                <img id="scanBackPreview" class="hidden" alt="Back of card" />
-              </div>
-              <figcaption id="scanBackCaption">Back</figcaption>
-            </figure>
-          </div>
-          <div class="scan-actions">
-            <button type="button" class="btn-secondary" id="scanBackCameraBtn">Take back photo</button>
-            <button type="button" class="btn-secondary" id="scanBackLibraryBtn">Photo library</button>
-          </div>
-          <div class="scan-actions scan-actions-full">
-            <button type="button" class="btn-scout" id="scanAnalyzeBtn">Continue</button>
-            <button type="button" class="btn-secondary" id="scanSkipBackBtn">Skip back photo</button>
-            <button type="button" class="btn-secondary hidden" id="scanBackRetakeBtn">Retake back</button>
-            <button type="button" class="btn-secondary" id="scanBackToFrontBtn">Back to front</button>
-          </div>
-        </div>
-
-        <div data-scan-step="analyzing" class="hidden">
-          <div class="scan-analyzing">
-            <div class="scan-analyzing-spinner" aria-hidden="true"></div>
-            <p id="scanAnalyzingStatus">Reading card details…</p>
-          </div>
-        </div>
-
-        <div data-scan-step="review" class="hidden">
-          <div class="scan-review-top">
-            <div class="scan-dual-thumbs scan-review-thumbs">
-              <figure class="scan-thumb-figure">
-                <img id="scanReviewFrontThumb" class="scan-mini-thumb hidden" alt="Front scanned" />
-                <figcaption>Front</figcaption>
-              </figure>
-              <figure class="scan-thumb-figure">
-                <img id="scanReviewBackThumb" class="scan-mini-thumb hidden" alt="Back scanned" />
-                <figcaption id="scanReviewBackLabel">Back</figcaption>
-              </figure>
-            </div>
-            <p class="scan-review-summary" id="scanReviewSummary"></p>
-          </div>
-          <form id="scanReviewForm" class="scan-review-form">
-            <div id="scanReviewFields"></div>
-            <div class="scan-review-actions">
-              <button type="submit" class="btn-scout">Scout this card</button>
-              <button type="button" class="btn-secondary" id="scanBackToPhotoBtn">Retake photos</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <script src="/js/app.js?v=20" type="module"></script>
+    <script src="/js/app.js?v=21" type="module"></script>
   </body>
 </html>

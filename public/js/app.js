@@ -741,7 +741,7 @@ async function performScout(card) {
     lastScoutCard = exactData.card || card;
 
     state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
-    const isNewScan = registerUniqueScan(state, lastScoutCard);
+    const isNewScan = registerUniqueScan(state, card);
     saveState(state);
 
     const dupNotice = $("scoutDuplicateNotice");

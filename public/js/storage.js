@@ -5,6 +5,7 @@ import {
   mergeCollectionByFingerprint,
   migrateScanTracking,
   migrateCollectionQuantities,
+  registerScanFingerprint,
 } from "./card-fingerprint.js";
 import {
   migrateEconomy,
@@ -184,14 +185,8 @@ export function getCollection(state) {
 
 export function registerUniqueScan(state, card) {
   if (!card) return false;
-  const fp = scanFingerprint(card);
-  if (!state.scannedCards || typeof state.scannedCards !== "object") {
-    state.scannedCards = {};
-  }
-  const isNew = !state.scannedCards[fp];
-  if (isNew) {
-    state.scannedCards[fp] = new Date().toISOString();
-  }
+  const { map, isNew } = registerScanFingerprint(state.scannedCards || {}, card);
+  state.scannedCards = map;
   syncScoutCount(state);
   saveState(state);
   return isNew;

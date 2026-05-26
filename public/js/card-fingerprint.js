@@ -73,18 +73,130 @@ export function migrateCollectionQuantities(state) {
   return state;
 }
 
-export const SCAN_TRACKING_VERSION = 2;
+export const SCAN_TRACKING_VERSION = 3;
+
+function parseFingerprintParts(fp) {
+  const parts = {};
+  for (const segment of String(fp || "").split("|")) {
+    if (!segment) continue;
+    const colon = segment.indexOf(":");
+    if (colon === -1) continue;
+    parts[segment.slice(0, colon)] = segment.slice(colon + 1);
+  }
+  return parts;
+}
+
+function normalizeYearToken(year) {
+  const y = norm(year);
+  const match = y.match(/^(\d{4})(?:[-/](\d{2,4}))?$/);
+  return match ? match[1] : y;
+}
+
+function yearTokensCompatible(a, b) {
+  if (!a || !b) return true;
+  return normalizeYearToken(a) === normalizeYearToken(b);
+}
+
+function tokenTokensCompatible(a, b) {
+  if (!a || !b) return true;
+  if (a === b) return true;
+  return a.includes(b) || b.includes(a);
+}
+
+export function fingerprintsCompatible(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  const pa = parseFingerprintParts(a);
+  const pb = parseFingerprintParts(b);
+
+  if (pa.title || pb.title) {
+    return Boolean(pa.title && pb.title && pa.title === pb.title);
+  }
+
+  if (pa.p && pb.p && pa.p !== pb.p) return false;
+  if (!pa.p && !pb.p) return false;
+
+  if (!yearTokensCompatible(pa.y, pb.y)) return false;
+  if (pa.n && pb.n && pa.n !== pb.n) return false;
+  if (pa.par && pb.par && pa.par !== pb.par) return false;
+  if (pa.ser && pb.ser && pa.ser !== pb.ser) return false;
+  if (pa.g && pb.g && pa.g !== pb.g) return false;
+  if (pa.gr && pb.gr && pa.gr !== pb.gr) return false;
+  if (!tokenTokensCompatible(pa.s, pb.s)) return false;
+
+  return true;
+}
+
+export function fingerprintSpecificity(fp) {
+  return String(fp || "").split("|").filter(Boolean).length;
+}
+
+export function findMatchingScanKey(scannedCards, cardOrFp) {
+  const fp = typeof cardOrFp === "string" ? cardOrFp : scanFingerprint(cardOrFp);
+  if (!fp || fp === "title:unknown") return null;
+  if (scannedCards?.[fp]) return fp;
+  for (const key of Object.keys(scannedCards || {})) {
+    if (fingerprintsCompatible(key, fp)) return key;
+  }
+  return null;
+}
+
+export function dedupeScannedCardsMap(scannedCards = {}) {
+  const groups = [];
+  for (const [fp, at] of Object.entries(scannedCards || {})) {
+    let placed = false;
+    for (const group of groups) {
+      if (group.some((entry) => fingerprintsCompatible(entry.fp, fp))) {
+        group.push({ fp, at });
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) groups.push([{ fp, at }]);
+  }
+
+  const deduped = {};
+  for (const group of groups) {
+    const best = group.reduce((winner, entry) =>
+      fingerprintSpecificity(entry.fp) >= fingerprintSpecificity(winner.fp) ? entry : winner
+    );
+    const earliest = group.reduce((min, entry) => {
+      if (!min || new Date(entry.at) < new Date(min)) return entry.at;
+      return min;
+    }, null);
+    deduped[best.fp] = earliest;
+  }
+  return deduped;
+}
+
+export function registerScanFingerprint(scannedCards, card, at = new Date().toISOString()) {
+  const map = scannedCards && typeof scannedCards === "object" ? { ...scannedCards } : {};
+  const fp = scanFingerprint(card);
+  if (!fp || fp === "title:unknown") return { map, isNew: false };
+
+  const existingKey = findMatchingScanKey(map, fp);
+  if (existingKey) {
+    const prevAt = map[existingKey];
+    const bestKey =
+      fingerprintSpecificity(fp) >= fingerprintSpecificity(existingKey) ? fp : existingKey;
+    const bestAt = prevAt && new Date(prevAt) <= new Date(at) ? prevAt : at;
+    if (bestKey !== existingKey) delete map[existingKey];
+    map[bestKey] = bestAt;
+    return { map, isNew: false };
+  }
+
+  map[fp] = at;
+  return { map, isNew: true };
+}
 
 export function rebuildScannedCards(state) {
-  const rebuilt = {};
+  let rebuilt = {};
   const stamp = (card, at) => {
     if (!card) return;
-    const fp = scanFingerprint(card);
-    if (!fp || fp === "title:unknown") return;
     const when = at || new Date().toISOString();
-    if (!rebuilt[fp] || new Date(when) < new Date(rebuilt[fp])) {
-      rebuilt[fp] = when;
-    }
+    const result = registerScanFingerprint(rebuilt, card, when);
+    rebuilt = result.map;
   };
 
   for (const entry of state.collection || []) {
@@ -94,19 +206,21 @@ export function rebuildScannedCards(state) {
     stamp(state.lastScout.card, state.lastScout.at);
   }
 
-  state.scannedCards = rebuilt;
-  state.scoutCount = Object.keys(rebuilt).length;
+  state.scannedCards = dedupeScannedCardsMap(rebuilt);
+  state.scoutCount = Object.keys(state.scannedCards).length;
   return state;
 }
 
 export function migrateScanTracking(state) {
   if (!state || typeof state !== "object") return state;
-  if (state.scanTrackingVersion >= SCAN_TRACKING_VERSION) {
-    state.scoutCount = Object.keys(state.scannedCards || {}).length;
-    return state;
+  const version = state.scanTrackingVersion || 0;
+  if (version < 2) {
+    rebuildScannedCards(state);
+  } else if (version < SCAN_TRACKING_VERSION) {
+    state.scannedCards = dedupeScannedCardsMap(state.scannedCards || {});
   }
-  rebuildScannedCards(state);
   state.scanTrackingVersion = SCAN_TRACKING_VERSION;
+  state.scoutCount = Object.keys(state.scannedCards || {}).length;
   return state;
 }
 
@@ -115,13 +229,13 @@ export function uniqueScoutCount(state) {
 }
 
 export function mergeScannedCards(a = {}, b = {}) {
-  const merged = { ...a };
+  const combined = { ...a };
   for (const [key, at] of Object.entries(b || {})) {
-    if (!merged[key] || new Date(at) < new Date(merged[key])) {
-      merged[key] = at;
+    if (!combined[key] || new Date(at) < new Date(combined[key])) {
+      combined[key] = at;
     }
   }
-  return merged;
+  return dedupeScannedCardsMap(combined);
 }
 
 export function mergedScanFields(cloudState, localState) {

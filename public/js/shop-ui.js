@@ -12,18 +12,100 @@ import {
   equipAvatarPart,
   COINS_HELP_TEXT,
 } from "./economy.js";
-import { AVATAR_CATALOG, renderAvatarInto, disposeAvatar3D } from "./avatars.js";
+import {
+  AVATAR_CATALOG,
+  AVATAR_SHOP_GROUPS,
+  isFreeAvatarCategory,
+  previewAvatarProfile,
+  renderAvatarInto,
+  disposeAvatar3D,
+} from "./avatars.js";
 import { saveState } from "./storage.js";
+
+function renderAvatarItem({ category, item, owned, equipped, freeCategory }) {
+  const isOwned = freeCategory || (owned[category] || []).includes(item.id);
+  const isEquipped = equipped[category] === item.id;
+
+  return `
+    <article class="shop-avatar-item ${isEquipped ? "equipped" : ""}" data-category="${category}" data-id="${item.id}">
+      <div
+        class="shop-avatar-part-preview"
+        data-category="${category}"
+        data-id="${item.id}"
+        aria-hidden="true"
+      ></div>
+      <strong>${escapeHtml(item.label)}</strong>
+      <span class="muted-text">${freeCategory ? "Free" : item.price === 0 ? "Free" : `${item.price} coins`}</span>
+      ${
+        isEquipped
+          ? `<span class="shop-tag">Equipped</span>`
+          : isOwned
+            ? `<button type="button" class="btn-secondary btn-xs" data-shop="equip" data-category="${category}" data-id="${item.id}">Equip</button>`
+            : `<button type="button" class="btn-secondary btn-xs" data-shop="buy-avatar" data-category="${category}" data-id="${item.id}" data-price="${item.price}">Buy</button>`
+      }
+    </article>
+  `;
+}
+
+function mountShopAvatarPreviews(root, profile) {
+  root.querySelectorAll(".shop-avatar-part-preview").forEach((el) => {
+    const category = el.dataset.category;
+    const id = el.dataset.id;
+    if (!category || !id) return;
+    renderAvatarInto(el, previewAvatarProfile(profile, category, id), {
+      size: "thumb",
+      autoRotate: true,
+      interactive: false,
+    });
+  });
+}
 
 export function renderShop(state, { onChange } = {}) {
   const root = document.getElementById("shopRoot");
   if (!root) return;
+
+  disposeShopAvatarPreview();
+  root.querySelectorAll(".shop-avatar-part-preview").forEach((el) => disposeAvatar3D(el));
 
   const owned = state.ownedAvatarParts || {};
   const equipped = state.profile?.avatar || {};
   const tomorrow = tomorrowUtcDayKey();
   const activeBoost =
     state.codBoost?.dayKey === tomorrow ? state.codBoost.percent : 0;
+
+  const avatarSections = AVATAR_SHOP_GROUPS.map((group) => {
+    const subsections = group.categories
+      .map(({ key, label, free }) => {
+        const items = AVATAR_CATALOG[key] || [];
+        return `
+          <div class="shop-avatar-subsection" data-avatar-category="${key}">
+            <h4>${escapeHtml(label)}</h4>
+            <div class="shop-avatar-grid">
+              ${items
+                .map((item) =>
+                  renderAvatarItem({
+                    category: key,
+                    item,
+                    owned,
+                    equipped,
+                    freeCategory: free || isFreeAvatarCategory(key),
+                  })
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    return `
+      <div class="panel shop-section shop-avatar-group" data-avatar-group="${group.id}">
+        <h3>Avatar · ${escapeHtml(group.label)}</h3>
+        ${group.hint ? `<p class="hint">${escapeHtml(group.hint)}</p>` : ""}
+        ${subsections}
+      </div>
+    `;
+  }).join("");
 
   root.innerHTML = `
     <div class="shop-balance panel">
@@ -80,42 +162,11 @@ export function renderShop(state, { onChange } = {}) {
 
     <div class="panel shop-section shop-avatar-hero">
       <h3>Your collector avatar</h3>
-      <p class="hint">Drag to spin · Mix face, hair, and gear below</p>
+      <p class="hint">Drag to spin · Every part below shows a live preview before you buy</p>
       <div id="shopAvatarPreviewMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
     </div>
 
-    ${["face", "hair", "clothes"]
-      .map((category) => {
-        const label = category.charAt(0).toUpperCase() + category.slice(1);
-        return `
-          <div class="panel shop-section">
-            <h3>Avatar · ${label}</h3>
-            <div class="shop-avatar-grid">
-              ${AVATAR_CATALOG[category]
-                .map((item) => {
-                  const isOwned = (owned[category] || []).includes(item.id);
-                  const isEquipped = equipped[category] === item.id;
-                  return `
-                    <article class="shop-avatar-item ${isEquipped ? "equipped" : ""}" data-category="${category}" data-id="${item.id}">
-                      <div class="shop-avatar-swatch" style="--swatch:${item.tint || "#e85d04"}">${escapeHtml(item.label.slice(0, 1))}</div>
-                      <strong>${escapeHtml(item.label)}</strong>
-                      <span class="muted-text">${item.price === 0 ? "Free" : `${item.price} coins`}</span>
-                      ${
-                        isEquipped
-                          ? `<span class="shop-tag">Equipped</span>`
-                          : isOwned
-                            ? `<button type="button" class="btn-secondary btn-xs" data-shop="equip" data-category="${category}" data-id="${item.id}">Equip</button>`
-                            : `<button type="button" class="btn-secondary btn-xs" data-shop="buy-avatar" data-category="${category}" data-id="${item.id}" data-price="${item.price}">Buy</button>`
-                      }
-                    </article>
-                  `;
-                })
-                .join("")}
-            </div>
-          </div>
-        `;
-      })
-      .join("")}
+    ${avatarSections}
   `;
 
   root.querySelectorAll("[data-shop]").forEach((btn) => {
@@ -158,6 +209,8 @@ export function renderShop(state, { onChange } = {}) {
       interactive: true,
     });
   }
+
+  mountShopAvatarPreviews(root, state.profile);
 }
 
 export function updateProfileAvatarMount(state) {

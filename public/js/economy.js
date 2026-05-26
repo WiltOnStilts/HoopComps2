@@ -1,5 +1,15 @@
 /** Coins economy — client earning, shop, streak helpers */
 
+import {
+  defaultAvatarSelection,
+  defaultOwnedAvatarParts,
+  AVATAR_PART_KEYS,
+  AVATAR_CATALOG,
+  migrateAvatarFormat,
+  isFreeAvatarCategory,
+  normalizeAvatarPartIds,
+} from "./avatar-catalog.js";
+
 export const COINS_PER_UNIQUE_SCAN = 200;
 export const COINS_DAILY_BONUS = 300;
 export const STREAK_FREEZE_COST = 650;
@@ -27,16 +37,21 @@ export function codBoostCost(percent) {
   return p * COD_BOOST_COST_PER_PERCENT;
 }
 
-export function defaultAvatarSelection() {
-  return { face: "classic", hair: "buzz", clothes: "jersey" };
-}
-
-export function defaultOwnedAvatarParts() {
-  return { face: ["classic"], hair: ["buzz"], clothes: ["jersey"] };
-}
+export {
+  defaultAvatarSelection,
+  defaultOwnedAvatarParts,
+  AVATAR_PART_KEYS,
+  AVATAR_CATALOG,
+  migrateAvatarFormat,
+  isFreeAvatarCategory,
+  normalizeAvatarPartIds,
+};
 
 export function normalizeEconomy(state) {
   if (!state || typeof state !== "object") return state;
+
+  migrateAvatarFormat(state);
+  normalizeAvatarPartIds(state);
 
   if (!state.profile) state.profile = {};
   if (!state.profile.avatar || typeof state.profile.avatar !== "object") {
@@ -45,12 +60,16 @@ export function normalizeEconomy(state) {
   if (!state.ownedAvatarParts || typeof state.ownedAvatarParts !== "object") {
     state.ownedAvatarParts = defaultOwnedAvatarParts();
   }
-  for (const key of ["face", "hair", "clothes"]) {
+  for (const key of AVATAR_PART_KEYS) {
     if (!Array.isArray(state.ownedAvatarParts[key])) {
       state.ownedAvatarParts[key] = defaultOwnedAvatarParts()[key];
     }
+    if (key === "skin") {
+      state.ownedAvatarParts.skin = AVATAR_CATALOG.skin.map((item) => item.id);
+      continue;
+    }
     const freeId = defaultAvatarSelection()[key];
-    if (!state.ownedAvatarParts[key].includes(freeId)) {
+    if (freeId && !state.ownedAvatarParts[key].includes(freeId)) {
       state.ownedAvatarParts[key].unshift(freeId);
     }
   }
@@ -213,6 +232,9 @@ export function purchaseCodBoost(state, percent) {
 }
 
 export function purchaseAvatarPart(state, category, itemId, price) {
+  if (isFreeAvatarCategory(category)) {
+    return equipAvatarPart(state, category, itemId);
+  }
   const owned = state.ownedAvatarParts?.[category] || [];
   if (owned.includes(itemId)) return { ok: false, error: "Already owned" };
   if (!spendCoins(state, price)) return { ok: false, error: "Not enough coins" };
@@ -221,6 +243,12 @@ export function purchaseAvatarPart(state, category, itemId, price) {
 }
 
 export function equipAvatarPart(state, category, itemId) {
+  if (isFreeAvatarCategory(category)) {
+    const item = AVATAR_CATALOG[category]?.find((entry) => entry.id === itemId);
+    if (!item) return { ok: false, error: "Unknown style" };
+    state.profile.avatar = { ...state.profile.avatar, [category]: itemId };
+    return { ok: true };
+  }
   const owned = state.ownedAvatarParts?.[category] || [];
   if (!owned.includes(itemId)) return { ok: false, error: "Not owned" };
   state.profile.avatar = { ...state.profile.avatar, [category]: itemId };
@@ -231,9 +259,12 @@ export const COINS_HELP_TEXT =
   "Coins unlock streak freezes, avatar styles, and tomorrow's Card of the Day boost in the Shop. Earn 200 coins per unique scan and 300 coins at the start of each day.";
 
 function mergeOwnedAvatarParts(a = {}, b = {}) {
-  const out = { face: [], hair: [], clothes: [] };
-  for (const key of ["face", "hair", "clothes"]) {
+  const out = defaultOwnedAvatarParts();
+  for (const key of AVATAR_PART_KEYS) {
     out[key] = [...new Set([...(a[key] || []), ...(b[key] || [])])];
+    if (key === "skin") {
+      out.skin = AVATAR_CATALOG.skin.map((item) => item.id);
+    }
   }
   return out;
 }

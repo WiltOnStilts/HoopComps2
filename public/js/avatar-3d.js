@@ -1,14 +1,15 @@
-/** 3D collector avatar — Three.js bust with shop part variants */
+/** 3D collector avatar — modular Face + Torso parts */
 
 import * as THREE from "https://esm.sh/three@0.170.0";
-import { avatarSelection, findAvatarItem } from "./avatar-catalog.js";
+import { avatarSelection, findAvatarItem, skinHex, AVATAR_PART_KEYS } from "./avatar-catalog.js";
 
-const SKIN = 0xc68642;
 const mounts = new WeakMap();
+const HEAD_Y = 0.52;
 
 function mat(color, opts = {}) {
+  const c = typeof color === "string" ? new THREE.Color(color) : color;
   return new THREE.MeshStandardMaterial({
-    color,
+    color: c,
     roughness: opts.roughness ?? 0.62,
     metalness: opts.metalness ?? 0.08,
     emissive: opts.emissive ?? 0x000000,
@@ -30,159 +31,289 @@ function addMesh(group, geometry, material, position, rotation, scale) {
   return mesh;
 }
 
-function buildHair(group, hairId) {
-  const dark = mat(0x2b2118);
-  const headY = 0.52;
+function buildEars(group, skinMat) {
+  addMesh(group, new THREE.SphereGeometry(0.07, 10, 10), skinMat, [-0.33, HEAD_Y, 0.02], [0, 0, 0.2]);
+  addMesh(group, new THREE.SphereGeometry(0.07, 10, 10), skinMat, [0.33, HEAD_Y, 0.02], [0, 0, -0.2]);
+}
 
-  switch (hairId) {
-    case "curly":
-      for (let i = 0; i < 9; i++) {
-        const a = (i / 9) * Math.PI * 2;
-        addMesh(
-          group,
-          new THREE.SphereGeometry(0.11, 10, 10),
-          dark,
-          [Math.cos(a) * 0.18, headY + 0.08 + Math.sin(i) * 0.02, Math.sin(a) * 0.18]
-        );
-      }
+function buildEyebrows(group, browsId) {
+  const brow = mat(0x2b2118);
+  const y = HEAD_Y + 0.12;
+  const z = 0.29;
+
+  switch (browsId) {
+    case "thick":
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.035, 0.02), brow, [-0.11, y, z]);
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.035, 0.02), brow, [0.11, y, z]);
       break;
-    case "wave":
-      addMesh(group, new THREE.SphereGeometry(0.34, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), dark, [0, headY + 0.02, -0.02], [0.15, 0, 0]);
+    case "arched":
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.02, 0.02), brow, [-0.11, y + 0.02, z], [0, 0, 0.35]);
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.02, 0.02), brow, [0.11, y + 0.02, z], [0, 0, -0.35]);
       break;
-    case "cap": {
-      const cap = mat(0x1d3557);
-      addMesh(group, new THREE.SphereGeometry(0.3, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.52), cap, [0, headY + 0.02, 0]);
-      addMesh(group, new THREE.BoxGeometry(0.42, 0.04, 0.22), cap, [0, headY - 0.02, 0.16]);
+    case "flat":
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), brow, [-0.11, y, z]);
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), brow, [0.11, y, z]);
       break;
-    }
-    case "headband":
-      addMesh(group, new THREE.TorusGeometry(0.31, 0.035, 8, 24), mat(0xe63946), [0, headY + 0.02, 0], [Math.PI / 2, 0, 0]);
+    case "bushy":
+      addMesh(group, new THREE.BoxGeometry(0.18, 0.05, 0.025), brow, [-0.11, y, z]);
+      addMesh(group, new THREE.BoxGeometry(0.18, 0.05, 0.025), brow, [0.11, y, z]);
       break;
-    case "fro":
-      addMesh(group, new THREE.SphereGeometry(0.42, 18, 18), dark, [0, headY + 0.12, 0]);
+    case "raised":
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.02, 0.02), brow, [-0.11, y + 0.04, z], [0, 0, 0.5]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.02, 0.02), brow, [0.11, y + 0.04, z], [0, 0, -0.5]);
       break;
-    case "crown": {
-      const gold = mat(0xffb703, { metalness: 0.55, roughness: 0.35 });
-      for (let i = 0; i < 5; i++) {
-        const a = -0.5 + i * 0.25;
-        addMesh(group, new THREE.ConeGeometry(0.06, 0.16, 4), gold, [a, headY + 0.34, 0]);
-      }
-      addMesh(group, new THREE.CylinderGeometry(0.32, 0.34, 0.08, 16), gold, [0, headY + 0.24, 0]);
-      break;
-    }
-    case "buzz":
+    case "natural":
     default:
-      addMesh(group, new THREE.SphereGeometry(0.33, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), dark, [0, headY + 0.02, 0]);
+      addMesh(group, new THREE.BoxGeometry(0.13, 0.022, 0.02), brow, [-0.11, y + 0.01, z], [0, 0, 0.15]);
+      addMesh(group, new THREE.BoxGeometry(0.13, 0.022, 0.02), brow, [0.11, y + 0.01, z], [0, 0, -0.15]);
       break;
   }
 }
 
-function buildFace(group, faceId) {
+function buildEyes(group, eyesId) {
   const eye = mat(0x1a120c);
-  const headY = 0.52;
+  const white = mat(0xf8f9fa);
+  const y = HEAD_Y + 0.02;
+  const z = 0.28;
 
-  const addEyes = () => {
-    addMesh(group, new THREE.SphereGeometry(0.035, 8, 8), eye, [-0.11, headY + 0.02, 0.28]);
-    addMesh(group, new THREE.SphereGeometry(0.035, 8, 8), eye, [0.11, headY + 0.02, 0.28]);
+  const addRoundEyes = (rx = 0.035, ry = 0.035) => {
+    addMesh(group, new THREE.SphereGeometry(rx, 8, 8), white, [-0.11, y, z], [0, 0, 0], [1, ry / rx, 1]);
+    addMesh(group, new THREE.SphereGeometry(rx, 8, 8), white, [0.11, y, z], [0, 0, 0], [1, ry / rx, 1]);
+    addMesh(group, new THREE.SphereGeometry(rx * 0.55, 8, 8), eye, [-0.11, y, z + 0.02]);
+    addMesh(group, new THREE.SphereGeometry(rx * 0.55, 8, 8), eye, [0.11, y, z + 0.02]);
   };
 
-  switch (faceId) {
-    case "grin":
-      addEyes();
-      addMesh(group, new THREE.TorusGeometry(0.09, 0.018, 6, 12, Math.PI), mat(0x5c3d2e), [0, headY - 0.1, 0.27], [0, 0, Math.PI]);
+  switch (eyesId) {
+    case "narrow":
+      addRoundEyes(0.04, 0.022);
       break;
-    case "cool":
-      addMesh(group, new THREE.BoxGeometry(0.34, 0.08, 0.05), mat(0x111111), [0, headY + 0.03, 0.31]);
-      addMesh(group, new THREE.BoxGeometry(0.14, 0.05, 0.04), mat(0x111111), [0, headY + 0.03, 0.33]);
+    case "wide":
+      addRoundEyes(0.05, 0.045);
+      break;
+    case "intense":
+      addRoundEyes(0.032, 0.032);
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), eye, [-0.11, y + 0.05, z + 0.01], [0, 0, 0.2]);
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), eye, [0.11, y + 0.05, z + 0.01], [0, 0, -0.2]);
+      break;
+    case "sleepy":
+      addRoundEyes(0.034, 0.028);
+      addMesh(group, new THREE.BoxGeometry(0.15, 0.025, 0.02), mat(0xc68642), [-0.11, y + 0.04, z + 0.01], [0, 0, -0.25]);
+      addMesh(group, new THREE.BoxGeometry(0.15, 0.025, 0.02), mat(0xc68642), [0.11, y + 0.04, z + 0.01], [0, 0, 0.25]);
       break;
     case "star": {
       const star = mat(0xffd166, { emissive: 0xffb703, emissiveIntensity: 0.35 });
-      addMesh(group, new THREE.OctahedronGeometry(0.06, 0), star, [-0.11, headY + 0.02, 0.3], [0, 0, Math.PI / 4]);
-      addMesh(group, new THREE.OctahedronGeometry(0.06, 0), star, [0.11, headY + 0.02, 0.3], [0, 0, Math.PI / 4]);
-      addMesh(group, new THREE.BoxGeometry(0.08, 0.02, 0.02), mat(0x5c3d2e), [0, headY - 0.08, 0.28]);
+      addMesh(group, new THREE.OctahedronGeometry(0.06, 0), star, [-0.11, y, z + 0.02], [0, 0, Math.PI / 4]);
+      addMesh(group, new THREE.OctahedronGeometry(0.06, 0), star, [0.11, y, z + 0.02], [0, 0, Math.PI / 4]);
       break;
     }
-    case "focus":
-      addMesh(group, new THREE.SphereGeometry(0.035, 8, 8), eye, [0.11, headY + 0.02, 0.28]);
-      addMesh(group, new THREE.TorusGeometry(0.07, 0.012, 6, 16), mat(0xadb5bd), [-0.11, headY + 0.02, 0.3], [0, 0, 0]);
-      addMesh(group, new THREE.CylinderGeometry(0.015, 0.015, 0.14, 8), mat(0xadb5bd), [-0.24, headY + 0.02, 0.28], [0, 0, Math.PI / 2]);
-      addMesh(group, new THREE.BoxGeometry(0.08, 0.02, 0.02), mat(0x5c3d2e), [0, headY - 0.08, 0.28]);
+    case "shade":
+      addMesh(group, new THREE.BoxGeometry(0.36, 0.09, 0.05), mat(0x111111), [0, y + 0.01, z + 0.03]);
+      addMesh(group, new THREE.BoxGeometry(0.15, 0.05, 0.04), mat(0x111111), [0, y + 0.01, z + 0.04]);
       break;
-    case "fire": {
-      addEyes();
-      addMesh(group, new THREE.SphereGeometry(0.055, 8, 8), mat(0xff6b35, { emissive: 0xff4500, emissiveIntensity: 0.8 }), [-0.18, headY - 0.02, 0.22]);
-      addMesh(group, new THREE.SphereGeometry(0.045, 8, 8), mat(0xff9f1c, { emissive: 0xff8500, emissiveIntensity: 0.6 }), [0.2, headY + 0.08, 0.18]);
-      addMesh(group, new THREE.BoxGeometry(0.12, 0.02, 0.02), mat(0x5c3d2e), [0, headY - 0.08, 0.28]);
-      break;
-    }
-    case "goat":
-      addEyes();
-      addMesh(group, new THREE.ConeGeometry(0.04, 0.12, 4), mat(0xd4d4d4), [-0.14, headY + 0.28, 0.05], [0, 0, -0.4]);
-      addMesh(group, new THREE.ConeGeometry(0.04, 0.12, 4), mat(0xd4d4d4), [0.14, headY + 0.28, 0.05], [0, 0, 0.4]);
-      addMesh(group, new THREE.BoxGeometry(0.1, 0.02, 0.02), mat(0x5c3d2e), [0, headY - 0.08, 0.28]);
-      break;
-    case "classic":
+    case "round":
     default:
-      addEyes();
-      addMesh(group, new THREE.BoxGeometry(0.1, 0.02, 0.02), mat(0x5c3d2e), [0, headY - 0.08, 0.28]);
+      addRoundEyes();
       break;
   }
 }
 
-function buildClothes(group, clothesId, tint) {
+function buildNose(group, noseId, skinMat) {
+  const y = HEAD_Y - 0.02;
+  const z = 0.31;
+
+  switch (noseId) {
+    case "button":
+      addMesh(group, new THREE.SphereGeometry(0.045, 10, 10), skinMat, [0, y, z]);
+      break;
+    case "straight":
+      addMesh(group, new THREE.BoxGeometry(0.05, 0.12, 0.06), skinMat, [0, y, z]);
+      break;
+    case "wide":
+      addMesh(group, new THREE.BoxGeometry(0.1, 0.06, 0.07), skinMat, [0, y, z]);
+      break;
+    case "sharp":
+      addMesh(group, new THREE.ConeGeometry(0.05, 0.14, 4), skinMat, [0, y, z], [0.2, 0, 0]);
+      break;
+    case "classic":
+    default:
+      addMesh(group, new THREE.SphereGeometry(0.04, 8, 8), skinMat, [0, y, z]);
+      addMesh(group, new THREE.BoxGeometry(0.06, 0.05, 0.04), skinMat, [0, y - 0.03, z - 0.01]);
+      break;
+  }
+}
+
+function buildMouth(group, mouthId) {
+  const lip = mat(0x5c3d2e);
+  const y = HEAD_Y - 0.12;
+  const z = 0.28;
+
+  switch (mouthId) {
+    case "grin":
+      addMesh(group, new THREE.TorusGeometry(0.1, 0.018, 6, 12, Math.PI), lip, [0, y, z], [0, 0, Math.PI]);
+      break;
+    case "smirk":
+      addMesh(group, new THREE.TorusGeometry(0.07, 0.015, 6, 10, Math.PI * 0.65), lip, [0.02, y, z], [0, 0, Math.PI + 0.35]);
+      break;
+    case "flat":
+      addMesh(group, new THREE.BoxGeometry(0.1, 0.015, 0.02), lip, [0, y, z]);
+      break;
+    case "open":
+      addMesh(group, new THREE.SphereGeometry(0.055, 10, 10, 0, Math.PI * 2, 0, Math.PI), mat(0x3d1515), [0, y, z], [Math.PI, 0, 0]);
+      break;
+    case "laugh":
+      addMesh(group, new THREE.TorusGeometry(0.11, 0.02, 6, 12, Math.PI * 1.15), lip, [0, y, z], [0, 0, Math.PI]);
+      break;
+    case "tough":
+      addMesh(group, new THREE.BoxGeometry(0.11, 0.02, 0.02), lip, [0, y, z]);
+      addMesh(group, new THREE.BoxGeometry(0.04, 0.03, 0.02), lip, [-0.05, y - 0.01, z]);
+      break;
+    case "smile":
+    default:
+      addMesh(group, new THREE.TorusGeometry(0.08, 0.015, 6, 12, Math.PI), lip, [0, y, z], [0, 0, Math.PI]);
+      break;
+  }
+}
+
+function buildArms(group, buildId, fabric) {
+  const specs = {
+    slim: { radius: 0.07, length: 0.42, x: 0.46 },
+    average: { radius: 0.09, length: 0.44, x: 0.48 },
+    athletic: { radius: 0.1, length: 0.46, x: 0.5 },
+    strong: { radius: 0.12, length: 0.48, x: 0.52 },
+    powerhouse: { radius: 0.14, length: 0.5, x: 0.54 },
+  };
+  const spec = specs[buildId] || specs.average;
+  const armY = 0.02;
+
+  addMesh(
+    group,
+    new THREE.CylinderGeometry(spec.radius, spec.radius * 0.92, spec.length, 10),
+    fabric,
+    [-spec.x, armY, 0],
+    [0, 0, 0.35]
+  );
+  addMesh(
+    group,
+    new THREE.CylinderGeometry(spec.radius, spec.radius * 0.92, spec.length, 10),
+    fabric,
+    [spec.x, armY, 0],
+    [0, 0, -0.35]
+  );
+}
+
+function buildTorsoBase(group, buildId, fabric) {
+  const specs = {
+    slim: { w: 0.62, h: 0.52, d: 0.34 },
+    average: { w: 0.72, h: 0.56, d: 0.38 },
+    athletic: { w: 0.76, h: 0.58, d: 0.4 },
+    strong: { w: 0.82, h: 0.6, d: 0.42 },
+    powerhouse: { w: 0.9, h: 0.62, d: 0.44 },
+  };
+  const spec = specs[buildId] || specs.average;
+  addMesh(group, new THREE.BoxGeometry(spec.w, spec.h, spec.d), fabric, [0, -0.08, 0]);
+  buildArms(group, buildId, fabric);
+}
+
+function buildCostume(group, costumeId, tint, buildId) {
   const color = new THREE.Color(tint || "#e85d04");
   const fabric = mat(color);
   const trim = mat(0xffffff, { roughness: 0.5 });
+  const dark = mat(0x1b1b1e);
+  const neon = mat(0xffc300);
+  const gold = mat(0xffd166, { metalness: 0.4, roughness: 0.35 });
 
-  switch (clothesId) {
-    case "warmup": {
-      addMesh(group, new THREE.BoxGeometry(0.78, 0.62, 0.42), fabric, [0, -0.02, 0]);
-      addMesh(group, new THREE.BoxGeometry(0.82, 0.18, 0.44), fabric, [0, 0.28, 0], [-0.25, 0, 0]);
+  buildTorsoBase(group, buildId, fabric);
+
+  switch (costumeId) {
+    case "garbage": {
+      const vest = mat(0xffc300);
+      addMesh(group, new THREE.BoxGeometry(0.78, 0.62, 0.02), vest, [0, -0.02, 0.2]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [-0.18, 0.08, 0.22]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [0.18, 0.08, 0.22]);
+      addMesh(group, new THREE.CylinderGeometry(0.08, 0.08, 0.14, 8), neon, [0.28, 0.12, 0.15], [0, 0, Math.PI / 2]);
       break;
     }
-    case "retro":
-      addMesh(group, new THREE.BoxGeometry(0.72, 0.58, 0.38), fabric, [0, -0.08, 0]);
+    case "fastfood":
+      addMesh(group, new THREE.BoxGeometry(0.74, 0.28, 0.02), mat(0xffffff), [0, -0.02, 0.2]);
+      addMesh(group, new THREE.BoxGeometry(0.36, 0.08, 0.12), fabric, [0, 0.34, 0.02]);
+      break;
+    case "retail":
       addMesh(group, new THREE.BoxGeometry(0.74, 0.08, 0.39), trim, [0, 0.18, 0.01]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.06, 0.02), mat(0xffd166), [0.14, 0.04, 0.21]);
       break;
-    case "throwback":
-      addMesh(group, new THREE.BoxGeometry(0.62, 0.52, 0.34), fabric, [0, -0.1, 0]);
+    case "intern":
+      addMesh(group, new THREE.BoxGeometry(0.22, 0.36, 0.02), mat(0xf8f9fa), [0, 0.02, 0.2]);
+      addMesh(group, new THREE.BoxGeometry(0.04, 0.22, 0.02), mat(0xe63946), [-0.06, -0.02, 0.21]);
       break;
-    case "city":
-      addMesh(group, new THREE.BoxGeometry(0.68, 0.54, 0.36), fabric, [0, -0.08, 0]);
+    case "teacher":
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.14, 0.41), mat(0xf4a261), [0, 0.12, 0.01]);
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
+      break;
+    case "coach_hs":
       addMesh(group, new THREE.BoxGeometry(0.7, 0.12, 0.02), trim, [0, 0.02, 0.19]);
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
+      addMesh(group, new THREE.TorusGeometry(0.04, 0.012, 6, 12), mat(0xf8f9fa), [0.22, 0.02, 0.18], [Math.PI / 2, 0, 0]);
       break;
-    case "finals": {
-      const suit = mat(0x1b1b1e);
+    case "trainer":
+      addMesh(group, new THREE.BoxGeometry(0.82, 0.18, 0.44), fabric, [0, 0.28, 0], [-0.25, 0, 0]);
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), trim, [0, 0.18, 0.01]);
+      break;
+    case "scout":
+      addMesh(group, new THREE.BoxGeometry(0.68, 0.54, 0.36), mat(0x495057), [0, -0.08, 0]);
+      addMesh(group, new THREE.BoxGeometry(0.14, 0.18, 0.04), mat(0xf8f9fa), [0.24, 0.02, 0.16], [0, -0.4, 0.2]);
+      break;
+    case "analyst": {
       const shirt = mat(0xf8f9fa);
-      addMesh(group, new THREE.BoxGeometry(0.7, 0.58, 0.38), suit, [0, -0.08, 0]);
       addMesh(group, new THREE.BoxGeometry(0.22, 0.36, 0.02), shirt, [0, 0.02, 0.2]);
       addMesh(group, new THREE.BoxGeometry(0.08, 0.2, 0.03), mat(0xe63946), [0, -0.02, 0.21]);
       break;
     }
-    case "champ": {
-      addMesh(group, new THREE.BoxGeometry(0.74, 0.58, 0.4), fabric, [0, -0.06, 0]);
-      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), mat(0xffd166, { metalness: 0.4 }), [0, 0.18, 0.01]);
-      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), mat(0xffd166, { metalness: 0.4 }), [0, -0.26, 0.01]);
+    case "broadcaster":
+      addMesh(group, new THREE.BoxGeometry(0.22, 0.36, 0.02), mat(0xf8f9fa), [0, 0.02, 0.2]);
+      addMesh(group, new THREE.SphereGeometry(0.05, 8, 8), mat(0x111111), [0.2, 0.06, 0.2]);
+      addMesh(group, new THREE.CylinderGeometry(0.015, 0.015, 0.12, 6), mat(0x111111), [0.2, -0.02, 0.2]);
+      break;
+    case "gleague":
+      addMesh(group, new THREE.BoxGeometry(0.82, 0.18, 0.44), fabric, [0, 0.28, 0], [-0.25, 0, 0]);
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), trim, [0, -0.26, 0.01]);
+      break;
+    case "rookie":
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
+      addMesh(group, new THREE.BoxGeometry(0.08, 0.1, 0.02), mat(0xffffff), [-0.04, 0.02, 0.22]);
+      break;
+    case "allstar":
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), gold, [0, 0.18, 0.01]);
+      addMesh(group, new THREE.OctahedronGeometry(0.05, 0), mat(0xffffff, { emissive: 0xffd166, emissiveIntensity: 0.25 }), [0, 0.08, 0.22]);
+      break;
+    case "nba_star":
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), gold, [0, 0.18, 0.01]);
+      addMesh(group, new THREE.BoxGeometry(0.76, 0.06, 0.41), gold, [0, -0.26, 0.01]);
+      addMesh(group, new THREE.OctahedronGeometry(0.045, 0), gold, [0, 0.08, 0.23], [0, 0, Math.PI / 4]);
+      break;
+    default: {
+      const vest = mat(0xffc300);
+      addMesh(group, new THREE.BoxGeometry(0.78, 0.62, 0.02), vest, [0, -0.02, 0.2]);
       break;
     }
-    case "jersey":
-    default:
-      addMesh(group, new THREE.BoxGeometry(0.74, 0.58, 0.4), fabric, [0, -0.06, 0]);
-      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
-      break;
   }
 }
 
 export function buildAvatarGroup(profile = {}) {
   const sel = avatarSelection(profile);
-  const clothes = findAvatarItem("clothes", sel.clothes);
+  const costume = findAvatarItem("costume", sel.costume);
   const group = new THREE.Group();
+  const skinColor = skinHex(profile);
+  const skinMat = mat(skinColor);
 
-  buildClothes(group, sel.clothes, clothes.tint);
-  addMesh(group, new THREE.CylinderGeometry(0.12, 0.14, 0.12, 12), mat(SKIN), [0, 0.28, 0]);
-  addMesh(group, new THREE.SphereGeometry(0.34, 24, 24), mat(SKIN), [0, 0.52, 0]);
-  buildHair(group, sel.hair);
-  buildFace(group, sel.face);
+  buildCostume(group, sel.costume, costume.tint, sel.build);
+  addMesh(group, new THREE.CylinderGeometry(0.12, 0.14, 0.12, 12), skinMat, [0, 0.28, 0]);
+  addMesh(group, new THREE.SphereGeometry(0.34, 24, 24), skinMat, [0, HEAD_Y, 0]);
+  buildEars(group, skinMat);
+  buildEyebrows(group, sel.eyebrows);
+  buildEyes(group, sel.eyes);
+  buildNose(group, sel.nose, skinMat);
+  buildMouth(group, sel.mouth);
 
   group.position.y = -0.08;
   return group;
@@ -190,6 +321,7 @@ export function buildAvatarGroup(profile = {}) {
 
 function sizePx(size) {
   if (size === "hero") return 240;
+  if (size === "thumb") return 88;
   if (size === "lg") return 96;
   if (size === "sm") return 56;
   return 80;
@@ -311,7 +443,7 @@ export function mountAvatar3D(container, profile, { size = "lg", autoRotate = tr
 
 function avatarKey(profile) {
   const sel = avatarSelection(profile);
-  return `${sel.face}|${sel.hair}|${sel.clothes}`;
+  return AVATAR_PART_KEYS.map((key) => sel[key]).join("|");
 }
 
 export function refreshAvatar3D(container, profile, options) {

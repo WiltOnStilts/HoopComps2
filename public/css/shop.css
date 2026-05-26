@@ -74,6 +74,25 @@
   text-align: center;
 }
 
+.shop-avatar-part-preview {
+  width: 100%;
+  height: 96px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shop-avatar-part-preview.avatar-3d-mount {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.35));
+}
+
+.shop-avatar-part-preview .avatar-compose {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
 .shop-avatar-item.equipped {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(232, 93, 4, 0.25);
@@ -148,13 +167,36 @@
   border: 2px solid var(--accent);
 }
 
-/* Emoji fallback when WebGL unavailable */
+.shop-avatar-group {
+  display: grid;
+  gap: 1rem;
+}
+
+.shop-avatar-subsection h4 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.shop-avatar-subsection:first-of-type h4 {
+  margin-top: 0.35rem;
+}
+
+.shop-avatar-swatch--skin {
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
 .avatar-compose {
   position: relative;
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.2));
+  --avatar-skin: #c68642;
+  background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--avatar-skin) 55%, white), rgba(0, 0, 0, 0.2));
   border: 2px solid var(--accent);
   overflow: hidden;
   display: grid;

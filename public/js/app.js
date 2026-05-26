@@ -656,7 +656,9 @@ function renderProfile() {
  $("profileStreak").textContent = state.streak ?? 0;
  if ($("profileFreezes")) $("profileFreezes").textContent = String(state.streakFreezes ?? 0);
  $("profileScouts").textContent = uniqueScoutCount(state);
- updateProfileAvatarMount(state);
+ if (document.querySelector('[data-view="profile"]')?.classList.contains("active")) {
+  updateProfileAvatarMount(state);
+ }
 
  const coll = state.collection || [];
  const total = collectionTotal(state);

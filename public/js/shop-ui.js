@@ -163,6 +163,8 @@ export function renderShop(state, { onChange } = {}) {
 export function updateProfileAvatarMount(state) {
   const mount = document.getElementById("profileAvatarMount");
   if (!mount) return;
+  const profileView = document.querySelector('[data-view="profile"]');
+  if (profileView && !profileView.classList.contains("active")) return;
   renderAvatarInto(mount, state.profile, { size: "lg", autoRotate: true, interactive: true });
 }
 

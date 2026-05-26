@@ -1,7 +1,7 @@
 /** 3D collector avatar — Three.js bust with shop part variants */
 
 import * as THREE from "https://esm.sh/three@0.170.0";
-import { avatarSelection, findAvatarItem } from "./avatars.js";
+import { avatarSelection, findAvatarItem } from "./avatar-catalog.js";
 
 const SKIN = 0xc68642;
 const mounts = new WeakMap();
@@ -269,6 +269,7 @@ export function mountAvatar3D(container, profile, { size = "lg", autoRotate = tr
 
     let frameId = 0;
     let alive = true;
+    let visible = true;
     const animate = () => {
       if (!alive) return;
       frameId = requestAnimationFrame(animate);

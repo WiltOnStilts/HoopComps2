@@ -247,3 +247,22 @@ export function pickImageFromScout(card, scout) {
   const sold = scout.sources?.ebaySold?.items || [];
   return pickBestListingImage(card, [...sold, ...active]);
 }
+
+export function resolveCollectionImage(entry, scout) {
+  if (!entry) return null;
+  if (entry.userPhotoUrl) {
+    return { url: entry.userPhotoUrl, source: "Your photo", exactMatch: false };
+  }
+  if (entry.imageUrl && entry.imageSource === "photo") {
+    return { url: entry.imageUrl, source: "Your photo", exactMatch: false };
+  }
+  if (entry.imageUrl) {
+    return {
+      url: entry.imageUrl,
+      source: entry.imageSource || "eBay match",
+      listingTitle: entry.imageListingTitle || null,
+      exactMatch: true,
+    };
+  }
+  return pickImageFromScout(entry.card, scout);
+}

@@ -15,6 +15,7 @@ import {
  escapeHtml,
  formToCard,
  renderScoutResults,
+ clearScoutResults,
  setupResultTabs,
 } from "./scout-ui.js";
 import { initListingModal } from "./listings-ui.js";
@@ -22,8 +23,11 @@ import { initPwa } from "./pwa.js";
 import {
   initScoutWizard,
   fillScoutWizard,
+  resetScoutWizard,
   cardFromScoutForm,
   validateScoutCard,
+  getPendingScoutPhotoUrl,
+  clearPendingScoutPhoto,
 } from "./scout-wizard.js";
 import {
  loadStoredSession,
@@ -42,6 +46,7 @@ import {
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
+import { resolveCollectionImage } from "./card-image.js";
 
 const APP_NAME = "HoopComps";
 
@@ -52,6 +57,80 @@ let lastScoutCard = state.lastScout?.card || null;
 let cardOfDayData = null;
 let profileFormSavedSnapshot = null;
 let cloudPushPromise = null;
+let scoutPageWasHidden = false;
+let collectionSearchQuery = "";
+let collectionSortMode = "recent";
+
+ function resetScoutSession() {
+  resetScoutWizard($("scoutForm"));
+  clearScoutResults();
+  clearPendingScoutPhoto();
+  lastScoutData = null;
+  lastScoutCard = null;
+}
+
+function filterAndSortCollection(coll, { search, sort }) {
+  let items = [...coll];
+  const q = search?.trim().toLowerCase();
+  if (q) {
+    items = items.filter((item) => {
+      const card = item.card || {};
+      const haystack = [
+        card.title,
+        card.player,
+        card.set,
+        card.parallel,
+        card.notes,
+        card.year,
+        card.cardNumber,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
+  items.sort((a, b) => {
+    switch (sort) {
+      case "value-desc":
+        return (b.estimatedValue ?? -1) - (a.estimatedValue ?? -1);
+      case "value-asc":
+        return (a.estimatedValue ?? Number.POSITIVE_INFINITY) - (b.estimatedValue ?? Number.POSITIVE_INFINITY);
+      case "title-asc":
+        return (a.card?.title || "").localeCompare(b.card?.title || "", undefined, { sensitivity: "base" });
+      case "title-desc":
+        return (b.card?.title || "").localeCompare(a.card?.title || "", undefined, { sensitivity: "base" });
+      case "added":
+        return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+      case "recent":
+      default:
+        return (
+          new Date(b.lastScoutedAt || b.addedAt || 0) - new Date(a.lastScoutedAt || a.addedAt || 0)
+        );
+    }
+  });
+
+  return items;
+}
+
+function collectionImageHtml(item) {
+  const image = resolveCollectionImage(item);
+  if (image?.url) {
+    const safeSrc = image.url.startsWith("data:")
+      ? image.url.replace(/"/g, "&quot;")
+      : escapeHtml(image.url);
+    return `<img src="${safeSrc}" alt="" loading="lazy" />`;
+  }
+  return `<span class="collection-card-placeholder" aria-hidden="true">🃏</span>`;
+}
+
+function collectionImageSourceLabel(item) {
+  const image = resolveCollectionImage(item);
+  if (!image?.url) return "No image yet";
+  if (item.userPhotoUrl || image.source === "Your photo") return "Your photo";
+  return image.source || "eBay exact match";
+}
 
 function getProfileFormValues() {
  return {
@@ -170,25 +249,25 @@ async function renderCommunity() {
  await renderCommunityChat();
 }
 
-async function loadLeaderboard() {
+ async function loadLeaderboard() {
  const el = $("leaderboardList");
  if (!el) return;
  const entries = await fetchLeaderboard();
  if (!entries.length) {
-   const cardCount = state.collection?.length || 0;
+   const scoutCount = state.scoutCount || 0;
    const optedIn = Boolean(state.profile?.publicLeaderboard);
    if (!isLoggedIn()) {
      el.innerHTML =
-       cardCount > 0
-         ? `<p class="muted-text">Sign in to upload your ${cardCount} card${cardCount === 1 ? "" : "s"} and join the leaderboard.</p>`
+       scoutCount > 0
+         ? `<p class="muted-text">Sign in to sync your ${scoutCount} scan${scoutCount === 1 ? "" : "s"} and join the leaderboard.</p>`
          : `<p class="muted-text">Sign in and opt in on Profile to compete on the leaderboard.</p>`;
-   } else if (optedIn && cardCount > 0) {
-     el.innerHTML = `<p class="muted-text">Syncing your collection to the cloud…</p>`;
+   } else if (optedIn && scoutCount > 0) {
+     el.innerHTML = `<p class="muted-text">Syncing your scans to the cloud…</p>`;
      void pushLocalToCloud();
    } else if (optedIn) {
-     el.innerHTML = `<p class="muted-text">Add cards to your collection to rank on the leaderboard.</p>`;
+     el.innerHTML = `<p class="muted-text">Scout cards to rank on the leaderboard.</p>`;
    } else {
-     el.innerHTML = `<p class="muted-text">Turn on “Show my collection value on the public leaderboard” in Profile, then save.</p>`;
+     el.innerHTML = `<p class="muted-text">Turn on “Show my scans on the public leaderboard” in Profile, then save.</p>`;
    }
    return;
  }
@@ -198,8 +277,7 @@ async function loadLeaderboard() {
  
  #${i + 1} 
  ${escapeHtml(e.name)} 
- ${e.cardCount} cards · Lv ${e.level} 
- ${formatUsd(e.total)} 
+ ${e.scoutCount} scan${e.scoutCount === 1 ? "" : "s"} · Lv ${e.level} 
  `
  )
  .join("");
@@ -295,7 +373,6 @@ function applyCloudState(nextState) {
  renderCollection();
  renderProfile();
  renderAuthUI();
- if (state.lastScout?.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  $("profileNameInput").value = state.profile?.displayName || "";
  $("profileUsername").value = state.profile?.username || "";
  $("profilePhone").value = state.profile?.phone || "";
@@ -448,6 +525,10 @@ function renderCollection() {
  const coll = state.collection || [];
  const total = collectionTotal(state);
  const valued = collectionValuedCount(state);
+ const visible = filterAndSortCollection(coll, {
+   search: collectionSearchQuery,
+   sort: collectionSortMode,
+ });
 
  $("collectionTotalValue").textContent = total > 0 ? formatUsd(total) : "—";
  $("collectionSummary").textContent =
@@ -455,32 +536,49 @@ function renderCollection() {
  ? "Add cards from a scout report or manually below."
  : `${valued} of ${coll.length} cards have estimated values`;
 
+ const hint = $("collectionResultsHint");
+ if (hint) {
+   if (!coll.length) {
+     hint.textContent = "";
+   } else if (collectionSearchQuery.trim()) {
+     hint.textContent = `Showing ${visible.length} of ${coll.length} cards`;
+   } else {
+     hint.textContent = `${coll.length} card${coll.length === 1 ? "" : "s"} in your collection`;
+   }
+ }
+
  const list = $("collectionList");
  if (!coll.length) {
- list.innerHTML = ` 📦 Your collection is empty `;
+ list.innerHTML = `<div class="empty-collection"><span>📦</span><p>Your collection is empty</p></div>`;
  return;
  }
 
- list.innerHTML = coll
+ if (!visible.length) {
+ list.innerHTML = `<div class="empty-collection"><span>🔎</span><p>No cards match your search.</p></div>`;
+ return;
+ }
+
+ list.innerHTML = visible
  .map((item) => {
  const title = item.card?.title || "Untitled card";
  const tier = item.tier;
+ const valueHtml =
+   item.estimatedValue != null
+     ? `<p class="collection-card-value">${formatUsd(item.estimatedValue)}</p>`
+     : `<p class="collection-card-value unpriced">No estimate</p>`;
  return `
- 
- 
- ${escapeHtml(title)} 
- ${escapeHtml([item.card?.player, item.card?.year, item.card?.parallel].filter(Boolean).join(" · "))} 
- ${tier ? ` ${tier.emoji} ${tier.tier} ` : ""}
- 
- 
- Est. value 
- ${formatUsd(item.estimatedValue)} 
- 
- 
- Re-scout 
- Remove 
- 
- 
+ <article class="collection-card" data-id="${escapeHtml(item.id)}">
+   <div class="collection-card-image">${collectionImageHtml(item)}</div>
+   <div class="collection-card-body">
+     <h4>${escapeHtml(title)}</h4>
+     ${valueHtml}
+     <p class="collection-card-meta">${escapeHtml(collectionImageSourceLabel(item))}${tier ? ` · ${tier.emoji} ${escapeHtml(tier.tier)}` : ""}</p>
+   </div>
+   <div class="collection-card-actions">
+     <button type="button" class="btn-secondary btn-xs" data-action="scout-again" data-id="${escapeHtml(item.id)}">Re-scout</button>
+     <button type="button" class="btn-ghost btn-xs" data-action="remove" data-id="${escapeHtml(item.id)}">Remove</button>
+   </div>
+ </article>
  `;
  })
  .join("");
@@ -643,7 +741,9 @@ function handleAddToCollection() {
  card: lastScoutCard,
  estimatedValue: estimate,
  scoutData: lastScoutData,
+ userPhotoUrl: getPendingScoutPhotoUrl(),
  });
+ clearPendingScoutPhoto();
  state = loadState();
  updateHeaderStats();
  const btn = $("addToCollectionBtn");
@@ -798,6 +898,17 @@ function initNavigation() {
  navigate(target);
  }
  });
+ });
+}
+
+function initCollectionBrowser() {
+ $("collectionSearchInput")?.addEventListener("input", (e) => {
+   collectionSearchQuery = e.target.value || "";
+   renderCollection();
+ });
+ $("collectionSortSelect")?.addEventListener("change", (e) => {
+   collectionSortMode = e.target.value || "recent";
+   renderCollection();
  });
 }
 
@@ -961,8 +1072,9 @@ async function pushLocalToCloud() {
  if (!isLoggedIn()) return false;
  const hasCards = (state.collection?.length || 0) > 0;
  const optedIn = Boolean(state.profile?.publicLeaderboard);
+ const hasScans = (state.scoutCount || 0) > 0;
  const hasContact = Boolean(state.profile?.username?.trim() || state.profile?.phone?.trim());
- if (!hasCards && !optedIn && !hasContact) return false;
+ if (!hasCards && !optedIn && !hasContact && !hasScans) return false;
 
  if (cloudPushPromise) return cloudPushPromise;
 
@@ -1014,7 +1126,7 @@ async function reconcileCloudState() {
    applyCloudState(merged);
  }
 
- if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard) {
+ if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard || (state.scoutCount || 0) > 0) {
    await pushLocalToCloud();
  }
 }
@@ -1037,9 +1149,23 @@ async function refreshSocialPanels() {
 }
 
 function setupSessionPersistence() {
-  window.addEventListener("pageshow", () => {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      scoutPageWasHidden = true;
+      return;
+    }
+    if (document.visibilityState === "visible" && scoutPageWasHidden) {
+      scoutPageWasHidden = false;
+      resetScoutSession();
+    }
+  });
+
+  window.addEventListener("pageshow", (e) => {
     loadStoredSession();
     renderAuthUI();
+    if (e.persisted) {
+      resetScoutSession();
+    }
     if (!isLoggedIn()) return;
     bootstrapSession();
   });
@@ -1060,7 +1186,7 @@ function init() {
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
  initScoutWizard($("scoutForm"));
- if (state.lastScout?.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
+ resetScoutSession();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
@@ -1073,6 +1199,7 @@ function init() {
  $("scoutForm").requestSubmit();
  });
  initProfileForm();
+ initCollectionBrowser();
 
  updateHeaderStats();
  checkHealth().then(() => {

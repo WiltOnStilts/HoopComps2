@@ -95,8 +95,9 @@ export function getCollection(state) {
   return state.collection || [];
 }
 
-export function addToCollection(state, { card, estimatedValue, scoutData }) {
-  const image = scoutData ? pickImageFromScout(card, scoutData) : null;
+export function addToCollection(state, { card, estimatedValue, scoutData, userPhotoUrl }) {
+  const ebayImage = scoutData ? pickImageFromScout(card, scoutData) : null;
+  const photo = userPhotoUrl?.trim() || null;
   const entry = {
     id: uuid(),
     card,
@@ -105,9 +106,10 @@ export function addToCollection(state, { card, estimatedValue, scoutData }) {
     addedAt: new Date().toISOString(),
     lastScoutedAt: scoutData ? new Date().toISOString() : null,
     tier: scoutData?.valuation?.tier ?? null,
-    imageUrl: image?.url ?? null,
-    imageSource: image?.source ?? null,
-    imageListingTitle: image?.listingTitle ?? null,
+    userPhotoUrl: photo,
+    imageUrl: photo || ebayImage?.url || null,
+    imageSource: photo ? "photo" : ebayImage?.source ?? null,
+    imageListingTitle: photo ? null : ebayImage?.listingTitle ?? null,
   };
   state.collection = [entry, ...getCollection(state)];
   saveState(state);

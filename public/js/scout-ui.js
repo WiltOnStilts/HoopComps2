@@ -157,6 +157,18 @@ export function renderScoutResults(data, { ebayTipBanner }) {
   return exactData;
 }
 
+export function clearScoutResults() {
+  const panel = document.getElementById("resultsPanel");
+  const empty = document.getElementById("scoutEmptyState");
+  panel?.classList.add("hidden");
+  empty?.classList.remove("hidden");
+  const addBtn = document.getElementById("addToCollectionBtn");
+  if (addBtn) {
+    addBtn.disabled = true;
+    delete addBtn.dataset.ready;
+  }
+}
+
 export function setupResultTabs() {
   document.querySelectorAll("#resultsPanel .tab").forEach((tab) => {
     tab.addEventListener("click", () => {

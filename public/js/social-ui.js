@@ -310,6 +310,18 @@ function closeCodCommentsModal() {
 
 let chatAudience = "everyone";
 let chatTargetUsername = "";
+let hubMessageSubmitting = false;
+let socialUiBound = false;
+
+function dedupeMessages(messages) {
+  const seen = new Set();
+  return (messages || []).filter((message) => {
+    const key = message.id || `${message.authorName}|${message.text}|${message.createdAt}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 function chatAudienceLabel(audience, targetUser) {
   if (audience === "everyone") return "Talking to: everyone";
@@ -380,7 +392,7 @@ export async function renderCommunityChat() {
       audience,
       username: chatAudience === "user" ? chatTargetUsername : "",
     });
-    const messages = data.messages || [];
+    const messages = dedupeMessages(data.messages || []);
     list.innerHTML = messages.length
       ? messages.map(renderCommentCard).join("")
       : `<div class="social-empty">${chatAudience === "user" && !chatTargetUsername ? "Enter a username to start chatting." : "No messages yet — say hi!"}</div>`;
@@ -403,6 +415,9 @@ function setChatAudience(next) {
 }
 
 export function initSocialUI({ onNavigate, getState, openAuthModal }) {
+  if (socialUiBound) return;
+  socialUiBound = true;
+
   $("addFriendBtn")?.addEventListener("click", async () => {
     if (!isLoggedIn()) {
       openAuthModal("login");
@@ -577,6 +592,7 @@ export function initSocialUI({ onNavigate, getState, openAuthModal }) {
   });
 
   $("communityChatSubmit")?.addEventListener("click", async () => {
+    if (hubMessageSubmitting) return;
     if (!isLoggedIn()) {
       openAuthModal("login");
       return;
@@ -589,6 +605,11 @@ export function initSocialUI({ onNavigate, getState, openAuthModal }) {
       alert("Enter a username first");
       return;
     }
+
+    hubMessageSubmitting = true;
+    const submitBtn = $("communityChatSubmit");
+    if (submitBtn) submitBtn.disabled = true;
+
     try {
       await postHubMessage({
         text,
@@ -600,6 +621,9 @@ export function initSocialUI({ onNavigate, getState, openAuthModal }) {
     } catch (err) {
       alert(err.message);
       await renderCommunityChat();
+    } finally {
+      hubMessageSubmitting = false;
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 }

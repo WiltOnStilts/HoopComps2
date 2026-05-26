@@ -177,6 +177,54 @@
   display: none;
 }
 
+.scout-photo-block {
+  margin: 0.85rem 0 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.scout-photo-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 0.25rem;
+}
+
+.optional-tag {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.scout-photo-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.scout-photo-input {
+  width: 100%;
+  font-size: 0.82rem;
+}
+
+.scout-photo-preview {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin-top: 0.65rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.scout-photo-preview.hidden {
+  display: none;
+}
+
 @media (min-width: 769px) {
   .scout-wizard-step {
     min-height: 7rem;

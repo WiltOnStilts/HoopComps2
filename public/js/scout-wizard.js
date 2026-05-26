@@ -97,6 +97,90 @@ const STEPS = [
 let formEl = null;
 let stepIndex = 0;
 let activeSteps = [...STEPS];
+let pendingScoutPhotoUrl = null;
+
+function readPhotoFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read photo"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressPhotoDataUrl(dataUrl, maxWidth = 960) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / Math.max(img.width, 1));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(dataUrl);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => reject(new Error("Could not process photo"));
+    img.src = dataUrl;
+  });
+}
+
+export function getPendingScoutPhotoUrl() {
+  return pendingScoutPhotoUrl;
+}
+
+export function clearPendingScoutPhoto() {
+  pendingScoutPhotoUrl = null;
+  const preview = document.getElementById("scoutPhotoPreview");
+  const input = document.getElementById("scoutPhotoInput");
+  const clearBtn = document.getElementById("scoutPhotoClear");
+  if (input) input.value = "";
+  if (preview) {
+    preview.removeAttribute("src");
+    preview.classList.add("hidden");
+  }
+  clearBtn?.classList.add("hidden");
+}
+
+async function handleScoutPhotoSelected(file) {
+  if (!file?.type?.startsWith("image/")) {
+    alert("Choose a photo image file.");
+    return;
+  }
+  if (file.size > 12 * 1024 * 1024) {
+    alert("Photo is too large — try another picture under 12 MB.");
+    return;
+  }
+  try {
+    const raw = await readPhotoFile(file);
+    pendingScoutPhotoUrl = await compressPhotoDataUrl(raw);
+    const preview = document.getElementById("scoutPhotoPreview");
+    const clearBtn = document.getElementById("scoutPhotoClear");
+    if (preview) {
+      preview.src = pendingScoutPhotoUrl;
+      preview.classList.remove("hidden");
+    }
+    clearBtn?.classList.remove("hidden");
+  } catch (err) {
+    alert(err.message || "Could not use that photo");
+  }
+}
+
+function wireScoutPhotoControls() {
+  document.getElementById("scoutPhotoInput")?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (file) void handleScoutPhotoSelected(file);
+  });
+  document.getElementById("scoutPhotoClear")?.addEventListener("click", () => {
+    clearPendingScoutPhoto();
+  });
+}
 
 function isRaw(values) {
   return !values.gradingCompany?.trim();
@@ -274,6 +358,13 @@ export function initScoutWizard(form) {
         <h3 class="scout-review-heading">Ready to scout</h3>
         <p class="scout-review-intro">We'll search eBay for exact matches using the details you entered:</p>
         <p class="scout-review-query" id="scoutReviewQuery"></p>
+        <div class="scout-photo-block">
+          <label class="scout-photo-label" for="scoutPhotoInput">Take a picture of your card? <span class="optional-tag">optional</span></label>
+          <p class="scout-photo-hint muted-text">Your photo appears in your collection and may be featured on Card of the Day.</p>
+          <input type="file" id="scoutPhotoInput" class="scout-photo-input" accept="image/*" capture="environment" />
+          <img id="scoutPhotoPreview" class="scout-photo-preview hidden" alt="Card photo preview" />
+          <button type="button" class="btn-ghost btn-xs hidden" id="scoutPhotoClear">Remove photo</button>
+        </div>
         <p class="scout-review-hint muted-text">Tap Scout when this looks right. Use Back to fix any detail.</p>
       </div>
     </div>
@@ -291,6 +382,9 @@ export function initScoutWizard(form) {
   mount.querySelectorAll("[data-info-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => toggleInfo(btn));
   });
+
+  wireScoutPhotoControls();
+  clearPendingScoutPhoto();
 
   form.querySelectorAll(".scout-wizard-input, select[name]").forEach((el) => {
     el.addEventListener("change", syncBuiltTitle);
@@ -319,6 +413,21 @@ export function initScoutWizard(form) {
   });
 
   showStep(0);
+}
+
+export function resetScoutWizard(form) {
+  if (!form || !formEl) return;
+  clearPendingScoutPhoto();
+  for (const step of STEPS) {
+    const el = form.elements.namedItem(step.key);
+    if (el) el.value = step.inputType === "select" ? "" : "";
+  }
+  const titleEl = form.elements.namedItem("title");
+  if (titleEl) titleEl.value = "";
+  stepIndex = 0;
+  activeSteps = [...STEPS];
+  showStep(0);
+  syncBuiltTitle();
 }
 
 export function fillScoutWizard(form, card) {

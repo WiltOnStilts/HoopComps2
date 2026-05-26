@@ -93,7 +93,7 @@
 
         <div class="panel compact-panel leaderboard-panel">
           <h3>🏆 Collector leaderboard</h3>
-          <p class="hint">Public opt-in rankings by portfolio value</p>
+          <p class="hint">Public opt-in rankings by cards scanned</p>
           <div id="leaderboardList" class="leaderboard-list"></div>
         </div>
 
@@ -110,6 +110,12 @@
             </div>
           </div>
         </div>
+
+        <button type="button" class="dash-card about-entry-btn" data-goto="about">
+          <span class="dash-icon">ℹ️</span>
+          <span class="dash-name">About HoopComps</span>
+          <span class="dash-desc">How scouting, collections, and community work</span>
+        </button>
 
         <details class="api-setup" id="apiSetup">
           <summary>Unlock live eBay prices (Browse API)</summary>
@@ -333,8 +339,26 @@ node server.mjs</code>
         </div>
 
         <div class="collection-panels">
-        <div class="panel">
+        <div class="panel collection-browser-panel">
+          <div class="collection-toolbar">
+            <label class="field full">
+              <span>Search cards</span>
+              <input type="search" id="collectionSearchInput" placeholder="Search by title, player, set…" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Sort by</span>
+              <select id="collectionSortSelect">
+                <option value="recent">Recently scanned</option>
+                <option value="value-desc">Value: high to low</option>
+                <option value="value-asc">Value: low to high</option>
+                <option value="title-asc">Title: A–Z</option>
+                <option value="title-desc">Title: Z–A</option>
+                <option value="added">Recently added</option>
+              </select>
+            </label>
+          </div>
           <h3>Your cards</h3>
+          <p class="hint collection-results-hint" id="collectionResultsHint"></p>
           <div id="collectionList" class="collection-list"></div>
         </div>
 
@@ -420,7 +444,7 @@ node server.mjs</code>
             </label>
             <label class="field full checkbox-field" id="publicLeaderboardRow">
               <input type="checkbox" id="profilePublicLb" />
-              <span>Show my collection value on the public leaderboard</span>
+              <span>Show my scans on the public leaderboard</span>
             </label>
           </div>
           <button type="button" class="btn-secondary" id="saveProfileBtn">Save profile</button>
@@ -485,8 +509,8 @@ node server.mjs</code>
             <p>
               HoopComps is a basketball card value scout built for collectors, flippers, and investors.
               Enter any card — raw, graded, parallel, or rookie — and pull market comps from eBay, Amazon,
-              and major hobby marketplaces. Track your collection, estimate total portfolio value, compete
-              on the leaderboard, and get AI-powered insights on what you own.
+              and major hobby marketplaces. Track your collection, scout cards for comps, compete
+              on the scan leaderboard, and get AI-powered insights on what you own.
             </p>
           </section>
 

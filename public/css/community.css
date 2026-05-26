@@ -12,6 +12,13 @@
   text-align: left;
 }
 
+.about-entry-btn {
+  width: 100%;
+  min-height: 72px;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
 .community-layout {
   display: grid;
   gap: 1rem;

@@ -17,7 +17,7 @@ import {
   persistSpotlightPool,
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
-import { scanCardFromImage } from "./lib/card-scan.mjs";
+import { scanCardFromImage, warmupOcr } from "./lib/card-scan.mjs";
 import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
 import { usesPostgresSocial } from "./lib/social-store.mjs";
 import {
@@ -187,7 +187,7 @@ const server = http.createServer(async (req, res) => {
       priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
       openAiConfigured: Boolean(process.env.OPENAI_API_KEY),
       cardScanEnabled: true,
-      cardScanMode: "client-ocr",
+      cardScanMode: "server-ocr",
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",
@@ -631,6 +631,9 @@ const serverInstance = server.listen(PORT, "0.0.0.0", () => {
   } else {
     console.log(`  ${EBAY_TIP}\n`);
   }
+  warmupOcr()
+    .then(() => console.log("  Card photo OCR: ready\n"))
+    .catch((e) => console.warn("  Card photo OCR warmup skipped:", e.message, "\n"));
 });
 
 serverInstance.on("error", (err) => {

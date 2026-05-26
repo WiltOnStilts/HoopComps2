@@ -220,37 +220,18 @@ function resizeImageFile(file, maxEdge = 1400, quality = 0.85) {
   });
 }
 
-let tesseractModule = null;
-
-const TESSERACT_VENDOR = "/vendor/tesseract";
-
-async function loadTesseract() {
-  if (tesseractModule) return tesseractModule;
-  tesseractModule = await import(`${TESSERACT_VENDOR}/tesseract.esm.min.js`);
-  return tesseractModule;
+async function blobToBase64(blob) {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
-async function ocrImageFile(file, onProgress) {
-  const { createWorker } = await loadTesseract();
-  const worker = await createWorker("eng", 1, {
-    workerPath: `${TESSERACT_VENDOR}/worker.min.js`,
-    corePath: `${TESSERACT_VENDOR}/tesseract-core.wasm.js`,
-    langPath: "https://tessdata.projectnaptha.com/4.0.0",
-    gzip: true,
-    logger: (m) => {
-      if (m.status === "recognizing text" && onProgress) {
-        onProgress(Math.round(m.progress * 100));
-      }
-    },
-  });
-  try {
-    const {
-      data: { text },
-    } = await worker.recognize(file);
-    return text || "";
-  } finally {
-    await worker.terminate();
-  }
+function emptyManualReview(imageCount = 1) {
+  return parseOcrToCard("", "", imageCount);
 }
 
 function confidenceClass(level) {
@@ -367,45 +348,43 @@ async function analyzePhotos({ includeBack = true } = {}) {
 
   setStep("analyzing");
   const status = $("scanAnalyzingStatus");
-  if (status) status.textContent = "Loading text scanner (first time may take a moment)…";
+  if (status) status.textContent = "Uploading photos… (first scan may take up to a minute)";
+
+  const imageCount = includeBack && backFile ? 2 : 1;
 
   try {
-    const frontBlob = await resizeImageFile(frontFile);
-    const frontForOcr = new File([frontBlob], "front.jpg", { type: "image/jpeg" });
-
-    if (status) status.textContent = "Reading front of card…";
-    const frontText = await ocrImageFile(frontForOcr, (pct) => {
-      if (status) status.textContent = `Reading front… ${pct}%`;
-    });
-
-    let backText = "";
+    const images = [
+      {
+        side: "front",
+        base64: await blobToBase64(await resizeImageFile(frontFile)),
+      },
+    ];
     if (includeBack && backFile) {
-      const backBlob = await resizeImageFile(backFile);
-      const backForOcr = new File([backBlob], "back.jpg", { type: "image/jpeg" });
-      if (status) status.textContent = "Reading back of card…";
-      backText = await ocrImageFile(backForOcr, (pct) => {
-        if (status) status.textContent = `Reading back… ${pct}%`;
+      images.push({
+        side: "back",
+        base64: await blobToBase64(await resizeImageFile(backFile)),
       });
     }
 
-    const data = parseOcrToCard(frontText, backText);
+    if (status) status.textContent = "Analyzing photos…";
+
+    const res = await fetch("/api/scout/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ images }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Scan failed");
+
     renderReviewForm(data);
     setStep("review");
   } catch (err) {
-    console.error("Card scan OCR failed:", err);
-    const manual = confirm(
-      "Text scanner could not start. Fill in the card details manually instead?"
-    );
-    if (manual) {
-      renderReviewForm(parseOcrToCard("", ""));
-      setStep("review");
-      return;
-    }
-    alert(
-      err.message ||
-        "Could not read text from this photo — try better lighting, or fill in details manually."
-    );
-    setStep(backFile || includeBack ? "capture-back" : "capture-front");
+    console.error("Card scan failed:", err);
+    const manual = emptyManualReview(imageCount);
+    manual.scanNotes =
+      "Auto-read failed — use your photos and fill in the details below.";
+    renderReviewForm(manual);
+    setStep("review");
   }
 }
 

@@ -335,7 +335,7 @@ export function parseOcrToCard(frontText, backText = "", imageCount = null) {
     confidence,
     fieldHints,
     needsReview,
-    scanNotes: "Free on-device text scan — always double-check before scouting.",
+    scanNotes: "Fill in details from your photos — then scout for comps.",
     imageCount: imageCount ?? (backText ? 2 : 1),
     ocrPreview: {
       frontLines: lines(frontText).slice(0, 8),

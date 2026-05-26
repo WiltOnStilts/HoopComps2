@@ -180,7 +180,7 @@ node server.mjs</code>
             <p class="hint">Enter title and details — we search sold comps and marketplaces.</p>
 
             <button type="button" class="scan-open-btn scan-mobile-only hidden" id="openCardScanBtn">
-              📷 Scan card with camera
+              📷 Scan card (photo + details)
             </button>
             <input type="file" id="scanFileInput" accept="image/*" class="hidden" aria-hidden="true" />
 
@@ -652,7 +652,7 @@ node server.mjs</code>
 
         <div data-scan-step="capture-front">
           <p class="scan-step-label">Step 1 of 2 — Front</p>
-          <p class="scan-intro">Free scan — photos upload to the server for text reading. You confirm details before scouting.</p>
+          <p class="scan-intro">Photograph your card — you'll fill in the details on the next screen before scouting.</p>
           <div class="scan-preview-wrap">
             <div class="scan-preview-placeholder" id="scanFrontPlaceholder">
               <span>📷</span>
@@ -695,7 +695,7 @@ node server.mjs</code>
             <button type="button" class="btn-secondary" id="scanBackLibraryBtn">Photo library</button>
           </div>
           <div class="scan-actions scan-actions-full">
-            <button type="button" class="btn-scout" id="scanAnalyzeBtn">Analyze card</button>
+            <button type="button" class="btn-scout" id="scanAnalyzeBtn">Continue</button>
             <button type="button" class="btn-secondary" id="scanSkipBackBtn">Skip back photo</button>
             <button type="button" class="btn-secondary hidden" id="scanBackRetakeBtn">Retake back</button>
             <button type="button" class="btn-secondary" id="scanBackToFrontBtn">Back to front</button>
@@ -734,6 +734,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=19" type="module"></script>
+    <script src="/js/app.js?v=20" type="module"></script>
   </body>
 </html>

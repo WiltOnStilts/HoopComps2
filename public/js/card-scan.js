@@ -220,16 +220,6 @@ function resizeImageFile(file, maxEdge = 1400, quality = 0.85) {
   });
 }
 
-async function blobToBase64(blob) {
-  const buffer = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
 function emptyManualReview(imageCount = 1) {
   return parseOcrToCard("", "", imageCount);
 }
@@ -346,46 +336,12 @@ async function analyzePhotos({ includeBack = true } = {}) {
     return;
   }
 
-  setStep("analyzing");
-  const status = $("scanAnalyzingStatus");
-  if (status) status.textContent = "Uploading photos… (first scan may take up to a minute)";
-
   const imageCount = includeBack && backFile ? 2 : 1;
-
-  try {
-    const images = [
-      {
-        side: "front",
-        base64: await blobToBase64(await resizeImageFile(frontFile)),
-      },
-    ];
-    if (includeBack && backFile) {
-      images.push({
-        side: "back",
-        base64: await blobToBase64(await resizeImageFile(backFile)),
-      });
-    }
-
-    if (status) status.textContent = "Analyzing photos…";
-
-    const res = await fetch("/api/scout/scan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Scan failed");
-
-    renderReviewForm(data);
-    setStep("review");
-  } catch (err) {
-    console.error("Card scan failed:", err);
-    const manual = emptyManualReview(imageCount);
-    manual.scanNotes =
-      "Auto-read failed — use your photos and fill in the details below.";
-    renderReviewForm(manual);
-    setStep("review");
-  }
+  const review = emptyManualReview(imageCount);
+  review.scanNotes =
+    "Use your photos as reference — fill in the card details below, then scout.";
+  renderReviewForm(review);
+  setStep("review");
 }
 
 function openFilePicker(useCamera) {

@@ -8,7 +8,8 @@ import {
  updateCollectionEntry,
  collectionTotal,
  collectionValuedCount,
- awardXp,
+ handleScoutRewards,
+ getCoins,
  registerUniqueScan,
 } from "./storage.js";
 import {
@@ -49,6 +50,8 @@ import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
 import { resolveCollectionImage } from "./card-image.js";
 import { uniqueScoutCount } from "./card-fingerprint.js";
+import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN } from "./economy.js";
+import { renderShop, updateProfileAvatarMount } from "./shop-ui.js";
 
 const APP_NAME = "HoopComps";
 
@@ -173,7 +176,7 @@ function captureProfileFormSnapshot() {
  syncProfileSaveButton();
 }
 
-const VIEWS = ["dashboard", "community", "scout", "collection", "profile", "about"];
+const VIEWS = ["dashboard", "community", "scout", "collection", "profile", "shop", "about"];
 
 function $(id) {
  return document.getElementById(id);
@@ -190,7 +193,18 @@ function navigate(view) {
  if (view === "community") renderCommunity();
  if (view === "collection") renderCollection();
  if (view === "profile") renderProfile();
+ if (view === "shop") renderShopView();
  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderShopView() {
+ renderShop(state, {
+ onChange: (next) => {
+ state = next;
+ updateHeaderStats();
+ renderProfile();
+ },
+ });
 }
 
 function ebayTipHtml() {
@@ -199,9 +213,14 @@ function ebayTipHtml() {
 }
 
 function updateHeaderStats() {
- $("scoutLevel").textContent = state.level ?? 1;
- $("scoutXp").textContent = state.xp ?? 0;
- $("scoutStreak").textContent = `${state.streak ?? 0}🔥`;
+ const coins = getCoins(state);
+ const streak = state.streak ?? 0;
+ if ($("headerCoins")) $("headerCoins").textContent = String(coins);
+ if ($("headerStreak")) $("headerStreak").textContent = `${streak}🔥`;
+ if ($("scoutCoins")) $("scoutCoins").textContent = String(coins);
+ $("scoutStreak").textContent = `${streak}🔥`;
+ const help = $("coinsHelpText");
+ if (help) help.textContent = COINS_HELP_TEXT;
  const total = collectionTotal(state);
  const pill = $("collectionValuePill");
  if (pill) {
@@ -279,7 +298,7 @@ async function renderCommunity() {
  
  #${i + 1} 
  ${escapeHtml(e.name)} 
- ${e.scoutCount} unique scan${e.scoutCount === 1 ? "" : "s"} · Lv ${e.level} 
+ ${e.scoutCount} unique scan${e.scoutCount === 1 ? "" : "s"} · ${e.streak ?? 0}🔥 streak
  `
  )
  .join("");
@@ -611,12 +630,13 @@ function renderCollection() {
 
 function renderProfile() {
  $("profileName").textContent = state.profile?.displayName || "Scout";
- $("profileLevel").textContent = state.level ?? 1;
- const levelStat = $("profileLevelStat");
- if (levelStat) levelStat.textContent = state.level ?? 1;
- $("profileXp").textContent = state.xp ?? 0;
+ if ($("profileCoins")) $("profileCoins").textContent = String(getCoins(state));
+ if ($("profileCoinsStat")) $("profileCoinsStat").textContent = String(getCoins(state));
+ if ($("profileStreakInline")) $("profileStreakInline").textContent = String(state.streak ?? 0);
  $("profileStreak").textContent = state.streak ?? 0;
+ if ($("profileFreezes")) $("profileFreezes").textContent = String(state.streakFreezes ?? 0);
  $("profileScouts").textContent = uniqueScoutCount(state);
+ updateProfileAvatarMount(state);
 
  const coll = state.collection || [];
  const total = collectionTotal(state);
@@ -705,11 +725,11 @@ async function performScout(card) {
     const dupNotice = $("scoutDuplicateNotice");
     if (dupNotice) {
       if (isNewScan) {
-        dupNotice.classList.add("hidden");
-        dupNotice.textContent = "";
+        dupNotice.textContent = `+${COINS_PER_UNIQUE_SCAN} coins for a unique scan!`;
+        dupNotice.classList.remove("hidden");
       } else {
         dupNotice.textContent =
-          "You already scanned this card — only unique cards count toward the leaderboard.";
+          "You already scanned this card — only unique cards count toward the leaderboard and coin rewards.";
         dupNotice.classList.remove("hidden");
       }
     }
@@ -717,11 +737,7 @@ async function performScout(card) {
     const addBtn = $("addToCollectionBtn");
     addBtn.disabled = false;
 
-    const compBonus =
-      exactData.sources.ebaySold?.stats?.count || exactData.sources.ebayActive?.stats?.count
-        ? 15
-        : 0;
-    awardXp(state, 25 + compBonus);
+    handleScoutRewards(state, { isNewScan });
     state = loadState();
     updateHeaderStats();
     renderDashboard();
@@ -1182,6 +1198,10 @@ function setupSessionPersistence() {
 
   window.addEventListener("pageshow", (e) => {
     loadStoredSession();
+    state = loadState();
+    updateHeaderStats();
+    renderDashboard();
+    renderProfile();
     renderAuthUI();
     if (e.persisted) {
       resetScoutSession();

@@ -1,0 +1,163 @@
+.shop-header h2 {
+  margin: 0 0 0.35rem;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2rem;
+}
+
+.shop-layout {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.shop-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.shop-balance-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: right;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.shop-coins-value {
+  font-size: clamp(2rem, 8vw, 2.75rem);
+}
+
+.shop-section h3 {
+  margin-top: 0;
+}
+
+.shop-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.shop-boost-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.shop-boost-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.shop-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.shop-avatar-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.shop-avatar-item.equipped {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(232, 93, 4, 0.25);
+}
+
+.shop-avatar-preview {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.shop-tag {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.avatar-mount {
+  flex-shrink: 0;
+}
+
+.avatar-compose {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.2));
+  border: 2px solid var(--accent);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.avatar-compose--lg {
+  width: 72px;
+  height: 72px;
+}
+
+.avatar-compose--sm {
+  width: 40px;
+  height: 40px;
+}
+
+.avatar-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.65rem;
+}
+
+.avatar-compose--lg .avatar-layer {
+  font-size: 1.85rem;
+}
+
+.avatar-compose--sm .avatar-layer {
+  font-size: 1.1rem;
+}
+
+.avatar-clothes {
+  background: color-mix(in srgb, var(--avatar-tint, #e85d04) 35%, transparent);
+}
+
+.avatar-face {
+  transform: translateY(2px);
+}
+
+.avatar-hair {
+  transform: translateY(-8px);
+  font-size: 1.15rem;
+}
+
+.avatar-compose--lg .avatar-hair {
+  transform: translateY(-10px);
+}
+
+.stat-pill.coins .value,
+.header-stats .coins-pill .value {
+  color: #ffd166;
+}
+
+.coins-help {
+  margin: 0.65rem 0 0;
+}
+
+.shop-entry-btn {
+  border-color: rgba(255, 209, 102, 0.35);
+}

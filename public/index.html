@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="/css/social.css" />
     <link rel="stylesheet" href="/css/scout-wizard.css" />
     <link rel="stylesheet" href="/css/community.css" />
+    <link rel="stylesheet" href="/css/shop.css" />
   </head>
   <body>
     <div class="court-bg" aria-hidden="true">
@@ -64,9 +65,13 @@
           <span class="label">Collection</span>
           <span class="value" id="collectionValuePill">—</span>
         </div>
-        <div class="stat-pill compact">
-          <span class="label">Lv</span>
-          <span class="value" id="scoutLevel">1</span>
+        <div class="stat-pill compact coins-pill">
+          <span class="label">Coins</span>
+          <span class="value" id="headerCoins">0</span>
+        </div>
+        <div class="stat-pill compact streak-pill">
+          <span class="label">Streak</span>
+          <span class="value" id="headerStreak">0🔥</span>
         </div>
       </div>
     </header>
@@ -89,6 +94,12 @@
             <span class="dash-name">Community</span>
             <span class="dash-desc">Card of the Day, chat, friends &amp; collector feed</span>
           </button>
+
+          <button type="button" class="dash-card shop-entry-btn" data-goto="shop">
+            <span class="dash-icon">🛒</span>
+            <span class="dash-name">Shop</span>
+            <span class="dash-desc">Spend coins on streak freezes, avatars, and Card of the Day boosts</span>
+          </button>
         </div>
 
         <div class="panel compact-panel leaderboard-panel">
@@ -100,15 +111,16 @@
         <div class="panel compact-panel">
           <h3>Scout progress</h3>
           <div class="progress-row">
-            <div class="stat-pill">
-              <span class="label">XP</span>
-              <span class="value" id="scoutXp">0</span>
+            <div class="stat-pill coins">
+              <span class="label">Coins</span>
+              <span class="value" id="scoutCoins">0</span>
             </div>
             <div class="stat-pill streak">
               <span class="label">Streak</span>
               <span class="value" id="scoutStreak">0🔥</span>
             </div>
           </div>
+          <p class="hint coins-help" id="coinsHelpText"></p>
         </div>
 
         <button type="button" class="dash-card about-entry-btn" data-goto="about">
@@ -369,14 +381,23 @@ node server.mjs</code>
         </div>
       </section>
 
+      <!-- SHOP -->
+      <section class="view" data-view="shop">
+        <div class="shop-header panel">
+          <h2>Shop</h2>
+          <p class="hint">Spend coins on streak protection, avatar styles, and tomorrow's Card of the Day boost.</p>
+        </div>
+        <div id="shopRoot" class="shop-layout"></div>
+      </section>
+
       <!-- PROFILE -->
       <section class="view" data-view="profile">
         <div class="profile-layout">
         <div class="profile-header panel">
-          <div class="avatar">🏀</div>
+          <div id="profileAvatarMount" class="avatar-mount"></div>
           <div>
             <h2 id="profileName">Scout</h2>
-            <p class="muted-text">Level <span id="profileLevel">1</span> · <span id="profileXp">0</span> XP</p>
+            <p class="muted-text"><span id="profileCoins">0</span> coins · <span id="profileStreakInline">0</span> day streak</p>
           </div>
           <button type="button" class="btn-secondary profile-auth-btn" id="profileAuthBtn">Sign in</button>
         </div>
@@ -453,8 +474,12 @@ node server.mjs</code>
               <span class="val" id="profileStreak">0</span>
             </div>
             <div class="mini-stat">
-              <span class="label">Scout level</span>
-              <span class="val" id="profileLevelStat">1</span>
+              <span class="label">Coins</span>
+              <span class="val" id="profileCoinsStat">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="label">Streak freezes</span>
+              <span class="val" id="profileFreezes">0</span>
             </div>
           </div>
         </div>
@@ -467,6 +492,10 @@ node server.mjs</code>
           <button type="button" class="dash-card" data-goto="collection">
             <span class="dash-icon">📦</span>
             <span class="dash-name">View collection</span>
+          </button>
+          <button type="button" class="dash-card" data-goto="shop">
+            <span class="dash-icon">🛒</span>
+            <span class="dash-name">Shop</span>
           </button>
           <button type="button" class="dash-card" data-goto="community">
             <span class="dash-icon">👥</span>
@@ -645,6 +674,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=24" type="module"></script>
+    <script src="/js/app.js?v=25" type="module"></script>
   </body>
 </html>

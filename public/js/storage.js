@@ -5,6 +5,13 @@ import {
   mergeCollectionByFingerprint,
   migrateScanTracking,
 } from "./card-fingerprint.js";
+import {
+  migrateEconomy,
+  normalizeEconomy,
+  grantDailyCoins,
+  recordScoutStreak,
+  awardUniqueScanCoins,
+} from "./economy.js";
 
 const STORAGE_KEY = "hoopcomps";
 
@@ -32,10 +39,19 @@ export function loadState() {
     if ((legacyComps || legacy) && !raw) {
       localStorage.setItem(STORAGE_KEY, parsed);
     }
-    return normalizeState(data);
+    return maybeGrantDailyCoins(normalizeState(data));
   } catch {
     return defaultState();
   }
+}
+
+function maybeGrantDailyCoins(state) {
+  const granted = grantDailyCoins(state);
+  if (granted > 0) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    notifyChange(state);
+  }
+  return state;
 }
 
 function normalizeState(data) {
@@ -45,17 +61,19 @@ function normalizeState(data) {
       : {};
 
   const state = {
-    xp: 0,
-    level: 1,
+    coins: 0,
     streak: 0,
+    streakFreezes: 0,
     scoutCount: 0,
     scannedCards,
+    ownedAvatarParts: { face: ["classic"], hair: ["buzz"], clothes: ["jersey"] },
     profile: {
       displayName: "Scout",
       favoritePlayer: "",
       favoriteTeam: "",
       collectorStyle: "investor",
       publicLeaderboard: false,
+      avatar: { face: "classic", hair: "buzz", clothes: "jersey" },
       ...data.profile,
     },
     collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
@@ -67,6 +85,7 @@ function normalizeState(data) {
       favoriteTeam: "",
       collectorStyle: "investor",
       publicLeaderboard: false,
+      avatar: { face: "classic", hair: "buzz", clothes: "jersey" },
       ...data.profile,
     },
     collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
@@ -75,22 +94,27 @@ function normalizeState(data) {
 
   syncScoutCount(state);
   migrateScanTracking(state);
+  migrateEconomy(state);
+  normalizeEconomy(state);
   return state;
 }
 
 function defaultState() {
   return {
-    xp: 0,
-    level: 1,
+    coins: 0,
+    economyVersion: 1,
     streak: 0,
+    streakFreezes: 0,
     scoutCount: 0,
     scannedCards: {},
+    ownedAvatarParts: { face: ["classic"], hair: ["buzz"], clothes: ["jersey"] },
     profile: {
       displayName: "Scout",
       favoritePlayer: "",
       favoriteTeam: "",
       collectorStyle: "investor",
       publicLeaderboard: false,
+      avatar: { face: "classic", hair: "buzz", clothes: "jersey" },
     },
     collection: [],
     lastScout: null,
@@ -106,8 +130,19 @@ export function replaceState(next) {
 
 export function saveState(state) {
   syncScoutCount(state);
+  normalizeEconomy(state);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   notifyChange(state);
+}
+
+export function handleScoutRewards(state, { isNewScan }) {
+  if (isNewScan) {
+    awardUniqueScanCoins(state);
+  } else {
+    recordScoutStreak(state);
+  }
+  saveState(state);
+  return state;
 }
 
 export function uuid() {
@@ -208,17 +243,6 @@ export function collectionValuedCount(state) {
   return getCollection(state).filter((c) => c.estimatedValue != null).length;
 }
 
-export function awardXp(state, amount) {
-  const today = new Date().toDateString();
-  state.xp = (state.xp || 0) + amount;
-  state.level = Math.floor(state.xp / 100) + 1;
-  if (state.lastScoutDate !== today) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    state.streak =
-      state.lastScoutDate === yesterday.toDateString() ? (state.streak || 0) + 1 : 1;
-    state.lastScoutDate = today;
-  }
-  saveState(state);
-  return state;
+export function getCoins(state) {
+  return state.coins ?? 0;
 }

@@ -178,7 +178,7 @@ async function openFriendModal(userId) {
     const coll = data.collection || [];
     body.innerHTML = `
       <h2 id="friendModalTitle">${escapeHtml(u.displayName)}</h2>
-      <p class="social-modal-sub">${escapeHtml(u.email)} · Level ${u.level}</p>
+      <p class="social-modal-sub">${escapeHtml(u.email)} · ${u.coins ?? 0} coins</p>
       <div class="friend-modal-stats">
         <div><span>${u.cardCount}</span> cards</div>
         <div><span>${u.collectionValue > 0 ? formatUsd(u.collectionValue) : "—"}</span> collection</div>

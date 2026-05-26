@@ -703,8 +703,26 @@ body {
     backdrop-filter: blur(14px);
   }
 
-  body.mobile-signed-in .header-stats .stat-pill.compact {
+  body.mobile-signed-in .header-stats .stat-pill.compact:not(.coins-pill):not(.streak-pill) {
     display: none;
+  }
+
+  body.mobile-signed-in .header-stats .coins-pill,
+  body.mobile-signed-in .header-stats .streak-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    min-width: 0;
+    padding: 0.35rem 0.55rem;
+  }
+
+  body.mobile-signed-in .header-stats .coins-pill .label,
+  body.mobile-signed-in .header-stats .streak-pill .label {
+    display: none;
+  }
+
+  body.mobile-signed-in .header-stats .coins-pill .value,
+  body.mobile-signed-in .header-stats .streak-pill .value {
+    font-size: 0.82rem;
   }
 
   body.mobile-signed-in .header-stats .auth-pill {

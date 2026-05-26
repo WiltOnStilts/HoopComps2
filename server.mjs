@@ -17,7 +17,7 @@ import {
   persistSpotlightPool,
 } from "./lib/spotlight-pool.mjs";
 import { generateCollectionInsights } from "./lib/ai-estimate.mjs";
-import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats } from "./lib/db.mjs";
+import { initDb, isDbReady, getLeaderboard, countUsers, storageMode, getAllCommunityCards, findUserByEmail, getCommunityCardStats, getAllUserCodBoosts } from "./lib/db.mjs";
 import { usesPostgresSocial } from "./lib/social-store.mjs";
 import {
   registerUser,
@@ -349,11 +349,13 @@ const server = http.createServer(async (req, res) => {
         communityCards,
         findUserByEmail
       );
+      const userBoosts = isDbReady() ? await getAllUserCodBoosts() : {};
       const result = await getCardOfDayWithScout(
         scoutCard,
         ebayConfig(),
         cards,
-        spotlightUserIds
+        spotlightUserIds,
+        userBoosts
       );
       send(res, 200, result);
     } catch (e) {

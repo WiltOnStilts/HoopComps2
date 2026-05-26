@@ -535,7 +535,7 @@ function renderCollection() {
  $("collectionTotalValue").textContent = total > 0 ? formatUsd(total) : "—";
  $("collectionSummary").textContent =
  coll.length === 0
- ? "Add cards from a scout report or manually below."
+ ? "Scout a card, then add it from your scout report."
  : `${valued} of ${coll.length} cards have estimated values`;
 
  const hint = $("collectionResultsHint");
@@ -879,29 +879,6 @@ async function refreshCollectionValues() {
  }
 }
 
-function handleManualAdd(e) {
- e.preventDefault();
- const card = formToCard($("manualAddForm"));
- if (!card.title?.trim()) return;
-
- const manualVal = parseFloat($("manualValue").value);
- const qty = Math.max(1, parseInt($("manualQty")?.value, 10) || 1);
- const result = addToCollection(state, {
- card,
- estimatedValue: Number.isFinite(manualVal) ? manualVal : null,
- quantity: qty,
- });
- state = loadState();
- $("manualAddForm").reset();
- if (result.merged) {
-   alert(`That card is already in your collection — quantity is now ×${result.quantity}.`);
- }
- renderCollection();
- updateHeaderStats();
- renderDashboard();
- renderProfile();
-}
-
 function initNavigation() {
  document.querySelectorAll("[data-nav]").forEach((el) => {
  el.addEventListener("click", (e) => {
@@ -1234,7 +1211,6 @@ function init() {
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
  $("aiEstimateBtn").addEventListener("click", runAiInsights);
- $("manualAddForm").addEventListener("submit", handleManualAdd);
  $("cowScoutBtn")?.addEventListener("click", () => {
  if (!cardOfDayData?.card) return;
  navigate("scout");

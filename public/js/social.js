@@ -71,3 +71,22 @@ export async function postCodComment(text) {
     body: JSON.stringify({ text }),
   });
 }
+
+export async function fetchHubMessages({ audience = "everyone", username = "" } = {}) {
+  const params = new URLSearchParams({ audience });
+  if (username) params.set("username", username);
+  if (isLoggedIn()) {
+    return authFetch(`/api/social/hub/messages?${params}`);
+  }
+  const res = await fetch(`/api/social/hub/messages?${params}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Could not load chat");
+  return data;
+}
+
+export async function postHubMessage({ text, audience, targetUsername }) {
+  return authFetch("/api/social/hub/messages", {
+    method: "POST",
+    body: JSON.stringify({ text, audience, targetUsername }),
+  });
+}

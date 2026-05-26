@@ -41,7 +41,7 @@ import {
  pushCloudState,
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
-import { renderProfileSocial, initSocialUI } from "./social-ui.js";
+import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
 
 const APP_NAME = "HoopComps";
 
@@ -88,7 +88,7 @@ function captureProfileFormSnapshot() {
  syncProfileSaveButton();
 }
 
-const VIEWS = ["dashboard", "scout", "collection", "profile", "about"];
+const VIEWS = ["dashboard", "community", "scout", "collection", "profile", "about"];
 
 function $(id) {
  return document.getElementById(id);
@@ -102,6 +102,7 @@ function navigate(view) {
  n.classList.toggle("active", n.dataset.nav === view);
  });
  if (view === "dashboard") renderDashboard();
+ if (view === "community") renderCommunity();
  if (view === "collection") renderCollection();
  if (view === "profile") renderProfile();
  window.scrollTo({ top: 0, behavior: "smooth" });
@@ -156,22 +157,13 @@ function renderDashboard() {
  $("dashCardCount").textContent = coll.length;
  $("dashValuedCount").textContent = `${valued} / ${coll.length} priced`;
 
- const last = state.lastScout;
- const lastEl = $("dashLastScout");
- if (last?.data) {
- const est = last.data.valuation?.estimate;
- lastEl.innerHTML = `
- ${escapeHtml(last.card?.title || last.data.query)} 
- ${est != null ? formatUsd(est) : "View report"} 
- `;
- $("dashLastScoutCard").classList.remove("disabled");
- } else {
- lastEl.textContent = "No scouts yet — try your first card!";
- $("dashLastScoutCard").classList.add("disabled");
- }
-
- loadCardOfDay();
  loadLeaderboard();
+}
+
+async function renderCommunity() {
+ await loadCardOfDay();
+ await renderProfileSocial(state);
+ await renderCommunityChat();
 }
 
 async function loadLeaderboard() {
@@ -520,7 +512,6 @@ function renderProfile() {
  $("profileCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
  $("profileCardCount").textContent = coll.length;
  $("profileValuedCount").textContent = collectionValuedCount(state);
- renderProfileSocial(state);
 }
 
 async function checkHealth() {
@@ -859,8 +850,7 @@ function initAuth() {
  renderAuthUI();
  await pushLocalToCloud();
  loadLeaderboard();
- loadCardOfDay();
- renderProfileSocial(state);
+ refreshSocialPanels();
  });
 
  $("authHeaderBtn")?.addEventListener("click", () => {
@@ -1023,7 +1013,12 @@ async function bootstrapSession() {
   }
 
   renderAuthUI();
-  renderProfileSocial(state);
+  refreshSocialPanels();
+}
+
+async function refreshSocialPanels() {
+  await renderProfileSocial(state);
+  await renderCommunityChat();
 }
 
 function setupSessionPersistence() {

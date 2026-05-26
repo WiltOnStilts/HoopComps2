@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="/css/listings.css" />
     <link rel="stylesheet" href="/css/social.css" />
     <link rel="stylesheet" href="/css/scout-wizard.css" />
+    <link rel="stylesheet" href="/css/community.css" />
   </head>
   <body>
     <div class="court-bg" aria-hidden="true">
@@ -52,6 +53,7 @@
         <button type="button" class="desktop-nav-item active" data-nav="dashboard">Home</button>
         <button type="button" class="desktop-nav-item" data-nav="scout">Scout</button>
         <button type="button" class="desktop-nav-item" data-nav="collection">Collection</button>
+        <button type="button" class="desktop-nav-item" data-nav="community">Community</button>
         <button type="button" class="desktop-nav-item" data-nav="profile">Profile</button>
         <button type="button" class="desktop-nav-item" data-nav="about">About</button>
       </nav>
@@ -74,7 +76,7 @@
       <section class="view active" data-view="dashboard">
         <div id="dashboardEbayBanner" class="banner-slot hidden"></div>
 
-        <div class="dashboard-top">
+        <div class="dashboard-home-layout">
           <div class="hero-card">
             <p class="hero-label">Your collection</p>
             <h2 class="hero-value" id="dashCollectionValue">—</h2>
@@ -82,57 +84,10 @@
             <p class="hero-count"><span id="dashCardCount">0</span> cards tracked</p>
           </div>
 
-          <div class="panel card-of-week" id="cardOfWeekPanel">
-            <div class="cow-layout">
-              <figure class="cow-visual" id="cowVisual">
-                <div class="cow-image-frame">
-                  <img id="cowImage" class="cow-image hidden" alt="" loading="lazy" />
-                  <div id="cowImagePlaceholder" class="cow-image-placeholder" aria-hidden="true">🃏</div>
-                </div>
-                <figcaption class="cow-image-caption hidden" id="cowImageCaption"></figcaption>
-              </figure>
-              <div class="cow-content">
-                <div class="cow-header">
-                  <div>
-                    <p class="cow-badge" id="cowBadge">🏆 Card of the Day</p>
-                    <h3 id="cowTitle">Loading spotlight…</h3>
-                    <p class="cow-sub" id="cowSub"></p>
-                    <p class="cow-owner" id="cowOwner"></p>
-                  </div>
-                  <div class="cow-estimate" id="cowEstimate">—</div>
-                </div>
-                <p class="cow-blurb" id="cowBlurb"></p>
-                <div class="price-variation-bar" id="cowVariation"></div>
-                <div class="cow-actions">
-                  <button type="button" class="btn-secondary" id="cowScoutBtn">Scout this card</button>
-                  <button type="button" class="btn-secondary" id="cowCommentBtn">Comment on this card</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <h3 class="section-title">Quick actions</h3>
-        <div class="dash-grid">
-          <button type="button" class="dash-card accent" data-goto="scout">
-            <span class="dash-icon">🔍</span>
-            <span class="dash-name">Scout a card</span>
-            <span class="dash-desc">Check market value from title & details</span>
-          </button>
-          <button type="button" class="dash-card" data-goto="collection">
-            <span class="dash-icon">📦</span>
-            <span class="dash-name">My collection</span>
-            <span class="dash-desc">Add cards & total portfolio value</span>
-          </button>
-          <button type="button" class="dash-card" data-goto="profile">
-            <span class="dash-icon">👤</span>
-            <span class="dash-name">Profile</span>
-            <span class="dash-desc">Scout level, XP, streak & stats</span>
-          </button>
-          <button type="button" class="dash-card" id="dashLastScoutCard" data-goto="last-scout">
-            <span class="dash-icon">📋</span>
-            <span class="dash-name">Last scout report</span>
-            <span class="dash-desc" id="dashLastScout">No scouts yet</span>
+          <button type="button" class="dash-card accent community-entry-btn" data-goto="community">
+            <span class="dash-icon">👥</span>
+            <span class="dash-name">Community</span>
+            <span class="dash-desc">Card of the Day, chat, friends &amp; collector feed</span>
           </button>
         </div>
 
@@ -168,6 +123,129 @@ node server.mjs</code>
             App ID + Cert ID are under Production keys. Active listings use Browse API; sold comps need Marketplace Insights or the scout links.
           </p>
         </details>
+      </section>
+
+      <!-- COMMUNITY -->
+      <section class="view" data-view="community">
+        <div class="community-header panel">
+          <h2>Community</h2>
+          <p class="hint">Card of the Day, chat with collectors, friends, and your feed.</p>
+        </div>
+
+        <div class="community-layout">
+          <div class="community-main">
+        <div class="panel card-of-week" id="cardOfWeekPanel">
+          <div class="cow-layout">
+            <figure class="cow-visual" id="cowVisual">
+              <div class="cow-image-frame">
+                <img id="cowImage" class="cow-image hidden" alt="" loading="lazy" />
+                <div id="cowImagePlaceholder" class="cow-image-placeholder" aria-hidden="true">🃏</div>
+              </div>
+              <figcaption class="cow-image-caption hidden" id="cowImageCaption"></figcaption>
+            </figure>
+            <div class="cow-content">
+              <div class="cow-header">
+                <div>
+                  <p class="cow-badge" id="cowBadge">🏆 Card of the Day</p>
+                  <h3 id="cowTitle">Loading spotlight…</h3>
+                  <p class="cow-sub" id="cowSub"></p>
+                  <p class="cow-owner" id="cowOwner"></p>
+                </div>
+                <div class="cow-estimate" id="cowEstimate">—</div>
+              </div>
+              <p class="cow-blurb" id="cowBlurb"></p>
+              <div class="price-variation-bar" id="cowVariation"></div>
+              <div class="cow-actions">
+                <button type="button" class="btn-secondary" id="cowScoutBtn">Scout this card</button>
+                <button type="button" class="btn-secondary" id="cowCommentBtn">Comment on this card</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel social-panel" id="communityChatPanel">
+          <h3>Chat</h3>
+          <p class="hint">Pick who you're talking to, then comment below.</p>
+          <div class="chat-audience-tabs" role="tablist" aria-label="Chat audience">
+            <button type="button" class="chat-audience-tab active" data-chat-audience="everyone">Everyone</button>
+            <button type="button" class="chat-audience-tab" data-chat-audience="friends">Friends</button>
+            <button type="button" class="chat-audience-tab" data-chat-audience="user">User</button>
+          </div>
+          <div id="chatUserTargetRow" class="chat-user-target hidden">
+            <label class="field full">
+              <span>Username</span>
+              <input type="text" id="chatTargetUsername" placeholder="e.g. WiltOnStilts" autocomplete="off" />
+            </label>
+            <button type="button" class="btn-secondary btn-sm" id="chatLoadUserBtn">Load chat</button>
+          </div>
+          <p class="chat-audience-label muted-text" id="chatAudienceLabel">Talking to: everyone</p>
+          <div id="communityChatList" class="comment-list chat-message-list"></div>
+          <div id="communityChatSignIn" class="social-empty hidden">Sign in to join the conversation.</div>
+          <div id="communityChatAgreement" class="comment-agreement hidden">
+            <p id="communityChatAgreementText"></p>
+            <label class="checkbox-field">
+              <input type="checkbox" id="communityChatAgreementCheck" />
+              <span>I agree to today's community rules</span>
+            </label>
+            <button type="button" class="btn-secondary btn-sm" id="communityChatAgreementBtn" disabled>Continue</button>
+          </div>
+          <div id="communityChatBan" class="comment-ban hidden">
+            <p id="communityChatBanText"></p>
+          </div>
+          <div id="communityChatCompose" class="comment-compose hidden">
+            <textarea id="communityChatInput" rows="2" placeholder="Say something to collectors…"></textarea>
+            <button type="button" class="btn-secondary" id="communityChatSubmit">Send</button>
+          </div>
+        </div>
+          </div>
+
+          <div class="community-side">
+            <div id="profileSocialGuest" class="panel social-panel hidden">
+              <h3>Friends &amp; posts</h3>
+              <p class="hint">Sign in to add friends, view their collections, and post about your latest pulls.</p>
+            </div>
+
+            <div id="profileSocialSignedIn">
+              <div class="panel social-panel">
+                <h3>Friends</h3>
+                <p class="hint">Add collectors by email. Friends can view each other's collections and posts.</p>
+                <div class="friend-add-row">
+                  <input type="email" id="friendEmailInput" placeholder="friend@email.com" autocomplete="email" />
+                  <button type="button" class="btn-secondary" id="addFriendBtn">Add friend</button>
+                </div>
+                <p class="section-label">Your friends</p>
+                <div class="friend-list" id="friendsList"></div>
+                <p class="section-label">Requests</p>
+                <div class="request-list" id="friendRequestsList"></div>
+              </div>
+
+              <div class="panel social-panel">
+                <h3>Collector feed</h3>
+                <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
+                <div class="post-compose">
+                  <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
+                  <div class="post-compose-grid">
+                    <label class="field">
+                      <span>Recent card (optional)</span>
+                      <select id="postRecentCard"></select>
+                    </label>
+                    <label class="field">
+                      <span>Or card title</span>
+                      <input type="text" id="postCardTitle" placeholder="2026 Topps Flagship #202" />
+                    </label>
+                    <label class="field">
+                      <span>Est. value ($)</span>
+                      <input type="number" id="postCardValue" min="0" step="0.01" placeholder="Optional" />
+                    </label>
+                  </div>
+                  <button type="button" class="btn-secondary" id="publishPostBtn">Post update</button>
+                </div>
+                <p class="section-label">Your posts</p>
+                <div class="post-list" id="profilePostsList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- SCOUT -->
@@ -355,7 +433,7 @@ node server.mjs</code>
           </div>
         </div>
 
-        <div class="dash-grid">
+        <div class="dash-grid profile-shortcuts">
           <button type="button" class="dash-card" data-goto="scout">
             <span class="dash-icon">🔍</span>
             <span class="dash-name">Scout a card</span>
@@ -364,51 +442,10 @@ node server.mjs</code>
             <span class="dash-icon">📦</span>
             <span class="dash-name">View collection</span>
           </button>
-        </div>
-
-        <div id="profileSocialGuest" class="panel social-panel hidden">
-          <h3>Friends &amp; posts</h3>
-          <p class="hint">Sign in to add friends, view their collections, and post about your latest pulls.</p>
-        </div>
-
-        <div id="profileSocialSignedIn">
-          <div class="panel social-panel">
-            <h3>Friends</h3>
-            <p class="hint">Add collectors by email. Friends can view each other's collections and posts.</p>
-            <div class="friend-add-row">
-              <input type="email" id="friendEmailInput" placeholder="friend@email.com" autocomplete="email" />
-              <button type="button" class="btn-secondary" id="addFriendBtn">Add friend</button>
-            </div>
-            <p class="section-label">Your friends</p>
-            <div class="friend-list" id="friendsList"></div>
-            <p class="section-label">Requests</p>
-            <div class="request-list" id="friendRequestsList"></div>
-          </div>
-
-          <div class="panel social-panel">
-            <h3>Your collector feed</h3>
-            <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
-            <div class="post-compose">
-              <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
-              <div class="post-compose-grid">
-                <label class="field">
-                  <span>Recent card (optional)</span>
-                  <select id="postRecentCard"></select>
-                </label>
-                <label class="field">
-                  <span>Or card title</span>
-                  <input type="text" id="postCardTitle" placeholder="2026 Topps Flagship #202" />
-                </label>
-                <label class="field">
-                  <span>Est. value ($)</span>
-                  <input type="number" id="postCardValue" min="0" step="0.01" placeholder="Optional" />
-                </label>
-              </div>
-              <button type="button" class="btn-secondary" id="publishPostBtn">Post update</button>
-            </div>
-            <p class="section-label">Your posts</p>
-            <div class="post-list" id="profilePostsList"></div>
-          </div>
+          <button type="button" class="dash-card" data-goto="community">
+            <span class="dash-icon">👥</span>
+            <span class="dash-name">Community</span>
+          </button>
         </div>
         </div>
       </section>
@@ -488,13 +525,13 @@ node server.mjs</code>
         <span class="nav-icon">📦</span>
         <span>Collection</span>
       </button>
+      <button type="button" class="nav-item" data-nav="community">
+        <span class="nav-icon">👥</span>
+        <span>Community</span>
+      </button>
       <button type="button" class="nav-item" data-nav="profile">
         <span class="nav-icon">👤</span>
         <span>Profile</span>
-      </button>
-      <button type="button" class="nav-item" data-nav="about">
-        <span class="nav-icon">ℹ️</span>
-        <span>About</span>
       </button>
       <button type="button" class="nav-item nav-auth mobile-only hidden" id="mobileAuthHint">
         <span class="nav-icon">☁️</span>
@@ -582,6 +619,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=22" type="module"></script>
+    <script src="/js/app.js?v=24" type="module"></script>
   </body>
 </html>

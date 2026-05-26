@@ -12,6 +12,8 @@ import {
   postCodComment,
   acceptCodCommentAgreement,
   oneTimeTestUnbanComments,
+  fetchHubMessages,
+  postHubMessage,
 } from "./social.js";
 
 function $(id) {
@@ -306,6 +308,100 @@ function closeCodCommentsModal() {
   $("codCommentsModal")?.classList.add("hidden");
 }
 
+let chatAudience = "everyone";
+let chatTargetUsername = "";
+
+function chatAudienceLabel(audience, targetUser) {
+  if (audience === "everyone") return "Talking to: everyone";
+  if (audience === "friends") return "Talking to: friends only";
+  if (audience === "user") {
+    if (targetUser?.displayName) return `Talking to: ${targetUser.displayName}`;
+    if (chatTargetUsername) return `Talking to: @${chatTargetUsername}`;
+    return "Enter a username above";
+  }
+  return "";
+}
+
+function renderHubChatControls(data) {
+  const signInEl = $("communityChatSignIn");
+  const agreementEl = $("communityChatAgreement");
+  const composeEl = $("communityChatCompose");
+  const banEl = $("communityChatBan");
+  const agreementText = $("communityChatAgreementText");
+  const agreementCheck = $("communityChatAgreementCheck");
+  const agreementBtn = $("communityChatAgreementBtn");
+
+  signInEl?.classList.add("hidden");
+  agreementEl?.classList.add("hidden");
+  composeEl?.classList.add("hidden");
+  banEl?.classList.add("hidden");
+
+  if (data.needsTarget && chatAudience === "user") {
+    return;
+  }
+
+  if (data.commentBan) {
+    if ($("communityChatBanText")) {
+      $("communityChatBanText").textContent = `You cannot chat until ${formatBanWhen(data.commentBan.until)} due to a community guidelines violation.`;
+    }
+    banEl?.classList.remove("hidden");
+    return;
+  }
+
+  if (!data.signedIn) {
+    signInEl?.classList.remove("hidden");
+    return;
+  }
+
+  if (agreementText && data.agreementText) {
+    agreementText.textContent = data.agreementText;
+  }
+
+  if (data.canPost) {
+    composeEl?.classList.remove("hidden");
+    return;
+  }
+
+  agreementEl?.classList.remove("hidden");
+  if (agreementCheck) agreementCheck.checked = false;
+  if (agreementBtn) agreementBtn.disabled = true;
+}
+
+export async function renderCommunityChat() {
+  const list = $("communityChatList");
+  const label = $("chatAudienceLabel");
+  if (!list) return;
+
+  const audience = chatAudience === "user" ? "direct" : chatAudience;
+  list.innerHTML = `<p class="muted-text">Loading chat…</p>`;
+
+  try {
+    const data = await fetchHubMessages({
+      audience,
+      username: chatAudience === "user" ? chatTargetUsername : "",
+    });
+    const messages = data.messages || [];
+    list.innerHTML = messages.length
+      ? messages.map(renderCommentCard).join("")
+      : `<div class="social-empty">${chatAudience === "user" && !chatTargetUsername ? "Enter a username to start chatting." : "No messages yet — say hi!"}</div>`;
+    list.scrollTop = list.scrollHeight;
+    if (label) label.textContent = chatAudienceLabel(chatAudience, data.targetUser);
+    renderHubChatControls(data);
+  } catch (err) {
+    list.innerHTML = `<div class="social-empty">${escapeHtml(err.message)}</div>`;
+    renderHubChatControls({ signedIn: isLoggedIn() });
+  }
+}
+
+function setChatAudience(next) {
+  chatAudience = next;
+  document.querySelectorAll(".chat-audience-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.chatAudience === next);
+  });
+  $("chatUserTargetRow")?.classList.toggle("hidden", next !== "user");
+  void renderCommunityChat();
+}
+
 export function initSocialUI({ onNavigate, getState, openAuthModal }) {
   $("addFriendBtn")?.addEventListener("click", async () => {
     if (!isLoggedIn()) {
@@ -443,4 +539,67 @@ export function initSocialUI({ onNavigate, getState, openAuthModal }) {
   $("friendModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeFriendModal);
   $("codCommentsClose")?.addEventListener("click", closeCodCommentsModal);
   $("codCommentsModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeCodCommentsModal);
+
+  document.querySelectorAll(".chat-audience-tab").forEach((tab) => {
+    tab.addEventListener("click", () => setChatAudience(tab.dataset.chatAudience));
+  });
+
+  $("chatLoadUserBtn")?.addEventListener("click", () => {
+    chatTargetUsername = $("chatTargetUsername")?.value?.trim() || "";
+    void renderCommunityChat();
+  });
+
+  $("chatTargetUsername")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      chatTargetUsername = e.target.value?.trim() || "";
+      void renderCommunityChat();
+    }
+  });
+
+  $("communityChatAgreementCheck")?.addEventListener("change", (e) => {
+    const btn = $("communityChatAgreementBtn");
+    if (btn) btn.disabled = !e.target.checked;
+  });
+
+  $("communityChatAgreementBtn")?.addEventListener("click", async () => {
+    if (!isLoggedIn()) {
+      openAuthModal("login");
+      return;
+    }
+    if (!$("communityChatAgreementCheck")?.checked) return;
+    try {
+      await acceptCodCommentAgreement();
+      await renderCommunityChat();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  $("communityChatSubmit")?.addEventListener("click", async () => {
+    if (!isLoggedIn()) {
+      openAuthModal("login");
+      return;
+    }
+    const input = $("communityChatInput");
+    const text = input?.value?.trim();
+    if (!text) return;
+    const audience = chatAudience === "user" ? "direct" : chatAudience;
+    if (audience === "direct" && !chatTargetUsername) {
+      alert("Enter a username first");
+      return;
+    }
+    try {
+      await postHubMessage({
+        text,
+        audience,
+        targetUsername: chatTargetUsername,
+      });
+      input.value = "";
+      await renderCommunityChat();
+    } catch (err) {
+      alert(err.message);
+      await renderCommunityChat();
+    }
+  });
 }

@@ -42,6 +42,8 @@ import {
   acceptCodCommentAgreement,
   oneTimeTestUnban,
   clearCommentBan,
+  listHubMessages,
+  addHubMessage,
 } from "./lib/social.mjs";
 
 const SITE_NAME = process.env.SITE_NAME || "HoopComps";
@@ -464,6 +466,34 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       send(res, 200, await createProfilePost(user.id, body));
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (req.method === "GET" && url === "/api/social/hub/messages") {
+    try {
+      const u = new URL(req.url, "http://localhost");
+      const audience = u.searchParams.get("audience") || "everyone";
+      const targetUsername = u.searchParams.get("username") || "";
+      const viewer = await requireUser(req);
+      send(res, 200, await listHubMessages(viewer?.id || null, { audience, targetUsername }));
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/social/hub/messages") {
+    const user = await requireUser(req);
+    if (!user) {
+      send(res, 401, { error: "Sign in required" });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      send(res, 200, await addHubMessage(user.id, body));
     } catch (e) {
       send(res, 400, { error: e.message });
     }

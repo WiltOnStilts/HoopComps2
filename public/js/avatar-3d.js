@@ -6,6 +6,86 @@ import { avatarSelection, findAvatarItem, skinHex, AVATAR_PART_KEYS } from "./av
 const mounts = new WeakMap();
 const HEAD_Y = 0.52;
 
+/** Single shared WebGL context for shop thumbnails — avoids browser context limits */
+let thumbRenderer = null;
+let thumbScene = null;
+let thumbCamera = null;
+let thumbAvatar = null;
+const thumbCache = new Map();
+
+function disposeObject3D(root) {
+  root.traverse((child) => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
+      else child.material.dispose();
+    }
+  });
+}
+
+function clearThumbAvatar() {
+  if (!thumbAvatar || !thumbScene) return;
+  disposeObject3D(thumbAvatar);
+  thumbScene.remove(thumbAvatar);
+  thumbAvatar = null;
+}
+
+function ensureThumbRenderer(size) {
+  if (!thumbRenderer) {
+    thumbRenderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    thumbScene = new THREE.Scene();
+    thumbCamera = new THREE.PerspectiveCamera(34, 1, 0.1, 20);
+    thumbCamera.position.set(0, 0.18, 2.35);
+    thumbCamera.lookAt(0, 0.15, 0);
+    thumbScene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const key = new THREE.DirectionalLight(0xfff1e0, 1.05);
+    key.position.set(1.2, 2.2, 2.5);
+    thumbScene.add(key);
+    const rim = new THREE.DirectionalLight(0x6ea8fe, 0.35);
+    rim.position.set(-2, 0.5, -1);
+    thumbScene.add(rim);
+  }
+  thumbRenderer.setSize(size, size);
+  thumbRenderer.setPixelRatio(1);
+  return thumbRenderer;
+}
+
+export async function captureAvatarThumbnail(profile, size = 88) {
+  const cacheKey = `${size}:${avatarKey(profile)}`;
+  if (thumbCache.has(cacheKey)) return thumbCache.get(cacheKey);
+
+  try {
+    const renderer = ensureThumbRenderer(size);
+    clearThumbAvatar();
+    thumbAvatar = buildAvatarGroup(profile);
+    thumbAvatar.rotation.y = Math.PI / 6;
+    thumbScene.add(thumbAvatar);
+    renderer.render(thumbScene, thumbCamera);
+    const url = renderer.domElement.toDataURL("image/png");
+    thumbCache.set(cacheKey, url);
+    clearThumbAvatar();
+    return url;
+  } catch {
+    clearThumbAvatar();
+    return null;
+  }
+}
+
+export function disposeAvatarThumbnailRenderer() {
+  thumbCache.clear();
+  clearThumbAvatar();
+  if (thumbRenderer) {
+    thumbRenderer.dispose();
+    thumbRenderer = null;
+  }
+  thumbScene = null;
+  thumbCamera = null;
+}
+
 function mat(color, opts = {}) {
   const c = typeof color === "string" ? new THREE.Color(color) : color;
   return new THREE.MeshStandardMaterial({
@@ -365,7 +445,9 @@ export function disposeAvatar3D(container) {
   entry.stop?.();
   entry.cleanupDrag?.();
   entry.observer?.disconnect();
+  if (entry.avatar) disposeObject3D(entry.avatar);
   entry.renderer.dispose();
+  entry.renderer.forceContextLoss?.();
   container.innerHTML = "";
   mounts.delete(container);
 }

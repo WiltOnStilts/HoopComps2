@@ -87,10 +87,26 @@
   background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.35));
 }
 
-.shop-avatar-part-preview .avatar-compose {
+.avatar-compose--thumb {
   width: 100%;
   height: 100%;
   border-radius: 12px;
+}
+
+.shop-avatar-thumb-loading {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--muted);
+  font-size: 1.25rem;
+}
+
+.shop-avatar-thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .shop-avatar-item.equipped {

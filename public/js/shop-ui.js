@@ -18,7 +18,9 @@ import {
   isFreeAvatarCategory,
   previewAvatarProfile,
   renderAvatarInto,
+  renderAvatarThumbnailInto,
   disposeAvatar3D,
+  disposeAvatarThumbnailRenderer,
 } from "./avatars.js";
 import { saveState } from "./storage.js";
 
@@ -48,16 +50,19 @@ function renderAvatarItem({ category, item, owned, equipped, freeCategory }) {
 }
 
 function mountShopAvatarPreviews(root, profile) {
-  root.querySelectorAll(".shop-avatar-part-preview").forEach((el) => {
-    const category = el.dataset.category;
-    const id = el.dataset.id;
-    if (!category || !id) return;
-    renderAvatarInto(el, previewAvatarProfile(profile, category, id), {
-      size: "thumb",
-      autoRotate: true,
-      interactive: false,
-    });
-  });
+  const els = [...root.querySelectorAll(".shop-avatar-part-preview")];
+  void (async () => {
+    for (const el of els) {
+      if (!el.isConnected) return;
+      const category = el.dataset.category;
+      const id = el.dataset.id;
+      if (!category || !id) continue;
+      await renderAvatarThumbnailInto(el, previewAvatarProfile(profile, category, id), {
+        size: "thumb",
+      });
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+  })();
 }
 
 export function renderShop(state, { onChange } = {}) {
@@ -65,7 +70,7 @@ export function renderShop(state, { onChange } = {}) {
   if (!root) return;
 
   disposeShopAvatarPreview();
-  root.querySelectorAll(".shop-avatar-part-preview").forEach((el) => disposeAvatar3D(el));
+  disposeAvatarThumbnailRenderer();
 
   const owned = state.ownedAvatarParts || {};
   const equipped = state.profile?.avatar || {};
@@ -224,4 +229,5 @@ export function updateProfileAvatarMount(state) {
 export function disposeShopAvatarPreview() {
   const preview = document.getElementById("shopAvatarPreviewMount");
   if (preview) disposeAvatar3D(preview);
+  disposeAvatarThumbnailRenderer();
 }

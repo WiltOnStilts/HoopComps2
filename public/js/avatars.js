@@ -1,6 +1,6 @@
 /** Customizable profile avatars — mount helpers + 2D fallback */
 
-import { mountAvatar3D, disposeAvatar3D, refreshAvatar3D } from "./avatar-3d.js";
+import { mountAvatar3D, disposeAvatar3D, refreshAvatar3D, captureAvatarThumbnail, disposeAvatarThumbnailRenderer } from "./avatar-3d.js";
 import {
   AVATAR_CATALOG,
   AVATAR_SHOP_GROUPS,
@@ -19,6 +19,8 @@ export {
   mountAvatar3D,
   disposeAvatar3D,
   refreshAvatar3D,
+  captureAvatarThumbnail,
+  disposeAvatarThumbnailRenderer,
   AVATAR_CATALOG,
   AVATAR_SHOP_GROUPS,
   AVATAR_PART_KEYS,
@@ -41,6 +43,21 @@ export function renderAvatarInto(container, profile, options = {}) {
     container.innerHTML = renderAvatarHtml(profile, options);
     container.classList.remove("avatar-3d-mount");
   }
+}
+
+/** Static 3D snapshot for shop grid — one shared WebGL context, not one per item */
+export async function renderAvatarThumbnailInto(container, profile, options = {}) {
+  if (!container) return false;
+  container.innerHTML = `<span class="shop-avatar-thumb-loading" aria-hidden="true">…</span>`;
+  const size = options.size === "thumb" ? 88 : 88;
+  const url = await captureAvatarThumbnail(profile, size);
+  if (!container.isConnected) return false;
+  if (url) {
+    container.innerHTML = `<img class="shop-avatar-thumb-img" src="${url}" alt="" loading="lazy" />`;
+    return true;
+  }
+  container.innerHTML = renderAvatarHtml(profile, { ...options, size: "thumb" });
+  return false;
 }
 
 export function renderAvatarHtml(profile, { size = "md", className = "" } = {}) {

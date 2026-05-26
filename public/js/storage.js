@@ -4,6 +4,7 @@ import {
   uniqueScoutCount,
   mergeCollectionByFingerprint,
   migrateScanTracking,
+  migrateCollectionQuantities,
 } from "./card-fingerprint.js";
 import {
   migrateEconomy,
@@ -121,6 +122,7 @@ function normalizeState(data) {
 
   syncScoutCount(state);
   migrateScanTracking(state);
+  migrateCollectionQuantities(state);
   migrateEconomy(state);
   normalizeEconomy(state);
   return state;
@@ -210,6 +212,7 @@ export function addToCollection(state, { card, estimatedValue, scoutData, userPh
     const nextQty = (existing.quantity || 1) + qty;
     const patch = {
       quantity: nextQty,
+      quantityUserSet: true,
       estimatedValue: estimatedValue ?? existing.estimatedValue,
       lastScoutedAt: scoutData ? new Date().toISOString() : existing.lastScoutedAt,
       tier: scoutData?.valuation?.tier ?? existing.tier,
@@ -233,6 +236,7 @@ export function addToCollection(state, { card, estimatedValue, scoutData, userPh
     card,
     estimatedValue: estimatedValue ?? null,
     quantity: qty,
+    quantityUserSet: true,
     addedAt: new Date().toISOString(),
     lastScoutedAt: scoutData ? new Date().toISOString() : null,
     tier: scoutData?.valuation?.tier ?? null,

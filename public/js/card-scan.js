@@ -222,17 +222,21 @@ function resizeImageFile(file, maxEdge = 1400, quality = 0.85) {
 
 let tesseractModule = null;
 
+const TESSERACT_VENDOR = "/vendor/tesseract";
+
 async function loadTesseract() {
   if (tesseractModule) return tesseractModule;
-  tesseractModule = await import(
-    "https://cdn.jsdelivr.net/npm/tesseract.js@5.5.0/dist/tesseract.esm.min.js"
-  );
+  tesseractModule = await import(`${TESSERACT_VENDOR}/tesseract.esm.min.js`);
   return tesseractModule;
 }
 
 async function ocrImageFile(file, onProgress) {
   const { createWorker } = await loadTesseract();
   const worker = await createWorker("eng", 1, {
+    workerPath: `${TESSERACT_VENDOR}/worker.min.js`,
+    corePath: `${TESSERACT_VENDOR}/tesseract-core.wasm.js`,
+    langPath: "https://tessdata.projectnaptha.com/4.0.0",
+    gzip: true,
     logger: (m) => {
       if (m.status === "recognizing text" && onProgress) {
         onProgress(Math.round(m.progress * 100));
@@ -388,7 +392,19 @@ async function analyzePhotos({ includeBack = true } = {}) {
     renderReviewForm(data);
     setStep("review");
   } catch (err) {
-    alert(err.message || "Could not read text from this photo — try better lighting or fill in manually");
+    console.error("Card scan OCR failed:", err);
+    const manual = confirm(
+      "Text scanner could not start. Fill in the card details manually instead?"
+    );
+    if (manual) {
+      renderReviewForm(parseOcrToCard("", ""));
+      setStep("review");
+      return;
+    }
+    alert(
+      err.message ||
+        "Could not read text from this photo — try better lighting, or fill in details manually."
+    );
     setStep(backFile || includeBack ? "capture-back" : "capture-front");
   }
 }

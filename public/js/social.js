@@ -5,10 +5,10 @@ export async function fetchSocialOverview() {
   return authFetch("/api/social/friends");
 }
 
-export async function sendFriendRequest(email) {
+export async function sendFriendRequest(lookup) {
   return authFetch("/api/social/friends/request", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ lookup }),
   });
 }
 

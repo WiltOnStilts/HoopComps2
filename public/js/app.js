@@ -56,6 +56,8 @@ let cloudPushPromise = null;
 function getProfileFormValues() {
  return {
  displayName: $("profileNameInput")?.value.trim() || "Scout",
+ username: $("profileUsername")?.value.trim() || "",
+ phone: $("profilePhone")?.value.trim() || "",
  favoritePlayer: $("profileFavoritePlayer")?.value.trim() || "",
  favoriteTeam: $("profileFavoriteTeam")?.value.trim() || "",
  collectorStyle: $("profileCollectorStyle")?.value || "investor",
@@ -66,6 +68,8 @@ function getProfileFormValues() {
 function profileFormValuesEqual(a, b) {
  return (
  a.displayName === b.displayName &&
+ a.username === b.username &&
+ a.phone === b.phone &&
  a.favoritePlayer === b.favoritePlayer &&
  a.favoriteTeam === b.favoriteTeam &&
  a.collectorStyle === b.collectorStyle &&
@@ -209,6 +213,7 @@ function renderAuthUI() {
   const signedIn = isLoggedIn();
 
   if (signedIn) {
+    document.body.classList.add("mobile-signed-in");
     if (btn) btn.textContent = "Sign out";
     $("profileAuthBtn").textContent = "Sign out";
     if (pill) {
@@ -220,6 +225,7 @@ function renderAuthUI() {
  $("profilePublicLb").checked = Boolean(state.profile?.publicLeaderboard);
  $("mobileAuthHint")?.classList.add("hidden");
  } else {
+ document.body.classList.remove("mobile-signed-in");
  if (btn) btn.textContent = "Sign in";
  $("profileAuthBtn").textContent = "Sign in";
  if (pill) {
@@ -291,6 +297,8 @@ function applyCloudState(nextState) {
  renderAuthUI();
  if (state.lastScout?.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  $("profileNameInput").value = state.profile?.displayName || "";
+ $("profileUsername").value = state.profile?.username || "";
+ $("profilePhone").value = state.profile?.phone || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
@@ -795,6 +803,8 @@ function initNavigation() {
 
 function initProfileForm() {
  $("profileNameInput").value = state.profile?.displayName || "";
+ $("profileUsername").value = state.profile?.username || "";
+ $("profilePhone").value = state.profile?.phone || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
@@ -803,6 +813,8 @@ function initProfileForm() {
 
  for (const id of [
  "profileNameInput",
+ "profileUsername",
+ "profilePhone",
  "profileFavoritePlayer",
  "profileFavoriteTeam",
  "profileCollectorStyle",
@@ -815,6 +827,8 @@ function initProfileForm() {
  $("saveProfileBtn").addEventListener("click", async () => {
  state.profile = state.profile || {};
  state.profile.displayName = $("profileNameInput").value.trim() || "Scout";
+ state.profile.username = $("profileUsername").value.trim();
+ state.profile.phone = $("profilePhone").value.trim();
  state.profile.favoritePlayer = $("profileFavoritePlayer").value.trim();
  state.profile.favoriteTeam = $("profileFavoriteTeam").value.trim();
  state.profile.collectorStyle = $("profileCollectorStyle").value;
@@ -923,7 +937,7 @@ function updateCloudSyncStatus(result, err) {
    el.textContent =
      err.status === 401
        ? "Cloud session expired — sign in again to upload your collection."
-       : "Could not save to cloud — check your connection and try Save profile.";
+       : err.message || "Could not save to cloud — check your connection and try Save profile.";
    el.classList.remove("hidden");
    el.classList.add("sync-error");
    return;
@@ -947,7 +961,8 @@ async function pushLocalToCloud() {
  if (!isLoggedIn()) return false;
  const hasCards = (state.collection?.length || 0) > 0;
  const optedIn = Boolean(state.profile?.publicLeaderboard);
- if (!hasCards && !optedIn) return false;
+ const hasContact = Boolean(state.profile?.username?.trim() || state.profile?.phone?.trim());
+ if (!hasCards && !optedIn && !hasContact) return false;
 
  if (cloudPushPromise) return cloudPushPromise;
 

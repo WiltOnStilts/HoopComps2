@@ -124,6 +124,42 @@
   color: #ffb199;
 }
 
+.feed-about-callout {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.85rem;
+  border-radius: 12px;
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.28);
+}
+
+.feed-about-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.feed-about-copy strong {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 0.25rem;
+  color: var(--cream);
+}
+
+.feed-about-copy p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.collector-feed-panel .hint {
+  margin-bottom: 0.85rem;
+}
+
 @media (min-width: 769px) {
   .dashboard-home-layout {
     grid-template-columns: 1fr 1.15fr;

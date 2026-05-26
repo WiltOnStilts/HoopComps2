@@ -208,9 +208,9 @@ node server.mjs</code>
             <div id="profileSocialSignedIn">
               <div class="panel social-panel">
                 <h3>Friends</h3>
-                <p class="hint">Add collectors by email. Friends can view each other's collections and posts.</p>
+                <p class="hint">Add collectors by phone number or username. Friends can view each other's collections and posts.</p>
                 <div class="friend-add-row">
-                  <input type="email" id="friendEmailInput" placeholder="friend@email.com" autocomplete="email" />
+                  <input type="text" id="friendLookupInput" placeholder="@username or phone number" autocomplete="off" />
                   <button type="button" class="btn-secondary" id="addFriendBtn">Add friend</button>
                 </div>
                 <p class="section-label">Your friends</p>
@@ -219,8 +219,15 @@ node server.mjs</code>
                 <div class="request-list" id="friendRequestsList"></div>
               </div>
 
-              <div class="panel social-panel">
+              <div class="panel social-panel collector-feed-panel">
                 <h3>Collector feed</h3>
+                <div class="feed-about-callout" role="note">
+                  <span class="feed-about-icon" aria-hidden="true">📣</span>
+                  <div class="feed-about-copy">
+                    <strong>What is this?</strong>
+                    <p>Your personal timeline for card pulls, new pickups, and price checks. Post updates here — friends see them in Community, and you can look back at what you've shared.</p>
+                  </div>
+                </div>
                 <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
                 <div class="post-compose">
                   <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
@@ -374,6 +381,21 @@ node server.mjs</code>
           <span>Display name</span>
           <input type="text" id="profileNameInput" placeholder="Your name" />
         </label>
+
+        <div class="panel profile-prefs">
+          <h3>Find me</h3>
+          <p class="hint">Optional — lets friends add you by username or phone instead of email.</p>
+          <div class="field-grid">
+            <label class="field">
+              <span>Username</span>
+              <input type="text" id="profileUsername" placeholder="e.g. cardking23" autocomplete="username" />
+            </label>
+            <label class="field">
+              <span>Phone</span>
+              <input type="tel" id="profilePhone" placeholder="e.g. (555) 123-4567" autocomplete="tel" />
+            </label>
+          </div>
+        </div>
 
         <div class="panel profile-prefs">
           <h3>Collector profile</h3>

@@ -548,6 +548,269 @@ body {
     padding: 0.85rem 1rem;
   }
 
+  /* Signed-in: full-width session bar at top; scrolls away (not sticky) */
+  body.mobile-signed-in .top-bar {
+    position: relative;
+    top: auto;
+    flex-wrap: nowrap;
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  body.mobile-signed-in .logo-btn,
+  body.mobile-signed-in .desktop-nav {
+    display: none;
+  }
+
+  body.mobile-signed-in .header-stats {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
+    background: rgba(28, 16, 8, 0.96);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+  }
+
+  body.mobile-signed-in .header-stats .stat-pill.compact {
+    display: none;
+  }
+
+  body.mobile-signed-in .header-stats .auth-pill {
+    flex: 1;
+    max-width: none;
+    font-size: 0.72rem;
+    padding: 0.45rem 0.7rem;
+    text-align: left;
+  }
+
+  body.mobile-signed-in .auth-header-btn {
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* Compact mobile layout — less visual weight */
+  .app-main {
+    padding: 0.65rem max(0.65rem, env(safe-area-inset-left, 0px)) 1rem max(0.65rem, env(safe-area-inset-right, 0px));
+  }
+
+  .panel {
+    padding: 0.85rem 0.9rem;
+    border-radius: 14px;
+  }
+
+  .panel h2,
+  .results-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .panel h3,
+  .social-panel h3,
+  .community-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .hint {
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .compact-panel {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .hero-card {
+    padding: 0.9rem 0.85rem;
+    margin-bottom: 0.75rem;
+    border-radius: 14px;
+  }
+
+  .hero-value {
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
+  }
+
+  .hero-sub,
+  .hero-count {
+    font-size: 0.78rem;
+  }
+
+  .hero-label {
+    font-size: 0.62rem;
+  }
+
+  .dashboard-home-layout,
+  .community-layout,
+  .community-main,
+  .community-side {
+    gap: 0.65rem;
+  }
+
+  .community-entry-btn {
+    min-height: 64px;
+    padding: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .dash-card {
+    padding: 0.75rem;
+    min-height: 88px;
+    border-radius: 12px;
+  }
+
+  .dash-icon {
+    font-size: 1.35rem;
+  }
+
+  .dash-name {
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+  }
+
+  .dash-desc {
+    font-size: 0.68rem;
+  }
+
+  .community-header.panel {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .feed-about-callout {
+    padding: 0.6rem 0.7rem;
+    margin-bottom: 0.65rem;
+    border-radius: 10px;
+  }
+
+  .feed-about-copy strong {
+    font-size: 0.76rem;
+  }
+
+  .feed-about-copy p {
+    font-size: 0.72rem;
+  }
+
+  .chat-audience-tabs {
+    gap: 0.35rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .chat-audience-tab {
+    min-height: 34px;
+    font-size: 0.72rem;
+    border-radius: 8px;
+  }
+
+  .chat-message-list {
+    max-height: min(34vh, 260px);
+    padding: 0.4rem;
+    margin-bottom: 0.55rem;
+    border-radius: 10px;
+  }
+
+  .comment-compose textarea,
+  .post-compose textarea {
+    min-height: 56px;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .post-compose-grid {
+    gap: 0.5rem;
+  }
+
+  .friend-add-row input,
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .friend-row,
+  .request-row {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+  }
+
+  .friend-row-main strong,
+  .request-row-main strong {
+    font-size: 0.85rem;
+  }
+
+  .post-card,
+  .comment-card {
+    padding: 0.6rem 0.7rem;
+    border-radius: 10px;
+  }
+
+  .btn-secondary,
+  .btn-scout {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+  }
+
+  .btn-xs {
+    padding: 0.28rem 0.5rem !important;
+    font-size: 0.68rem !important;
+  }
+
+  .section-label {
+    font-size: 0.68rem;
+    margin: 0.65rem 0 0.35rem;
+  }
+
+  .profile-header {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .profile-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .stat-pill.compact {
+    min-width: 58px;
+    padding: 0.3rem 0.45rem;
+  }
+
+  .stat-pill.compact .value {
+    font-size: 0.95rem;
+  }
+
+  .logo-text h1 {
+    font-size: 1.25rem;
+  }
+
+  .logo-ball {
+    font-size: 1.75rem;
+  }
+
+  .banner-slot {
+    margin-bottom: 0.65rem;
+  }
+
+  .ebay-banner {
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+  }
+
+  .cow-estimate {
+    font-size: 1.45rem;
+  }
+
   .logo-text p {
     display: none;
   }
@@ -557,11 +820,7 @@ body {
   }
 
   .layout {
-    padding: 1rem;
-  }
-
-  .panel {
-    padding: 1.25rem;
+    padding: 0.75rem;
   }
 
   .valuation-hero {

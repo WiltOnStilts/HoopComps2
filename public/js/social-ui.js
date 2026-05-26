@@ -108,7 +108,7 @@ export async function renderProfileSocial(state) {
         </div>`
           )
           .join("")
-      : `<div class="social-empty">No friends yet — add someone by their account email.</div>`;
+      : `<div class="social-empty">No friends yet — add someone by their username or phone number.</div>`;
 
     const incoming = overview.requests?.incoming || [];
     const outgoing = overview.requests?.outgoing || [];
@@ -408,11 +408,11 @@ export function initSocialUI({ onNavigate, getState, openAuthModal }) {
       openAuthModal("login");
       return;
     }
-    const email = $("friendEmailInput")?.value?.trim();
-    if (!email) return;
+    const lookup = $("friendLookupInput")?.value?.trim();
+    if (!lookup) return;
     try {
-      await sendFriendRequest(email);
-      $("friendEmailInput").value = "";
+      await sendFriendRequest(lookup);
+      $("friendLookupInput").value = "";
       await renderProfileSocial(getState());
     } catch (err) {
       alert(err.message);

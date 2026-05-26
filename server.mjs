@@ -389,7 +389,7 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const body = await readBody(req);
-      send(res, 200, await sendFriendRequest(user.id, body.email));
+      send(res, 200, await sendFriendRequest(user.id, body.lookup || body.identifier || body.email));
     } catch (e) {
       send(res, 400, { error: e.message });
     }

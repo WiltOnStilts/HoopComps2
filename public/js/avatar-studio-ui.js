@@ -23,10 +23,6 @@ let studioPreview = null;
 let activeCategory = "mouth";
 let pendingConfirm = null;
 
-function isMobileStudio() {
-  return window.matchMedia("(max-width: 900px)").matches;
-}
-
 function heroProfile(state) {
   if (studioPreview) {
     return previewAvatarProfile(state.profile, studioPreview.category, studioPreview.id);
@@ -205,9 +201,6 @@ export function renderAvatarStudio(state, { onChange } = {}) {
 
       if (action === "preview") {
         studioPreview = { category, id };
-        if (isMobileStudio()) {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
         renderAvatarStudio(state, { onChange });
         return;
       }

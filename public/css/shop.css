@@ -534,7 +534,7 @@
   }
 
   .avatar-studio-main--preview-active .avatar-studio-hero-slot {
-    height: 0;
+    min-height: calc(300px + env(safe-area-inset-top, 0px));
   }
 
   .avatar-studio-main--preview-active .avatar-studio-hero-panel {
@@ -552,10 +552,6 @@
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
     animation: avatar-studio-hero-in 0.32s ease forwards;
-  }
-
-  .avatar-studio-main--preview-active .avatar-studio-controls {
-    padding-top: calc(300px + env(safe-area-inset-top, 0px));
   }
 }
 

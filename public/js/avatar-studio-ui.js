@@ -27,21 +27,11 @@ function isMobileStudio() {
   return window.matchMedia("(max-width: 900px)").matches;
 }
 
-function shouldMountHero() {
-  return !isMobileStudio() || Boolean(studioPreview);
-}
-
 function heroProfile(state) {
   if (studioPreview) {
     return previewAvatarProfile(state.profile, studioPreview.category, studioPreview.id);
   }
   return state.profile;
-}
-
-function isPreviewing(state) {
-  if (!studioPreview) return false;
-  const equipped = state.profile?.avatar?.[studioPreview.category];
-  return equipped !== studioPreview.id;
 }
 
 function renderStudioItem({ category, item, state }) {
@@ -167,6 +157,20 @@ export function renderAvatarStudio(state, { onChange } = {}) {
 
   root.innerHTML = `
     <div class="avatar-studio-main ${studioPreview ? "avatar-studio-main--preview-active" : ""}">
+      <div class="avatar-studio-hero-slot">
+        <div class="panel avatar-studio-hero-panel">
+          <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
+          ${
+            studioPreview
+              ? `
+            <p class="avatar-studio-preview-note">Previewing — not saved yet</p>
+            <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview avatar-studio-stop-preview" data-studio="stop-preview">Stop previewing</button>
+          `
+              : `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`
+          }
+        </div>
+      </div>
+
       <div class="avatar-studio-controls">
         <div class="avatar-studio-bar panel" role="tablist" aria-label="Avatar categories">
           ${categoryButtons}
@@ -178,15 +182,6 @@ export function renderAvatarStudio(state, { onChange } = {}) {
             ${items.map((item) => renderStudioItem({ category: categoryMeta.key, item, state })).join("")}
           </div>
         </div>
-      </div>
-
-      <div class="panel avatar-studio-hero-panel" aria-hidden="${isMobileStudio() && !studioPreview ? "true" : "false"}">
-        <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
-        ${
-          isPreviewing(state)
-            ? `<p class="avatar-studio-preview-note">Previewing — not saved yet</p>`
-            : `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`
-        }
       </div>
     </div>
   `;
@@ -213,6 +208,12 @@ export function renderAvatarStudio(state, { onChange } = {}) {
         if (isMobileStudio()) {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
+        renderAvatarStudio(state, { onChange });
+        return;
+      }
+
+      if (action === "stop-preview") {
+        studioPreview = null;
         renderAvatarStudio(state, { onChange });
         return;
       }
@@ -259,12 +260,7 @@ export function renderAvatarStudio(state, { onChange } = {}) {
     });
   });
 
-  if (shouldMountHero()) {
-    refreshHero(state, true);
-  } else {
-    const mount = document.getElementById("avatarStudioHeroMount");
-    if (mount) disposeAvatar3D(mount);
-  }
+  refreshHero(state, true);
   mountCategoryThumbnails(root, state.profile, categoryMeta.key);
 }
 

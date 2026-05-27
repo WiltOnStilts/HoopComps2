@@ -514,8 +514,41 @@
   }
 
   .avatar-studio-hero-panel {
-    order: -1;
+    display: none;
+    position: static;
+  }
+
+  .avatar-studio-main--preview-active .avatar-studio-hero-panel {
+    display: block;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    margin: 0;
+    padding: calc(0.5rem + env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) 0.65rem
+      max(0.75rem, env(safe-area-inset-left, 0px));
+    border-radius: 0 0 16px 16px;
+    border-top: none;
+    background: rgba(18, 16, 14, 0.96);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    animation: avatar-studio-hero-in 0.32s ease forwards;
+  }
+
+  .avatar-studio-main--preview-active .avatar-studio-controls {
+    padding-top: calc(280px + env(safe-area-inset-top, 0px));
+  }
+}
+
+@keyframes avatar-studio-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

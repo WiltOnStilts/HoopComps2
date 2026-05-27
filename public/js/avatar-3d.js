@@ -184,9 +184,7 @@ function buildEyes(group, eyesId, colorHex) {
       addRoundEyes(0.072, 0.062);
       break;
     case "intense":
-      addRoundEyes(0.052, 0.052);
-      addMesh(group, new THREE.BoxGeometry(0.16, 0.022, 0.02), pupil, [-0.11, y + 0.06, z + 0.01], [0, 0, 0.2]);
-      addMesh(group, new THREE.BoxGeometry(0.16, 0.022, 0.02), pupil, [0.11, y + 0.06, z + 0.01], [0, 0, -0.2]);
+      addRoundEyes(0.048, 0.044);
       break;
     case "sleepy":
       addRoundEyes(0.055, 0.045);

@@ -23,6 +23,14 @@ let studioPreview = null;
 let activeCategory = "mouth";
 let pendingConfirm = null;
 
+function isMobileStudio() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function shouldMountHero() {
+  return !isMobileStudio() || Boolean(studioPreview);
+}
+
 function heroProfile(state) {
   if (studioPreview) {
     return previewAvatarProfile(state.profile, studioPreview.category, studioPreview.id);
@@ -158,7 +166,7 @@ export function renderAvatarStudio(state, { onChange } = {}) {
   }).join("");
 
   root.innerHTML = `
-    <div class="avatar-studio-main">
+    <div class="avatar-studio-main ${studioPreview ? "avatar-studio-main--preview-active" : ""}">
       <div class="avatar-studio-controls">
         <div class="avatar-studio-bar panel" role="tablist" aria-label="Avatar categories">
           ${categoryButtons}
@@ -172,7 +180,7 @@ export function renderAvatarStudio(state, { onChange } = {}) {
         </div>
       </div>
 
-      <div class="panel avatar-studio-hero-panel">
+      <div class="panel avatar-studio-hero-panel" aria-hidden="${isMobileStudio() && !studioPreview ? "true" : "false"}">
         <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
         ${
           isPreviewing(state)
@@ -202,7 +210,9 @@ export function renderAvatarStudio(state, { onChange } = {}) {
 
       if (action === "preview") {
         studioPreview = { category, id };
-        refreshHero(state);
+        if (isMobileStudio()) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
         renderAvatarStudio(state, { onChange });
         return;
       }
@@ -249,7 +259,12 @@ export function renderAvatarStudio(state, { onChange } = {}) {
     });
   });
 
-  refreshHero(state, true);
+  if (shouldMountHero()) {
+    refreshHero(state, true);
+  } else {
+    const mount = document.getElementById("avatarStudioHeroMount");
+    if (mount) disposeAvatar3D(mount);
+  }
   mountCategoryThumbnails(root, state.profile, categoryMeta.key);
 }
 

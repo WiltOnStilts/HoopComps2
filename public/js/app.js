@@ -1083,7 +1083,12 @@ function initAuth() {
  $("authError").textContent = "";
  $("authSubmitBtn").disabled = true;
  try {
- const guestState = loadState();
+ const guestState = {
+   ...state,
+   collection: [...(state.collection || [])],
+   profile: { ...state.profile },
+   scannedCards: { ...(state.scannedCards || {}) },
+ };
  if (mode === "register") {
  await register({ email, password, displayName, guestState });
  } else if (mode === "reset") {

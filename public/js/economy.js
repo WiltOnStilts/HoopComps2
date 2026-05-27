@@ -114,7 +114,10 @@ export function migrateEconomy(state) {
 
 export function grantDailyCoins(state) {
   const today = localDayKey();
-  if (state.lastCoinDayKey === today) return 0;
+  if (state.lastCoinDayKey === today || state.lastDailySessionKey === today) {
+    state.lastCoinDayKey = today;
+    return 0;
+  }
   state.lastCoinDayKey = today;
   state.coins = (state.coins || 0) + COINS_DAILY_BONUS;
   return COINS_DAILY_BONUS;
@@ -126,7 +129,9 @@ export function grantDailyCoins(state) {
  */
 export function processDailySession(state) {
   const today = localDayKey();
-  if (state.lastDailySessionKey === today) {
+  if (state.lastDailySessionKey === today || state.lastCoinDayKey === today) {
+    state.lastDailySessionKey = today;
+    state.lastCoinDayKey = today;
     return { state, events: [] };
   }
 
@@ -290,6 +295,18 @@ function mergeCodBoost(a, b) {
   return (a.percent || 0) >= (b.percent || 0) ? a : b;
 }
 
+function mergeMostRecentDayKey(a, b) {
+  const today = localDayKey();
+  if (a === today || b === today) return today;
+  if (!a) return b || null;
+  if (!b) return a || null;
+  const da = new Date(a);
+  const db = new Date(b);
+  if (Number.isNaN(da.getTime())) return b;
+  if (Number.isNaN(db.getTime())) return a;
+  return da >= db ? a : b;
+}
+
 export function mergedEconomyFields(cloudState = {}, localState = {}) {
   const lastScoutDate =
     !cloudState.lastScoutDate
@@ -306,10 +323,15 @@ export function mergedEconomyFields(cloudState = {}, localState = {}) {
     streakFreezes: Math.max(cloudState.streakFreezes || 0, localState.streakFreezes || 0),
     ownedAvatarParts: mergeOwnedAvatarParts(cloudState.ownedAvatarParts, localState.ownedAvatarParts),
     codBoost: mergeCodBoost(cloudState.codBoost, localState.codBoost),
-    lastCoinDayKey: cloudState.lastCoinDayKey || localState.lastCoinDayKey || null,
-    lastDailySessionKey: cloudState.lastDailySessionKey || localState.lastDailySessionKey || null,
-    lastDailyNotifyShownKey:
-      cloudState.lastDailyNotifyShownKey || localState.lastDailyNotifyShownKey || null,
+    lastCoinDayKey: mergeMostRecentDayKey(cloudState.lastCoinDayKey, localState.lastCoinDayKey),
+    lastDailySessionKey: mergeMostRecentDayKey(
+      cloudState.lastDailySessionKey,
+      localState.lastDailySessionKey
+    ),
+    lastDailyNotifyShownKey: mergeMostRecentDayKey(
+      cloudState.lastDailyNotifyShownKey,
+      localState.lastDailyNotifyShownKey
+    ),
     lastScoutDate,
     economyVersion: Math.max(cloudState.economyVersion || 0, localState.economyVersion || 0, ECONOMY_VERSION),
   };

@@ -1,7 +1,7 @@
 /** 3D collector avatar — modular Face + Torso parts */
 
 import * as THREE from "https://esm.sh/three@0.170.0";
-import { avatarSelection, findAvatarItem, skinHex, AVATAR_PART_KEYS } from "./avatar-catalog.js";
+import { avatarSelection, findAvatarItem, skinHex, eyeColorHex, eyebrowColorHex, hairColorHex, AVATAR_PART_KEYS } from "./avatar-catalog.js";
 
 const mounts = new WeakMap();
 const HEAD_Y = 0.52;
@@ -116,8 +116,8 @@ function buildEars(group, skinMat) {
   addMesh(group, new THREE.SphereGeometry(0.07, 10, 10), skinMat, [0.33, HEAD_Y, 0.02], [0, 0, -0.2]);
 }
 
-function buildEyebrows(group, browsId) {
-  const brow = mat(0x2b2118);
+function buildEyebrows(group, browsId, colorHex) {
+  const brow = mat(parseInt(String(colorHex).replace("#", ""), 16) || 0x2b2118);
   const y = HEAD_Y + 0.12;
   const z = 0.29;
 
@@ -150,8 +150,8 @@ function buildEyebrows(group, browsId) {
   }
 }
 
-function buildEyes(group, eyesId) {
-  const eye = mat(0x1a120c);
+function buildEyes(group, eyesId, colorHex) {
+  const eye = mat(parseInt(String(colorHex).replace("#", ""), 16) || 0x1a120c);
   const white = mat(0xf8f9fa);
   const y = HEAD_Y + 0.02;
   const z = 0.28;
@@ -193,6 +193,85 @@ function buildEyes(group, eyesId) {
     case "round":
     default:
       addRoundEyes();
+      break;
+  }
+}
+
+function buildHair(group, hairId, colorHex) {
+  if (!hairId || hairId === "bald") return;
+
+  const hair = mat(parseInt(String(colorHex).replace("#", ""), 16) || 0x2b2118);
+  const topY = HEAD_Y + 0.08;
+
+  switch (hairId) {
+    case "buzzcut":
+      addMesh(
+        group,
+        new THREE.SphereGeometry(0.33, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.42),
+        hair,
+        [0, topY, 0]
+      );
+      break;
+    case "crew":
+      addMesh(
+        group,
+        new THREE.SphereGeometry(0.34, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.52),
+        hair,
+        [0, topY - 0.02, -0.03]
+      );
+      break;
+    case "fade":
+      addMesh(
+        group,
+        new THREE.SphereGeometry(0.33, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.48),
+        hair,
+        [0, topY, 0.02]
+      );
+      addMesh(group, new THREE.BoxGeometry(0.36, 0.08, 0.12), hair, [0, topY - 0.06, -0.08], [0.25, 0, 0]);
+      break;
+    case "sidepart":
+      addMesh(
+        group,
+        new THREE.SphereGeometry(0.35, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55),
+        hair,
+        [0.04, topY, 0]
+      );
+      addMesh(group, new THREE.BoxGeometry(0.18, 0.04, 0.14), hair, [-0.14, topY + 0.04, 0.06], [0, 0, 0.35]);
+      break;
+    case "wavy":
+      addMesh(group, new THREE.SphereGeometry(0.36, 14, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), hair, [0, topY + 0.02, 0]);
+      addMesh(group, new THREE.SphereGeometry(0.12, 10, 10), hair, [-0.22, topY, 0.04]);
+      addMesh(group, new THREE.SphereGeometry(0.12, 10, 10), hair, [0.22, topY, 0.04]);
+      break;
+    case "curly":
+      for (const [x, z, s] of [
+        [0, 0.04, 0.14],
+        [-0.16, 0.02, 0.11],
+        [0.16, 0.02, 0.11],
+        [-0.08, 0.1, 0.1],
+        [0.08, 0.1, 0.1],
+      ]) {
+        addMesh(group, new THREE.SphereGeometry(s, 10, 10), hair, [x, topY + 0.06, z]);
+      }
+      break;
+    case "afro":
+      addMesh(group, new THREE.SphereGeometry(0.42, 14, 14), hair, [0, topY + 0.1, 0]);
+      break;
+    case "long":
+      addMesh(group, new THREE.SphereGeometry(0.36, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.58), hair, [0, topY + 0.02, 0]);
+      addMesh(group, new THREE.BoxGeometry(0.34, 0.28, 0.14), hair, [0, topY - 0.18, -0.06]);
+      addMesh(group, new THREE.BoxGeometry(0.1, 0.22, 0.08), hair, [-0.2, topY - 0.12, 0.02]);
+      addMesh(group, new THREE.BoxGeometry(0.1, 0.22, 0.08), hair, [0.2, topY - 0.12, 0.02]);
+      break;
+    case "fluffy":
+      addMesh(group, new THREE.SphereGeometry(0.4, 12, 12), hair, [0, topY + 0.12, 0]);
+      addMesh(group, new THREE.SphereGeometry(0.22, 10, 10), hair, [-0.22, topY + 0.08, 0.06]);
+      addMesh(group, new THREE.SphereGeometry(0.22, 10, 10), hair, [0.22, topY + 0.08, 0.06]);
+      addMesh(group, new THREE.SphereGeometry(0.18, 10, 10), hair, [0, topY + 0.22, -0.02]);
+      addMesh(group, new THREE.SphereGeometry(0.14, 8, 8), hair, [-0.1, topY + 0.18, 0.12]);
+      addMesh(group, new THREE.SphereGeometry(0.14, 8, 8), hair, [0.1, topY + 0.18, 0.12]);
+      break;
+    default:
       break;
   }
 }
@@ -390,10 +469,11 @@ export function buildAvatarGroup(profile = {}) {
   addMesh(group, new THREE.CylinderGeometry(0.12, 0.14, 0.12, 12), skinMat, [0, 0.28, 0]);
   addMesh(group, new THREE.SphereGeometry(0.34, 24, 24), skinMat, [0, HEAD_Y, 0]);
   buildEars(group, skinMat);
-  buildEyebrows(group, sel.eyebrows);
-  buildEyes(group, sel.eyes);
+  buildEyebrows(group, sel.eyebrows, eyebrowColorHex(profile));
+  buildEyes(group, sel.eyes, eyeColorHex(profile));
   buildNose(group, sel.nose, skinMat);
   buildMouth(group, sel.mouth);
+  buildHair(group, sel.hair, hairColorHex(profile));
 
   group.position.y = -0.08;
   return group;

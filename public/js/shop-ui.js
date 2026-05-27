@@ -1,4 +1,4 @@
-/** Shop page — streak freezes, avatars, Card of the Day boost */
+/** Shop page — streak freezes, Card of the Day boost, avatar studio entry */
 
 import { escapeHtml } from "./scout-ui.js";
 import {
@@ -8,109 +8,20 @@ import {
   tomorrowUtcDayKey,
   purchaseStreakFreeze,
   purchaseCodBoost,
-  purchaseAvatarPart,
-  equipAvatarPart,
   COINS_HELP_TEXT,
 } from "./economy.js";
-import {
-  AVATAR_CATALOG,
-  AVATAR_SHOP_GROUPS,
-  isFreeAvatarCategory,
-  previewAvatarProfile,
-  renderAvatarInto,
-  renderAvatarThumbnailInto,
-  disposeAvatar3D,
-  disposeAvatarThumbnailRenderer,
-} from "./avatars.js";
+import { disposeAvatar3D, renderAvatarInto } from "./avatars.js";
 import { saveState } from "./storage.js";
 
-function renderAvatarItem({ category, item, owned, equipped, freeCategory }) {
-  const isOwned = freeCategory || (owned[category] || []).includes(item.id);
-  const isEquipped = equipped[category] === item.id;
-
-  return `
-    <article class="shop-avatar-item ${isEquipped ? "equipped" : ""}" data-category="${category}" data-id="${item.id}">
-      <div
-        class="shop-avatar-part-preview"
-        data-category="${category}"
-        data-id="${item.id}"
-        aria-hidden="true"
-      ></div>
-      <strong>${escapeHtml(item.label)}</strong>
-      <span class="muted-text">${freeCategory ? "Free" : item.price === 0 ? "Free" : `${item.price} coins`}</span>
-      ${
-        isEquipped
-          ? `<span class="shop-tag">Equipped</span>`
-          : isOwned
-            ? `<button type="button" class="btn-secondary btn-xs" data-shop="equip" data-category="${category}" data-id="${item.id}">Equip</button>`
-            : `<button type="button" class="btn-secondary btn-xs" data-shop="buy-avatar" data-category="${category}" data-id="${item.id}" data-price="${item.price}">Buy</button>`
-      }
-    </article>
-  `;
-}
-
-function mountShopAvatarPreviews(root, profile) {
-  const els = [...root.querySelectorAll(".shop-avatar-part-preview")];
-  void (async () => {
-    for (const el of els) {
-      if (!el.isConnected) return;
-      const category = el.dataset.category;
-      const id = el.dataset.id;
-      if (!category || !id) continue;
-      await renderAvatarThumbnailInto(el, previewAvatarProfile(profile, category, id), {
-        size: "thumb",
-      });
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-  })();
-}
-
-export function renderShop(state, { onChange } = {}) {
+export function renderShop(state, { onChange, onNavigate } = {}) {
   const root = document.getElementById("shopRoot");
   if (!root) return;
 
   disposeShopAvatarPreview();
-  disposeAvatarThumbnailRenderer();
 
-  const owned = state.ownedAvatarParts || {};
-  const equipped = state.profile?.avatar || {};
   const tomorrow = tomorrowUtcDayKey();
   const activeBoost =
     state.codBoost?.dayKey === tomorrow ? state.codBoost.percent : 0;
-
-  const avatarSections = AVATAR_SHOP_GROUPS.map((group) => {
-    const subsections = group.categories
-      .map(({ key, label, free }) => {
-        const items = AVATAR_CATALOG[key] || [];
-        return `
-          <div class="shop-avatar-subsection" data-avatar-category="${key}">
-            <h4>${escapeHtml(label)}</h4>
-            <div class="shop-avatar-grid">
-              ${items
-                .map((item) =>
-                  renderAvatarItem({
-                    category: key,
-                    item,
-                    owned,
-                    equipped,
-                    freeCategory: free || isFreeAvatarCategory(key),
-                  })
-                )
-                .join("")}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-
-    return `
-      <div class="panel shop-section shop-avatar-group" data-avatar-group="${group.id}">
-        <h3>Avatar · ${escapeHtml(group.label)}</h3>
-        ${group.hint ? `<p class="hint">${escapeHtml(group.hint)}</p>` : ""}
-        ${subsections}
-      </div>
-    `;
-  }).join("");
 
   root.innerHTML = `
     <div class="shop-balance panel">
@@ -131,6 +42,12 @@ export function renderShop(state, { onChange } = {}) {
     <div class="panel shop-section">
       <h3>What are coins?</h3>
       <p class="hint shop-coins-desc">${escapeHtml(COINS_HELP_TEXT)}</p>
+    </div>
+
+    <div class="panel shop-section shop-avatar-entry">
+      <h3>Avatar studio</h3>
+      <p class="hint">Customize face, eye color, career costume, and more — preview before you buy.</p>
+      <button type="button" class="btn-primary" data-goto="avatar">Customize avatar</button>
     </div>
 
     <div class="panel shop-section">
@@ -164,14 +81,6 @@ export function renderShop(state, { onChange } = {}) {
       </div>
       <p class="hint shop-boost-note">Cost scales at ${COD_BOOST_COST_PER_PERCENT} coins per 1% (+10% = 1,000 · +20% = 2,000).</p>
     </div>
-
-    <div class="panel shop-section shop-avatar-hero">
-      <h3>Your collector avatar</h3>
-      <p class="hint">Drag to spin · Every part below shows a live preview before you buy</p>
-      <div id="shopAvatarPreviewMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
-    </div>
-
-    ${avatarSections}
   `;
 
   root.querySelectorAll("[data-shop]").forEach((btn) => {
@@ -183,16 +92,6 @@ export function renderShop(state, { onChange } = {}) {
         result = purchaseStreakFreeze(state);
       } else if (action === "cod-boost") {
         result = purchaseCodBoost(state, Number(btn.dataset.percent));
-      } else if (action === "buy-avatar") {
-        result = purchaseAvatarPart(
-          state,
-          btn.dataset.category,
-          btn.dataset.id,
-          Number(btn.dataset.price)
-        );
-        if (result.ok) equipAvatarPart(state, btn.dataset.category, btn.dataset.id);
-      } else if (action === "equip") {
-        result = equipAvatarPart(state, btn.dataset.category, btn.dataset.id);
       }
 
       if (!result.ok) {
@@ -206,16 +105,12 @@ export function renderShop(state, { onChange } = {}) {
     });
   });
 
-  const preview = document.getElementById("shopAvatarPreviewMount");
-  if (preview) {
-    renderAvatarInto(preview, state.profile, {
-      size: "hero",
-      autoRotate: true,
-      interactive: true,
+  root.querySelectorAll("[data-goto]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      onNavigate?.(btn.dataset.goto);
     });
-  }
-
-  mountShopAvatarPreviews(root, state.profile);
+  });
 }
 
 export function updateProfileAvatarMount(state) {
@@ -229,5 +124,4 @@ export function updateProfileAvatarMount(state) {
 export function disposeShopAvatarPreview() {
   const preview = document.getElementById("shopAvatarPreviewMount");
   if (preview) disposeAvatar3D(preview);
-  disposeAvatarThumbnailRenderer();
 }

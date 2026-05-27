@@ -390,6 +390,17 @@ node server.mjs</code>
         <div id="shopRoot" class="shop-layout"></div>
       </section>
 
+      <!-- AVATAR STUDIO -->
+      <section class="view" data-view="avatar">
+        <div class="avatar-studio-header panel">
+          <button type="button" class="btn-text avatar-studio-back" data-goto="shop">← Back to shop</button>
+          <h2>Avatar studio</h2>
+          <p class="hint">Pick a category, preview styles on your avatar, then buy and equip.</p>
+          <p id="avatarStudioBalance" class="muted-text avatar-studio-balance"></p>
+        </div>
+        <div id="avatarStudioRoot" class="avatar-studio-layout"></div>
+      </section>
+
       <!-- PROFILE -->
       <section class="view" data-view="profile">
         <div class="profile-layout">
@@ -398,6 +409,7 @@ node server.mjs</code>
           <div>
             <h2 id="profileName">Scout</h2>
             <p class="muted-text"><span id="profileCoins">0</span> coins · <span id="profileStreakInline">0</span> day streak</p>
+            <button type="button" class="btn-secondary btn-sm profile-avatar-edit" data-goto="avatar">Customize avatar</button>
           </div>
           <button type="button" class="btn-secondary profile-auth-btn" id="profileAuthBtn">Sign in</button>
         </div>
@@ -674,6 +686,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=30" type="module"></script>
+    <script src="/js/app.js?v=32" type="module"></script>
   </body>
 </html>

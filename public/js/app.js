@@ -54,6 +54,7 @@ import { resolveCollectionImage } from "./card-image.js";
 import { uniqueScoutCount } from "./card-fingerprint.js";
 import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } from "./economy.js";
 import { renderShop, updateProfileAvatarMount, disposeShopAvatarPreview } from "./shop-ui.js";
+import { renderAvatarStudio, disposeAvatarStudio } from "./avatar-studio-ui.js";
 import { showDailyNotificationQueue } from "./daily-notifications.js";
 
 const APP_NAME = "HoopComps";
@@ -179,7 +180,7 @@ function captureProfileFormSnapshot() {
  syncProfileSaveButton();
 }
 
-const VIEWS = ["dashboard", "community", "scout", "collection", "profile", "shop", "about"];
+const VIEWS = ["dashboard", "community", "scout", "collection", "profile", "shop", "avatar", "about"];
 
 function $(id) {
  return document.getElementById(id);
@@ -198,15 +199,28 @@ function navigate(view) {
  if (view === "profile") renderProfile();
  if (view === "shop") renderShopView();
  else disposeShopAvatarPreview();
+ if (view === "avatar") renderAvatarStudioView();
+ else disposeAvatarStudio();
  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderShopView() {
  renderShop(state, {
+ onNavigate: navigate,
  onChange: (next) => {
  state = next;
  updateHeaderStats();
  renderProfile();
+ },
+ });
+}
+
+function renderAvatarStudioView() {
+ renderAvatarStudio(state, {
+ onChange: (next) => {
+ state = next;
+ updateHeaderStats();
+ updateProfileAvatarMount(state);
  },
  });
 }

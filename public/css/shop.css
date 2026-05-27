@@ -301,3 +301,173 @@
 .daily-notify-panel p strong {
   color: var(--text);
 }
+
+/* Avatar studio */
+.avatar-studio-header h2 {
+  margin: 0.35rem 0;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2rem;
+}
+
+.avatar-studio-back {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-size: 0.88rem;
+}
+
+.avatar-studio-balance {
+  margin: 0.35rem 0 0;
+}
+
+.avatar-studio-layout {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.avatar-studio-hero-panel {
+  text-align: center;
+}
+
+.avatar-studio-preview-note {
+  margin: 0.5rem 0 0;
+  color: #ffd166;
+  font-size: 0.88rem;
+}
+
+.avatar-studio-drag-hint {
+  margin: 0.5rem 0 0;
+}
+
+.avatar-studio-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.65rem;
+}
+
+.avatar-cat-btn {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  min-width: 5.5rem;
+}
+
+.avatar-cat-btn.active {
+  border-color: rgba(255, 209, 102, 0.55);
+  background: rgba(255, 209, 102, 0.1);
+}
+
+.avatar-cat-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.avatar-cat-sub {
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 7rem;
+}
+
+.avatar-studio-panel-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+}
+
+.avatar-studio-item-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.avatar-studio-item {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  grid-template-areas:
+    "preview info actions"
+    "preview confirm confirm";
+  gap: 0.55rem 0.75rem;
+  align-items: center;
+  padding: 0.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.avatar-studio-item.equipped {
+  border-color: rgba(255, 209, 102, 0.45);
+}
+
+.avatar-studio-item.previewing {
+  border-color: rgba(100, 180, 255, 0.45);
+}
+
+.avatar-studio-item-preview,
+.avatar-studio-swatch {
+  grid-area: preview;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.avatar-studio-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.avatar-studio-item-info {
+  grid-area: info;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.avatar-studio-item-actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.avatar-studio-confirm {
+  grid-area: confirm;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.shop-avatar-entry .btn-primary {
+  margin-top: 0.65rem;
+}
+
+.profile-avatar-edit {
+  margin-top: 0.55rem;
+}
+
+@media (max-width: 520px) {
+  .avatar-studio-item {
+    grid-template-columns: 64px 1fr;
+    grid-template-areas:
+      "preview info"
+      "actions actions"
+      "confirm confirm";
+  }
+
+  .avatar-studio-item-actions,
+  .avatar-studio-confirm {
+    justify-content: stretch;
+  }
+
+  .avatar-studio-item-actions .btn-xs,
+  .avatar-studio-confirm .btn-xs {
+    flex: 1 1 auto;
+  }
+}

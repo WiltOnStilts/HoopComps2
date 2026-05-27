@@ -64,8 +64,8 @@ export function normalizeEconomy(state) {
     if (!Array.isArray(state.ownedAvatarParts[key])) {
       state.ownedAvatarParts[key] = defaultOwnedAvatarParts()[key];
     }
-    if (key === "skin") {
-      state.ownedAvatarParts.skin = AVATAR_CATALOG.skin.map((item) => item.id);
+    if (key === "skin" || key === "eyeColor" || key === "eyebrowColor") {
+      state.ownedAvatarParts[key] = AVATAR_CATALOG[key].map((item) => item.id);
       continue;
     }
     const freeId = defaultAvatarSelection()[key];
@@ -242,6 +242,16 @@ export function purchaseAvatarPart(state, category, itemId, price) {
   return { ok: true };
 }
 
+export function unequipAvatarPart(state, category) {
+  const defaults = defaultAvatarSelection();
+  const defaultId = defaults[category];
+  if (!defaultId) return { ok: false, error: "Unknown category" };
+  const current = state.profile?.avatar?.[category];
+  if (current === defaultId) return { ok: false, error: "Already using default" };
+  state.profile.avatar = { ...state.profile.avatar, [category]: defaultId };
+  return { ok: true };
+}
+
 export function equipAvatarPart(state, category, itemId) {
   if (isFreeAvatarCategory(category)) {
     const item = AVATAR_CATALOG[category]?.find((entry) => entry.id === itemId);
@@ -262,8 +272,9 @@ function mergeOwnedAvatarParts(a = {}, b = {}) {
   const out = defaultOwnedAvatarParts();
   for (const key of AVATAR_PART_KEYS) {
     out[key] = [...new Set([...(a[key] || []), ...(b[key] || [])])];
-    if (key === "skin") {
-      out.skin = AVATAR_CATALOG.skin.map((item) => item.id);
+    if (key === "skin" || key === "eyeColor" || key === "eyebrowColor") {
+      out[key] = AVATAR_CATALOG[key].map((item) => item.id);
+      continue;
     }
   }
   return out;

@@ -2,7 +2,32 @@
 
 export const AVATAR_FORMAT_VERSION = 2;
 
-export const AVATAR_PART_KEYS = ["skin", "eyes", "mouth", "nose", "eyebrows", "build", "costume"];
+export const AVATAR_PART_KEYS = [
+  "skin",
+  "eyeColor",
+  "eyes",
+  "eyebrowColor",
+  "eyebrows",
+  "hair",
+  "mouth",
+  "nose",
+  "build",
+  "costume",
+];
+
+/** Flat category list for avatar studio tabs */
+export const AVATAR_STUDIO_CATEGORIES = [
+  { key: "skin", label: "Skin", free: true },
+  { key: "eyeColor", label: "Eye color", free: true },
+  { key: "eyes", label: "Eyes" },
+  { key: "eyebrowColor", label: "Brow color", free: true },
+  { key: "eyebrows", label: "Eyebrows" },
+  { key: "hair", label: "Hair" },
+  { key: "mouth", label: "Mouth" },
+  { key: "nose", label: "Nose" },
+  { key: "build", label: "Build" },
+  { key: "costume", label: "Costume" },
+];
 
 export const AVATAR_SHOP_GROUPS = [
   {
@@ -11,10 +36,12 @@ export const AVATAR_SHOP_GROUPS = [
     hint: "Ears are included automatically on every avatar.",
     categories: [
       { key: "skin", label: "Skin tone", free: true },
+      { key: "eyeColor", label: "Eye color", free: true },
       { key: "eyes", label: "Eyes" },
-      { key: "mouth", label: "Mouth" },
-      { key: "nose", label: "Nose" },
+      { key: "eyebrowColor", label: "Brow color", free: true },
       { key: "eyebrows", label: "Eyebrows" },
+      { key: "hair", label: "Hair" },
+      { key: "mouth", label: "Mouth" },
     ],
   },
   {
@@ -37,6 +64,16 @@ export const AVATAR_CATALOG = {
     { id: "brown", label: "Brown", hex: "#8d5524", price: 0 },
     { id: "deep", label: "Deep", hex: "#6b4423", price: 0 },
     { id: "ebony", label: "Ebony", hex: "#4a3728", price: 0 },
+  ],
+  eyeColor: [
+    { id: "brown", label: "Brown", hex: "#5c3d2e", price: 0 },
+    { id: "black", label: "Black", hex: "#1a120c", price: 0 },
+    { id: "tan", label: "Tan", hex: "#8d5524", price: 0 },
+  ],
+  eyebrowColor: [
+    { id: "brown", label: "Brown", hex: "#2b2118", price: 0 },
+    { id: "black", label: "Black", hex: "#1a120c", price: 0 },
+    { id: "tan", label: "Tan", hex: "#6b4423", price: 0 },
   ],
   eyes: [
     { id: "round", label: "Round", emoji: "👀", price: 0 },
@@ -70,6 +107,18 @@ export const AVATAR_CATALOG = {
     { id: "flat", label: "Flat", emoji: "—", price: 300 },
     { id: "bushy", label: "Bushy", emoji: "≡", price: 500 },
     { id: "raised", label: "Raised", emoji: "╱", price: 650 },
+  ],
+  hair: [
+    { id: "bald", label: "Bald", emoji: "🧑‍🦲", price: 0 },
+    { id: "buzzcut", label: "Buzz cut", emoji: "💇", price: 150 },
+    { id: "crew", label: "Crew cut", emoji: "✂️", price: 250 },
+    { id: "fade", label: "Fade", emoji: "📐", price: 350 },
+    { id: "sidepart", label: "Side part", emoji: "↪", price: 450 },
+    { id: "wavy", label: "Wavy", emoji: "🌊", price: 550 },
+    { id: "curly", label: "Curly", emoji: "🌀", price: 650 },
+    { id: "afro", label: "Afro", emoji: "⭕", price: 750 },
+    { id: "long", label: "Long", emoji: "💇‍♂️", price: 850 },
+    { id: "fluffy", label: "Fluffy", emoji: "🦁", price: 950 },
   ],
   build: [
     { id: "average", label: "Average", emoji: "🧍", price: 0 },
@@ -110,6 +159,16 @@ const LEGACY_FACE_TO_EYES = {
   star: "star",
   focus: "intense",
   cool: "shade",
+};
+
+const LEGACY_HAIR_TO_HAIR = {
+  buzz: "buzzcut",
+  curly: "curly",
+  wave: "wavy",
+  cap: "crew",
+  headband: "sidepart",
+  fro: "afro",
+  crown: "fluffy",
 };
 
 const LEGACY_HAIR_TO_EYEBROWS = {
@@ -156,10 +215,13 @@ export function normalizeCostumeId(id) {
 export function defaultAvatarSelection() {
   return {
     skin: "medium",
+    eyeColor: "brown",
     eyes: "round",
+    eyebrowColor: "brown",
+    eyebrows: "natural",
+    hair: "bald",
     mouth: "smile",
     nose: "classic",
-    eyebrows: "natural",
     build: "average",
     costume: "garbage",
   };
@@ -168,8 +230,8 @@ export function defaultAvatarSelection() {
 export function defaultOwnedAvatarParts() {
   const owned = {};
   for (const key of AVATAR_PART_KEYS) {
-    if (key === "skin") {
-      owned.skin = AVATAR_CATALOG.skin.map((item) => item.id);
+    if (key === "skin" || key === "eyeColor" || key === "eyebrowColor") {
+      owned[key] = AVATAR_CATALOG[key].map((item) => item.id);
       continue;
     }
     const free = AVATAR_CATALOG[key]?.find((item) => item.price === 0);
@@ -219,8 +281,22 @@ export function skinHex(profile = {}) {
   return findAvatarItem("skin", sel.skin)?.hex || "#c68642";
 }
 
+export function eyeColorHex(profile = {}) {
+  const sel = avatarSelection(profile);
+  return findAvatarItem("eyeColor", sel.eyeColor)?.hex || "#5c3d2e";
+}
+
+export function eyebrowColorHex(profile = {}) {
+  const sel = avatarSelection(profile);
+  return findAvatarItem("eyebrowColor", sel.eyebrowColor)?.hex || "#2b2118";
+}
+
+export function hairColorHex(profile = {}) {
+  return eyebrowColorHex(profile);
+}
+
 export function isFreeAvatarCategory(category) {
-  return category === "skin";
+  return category === "skin" || category === "eyeColor" || category === "eyebrowColor";
 }
 
 export function migrateAvatarFormat(state) {
@@ -242,6 +318,7 @@ export function migrateAvatarFormat(state) {
     }
   }
   if (oldSel.hair) {
+    nextSel.hair = LEGACY_HAIR_TO_HAIR[oldSel.hair] || nextSel.hair;
     nextSel.eyebrows = LEGACY_HAIR_TO_EYEBROWS[oldSel.hair] || nextSel.eyebrows;
   }
   if (oldSel.clothes) {
@@ -257,6 +334,8 @@ export function migrateAvatarFormat(state) {
     if (eyes && !nextOwned.eyes.includes(eyes)) nextOwned.eyes.push(eyes);
   }
   for (const id of oldOwned.hair || []) {
+    const hairId = LEGACY_HAIR_TO_HAIR[id];
+    if (hairId && !nextOwned.hair.includes(hairId)) nextOwned.hair.push(hairId);
     const brows = LEGACY_HAIR_TO_EYEBROWS[id];
     if (brows && !nextOwned.eyebrows.includes(brows)) nextOwned.eyebrows.push(brows);
   }

@@ -4,10 +4,14 @@ import { mountAvatar3D, disposeAvatar3D, refreshAvatar3D, captureAvatarThumbnail
 import {
   AVATAR_CATALOG,
   AVATAR_SHOP_GROUPS,
+  AVATAR_STUDIO_CATEGORIES,
   AVATAR_PART_KEYS,
   findAvatarItem,
   avatarSelection,
   skinHex,
+  eyeColorHex,
+  eyebrowColorHex,
+  hairColorHex,
   isFreeAvatarCategory,
   migrateAvatarFormat,
   defaultAvatarSelection,
@@ -23,10 +27,14 @@ export {
   disposeAvatarThumbnailRenderer,
   AVATAR_CATALOG,
   AVATAR_SHOP_GROUPS,
+  AVATAR_STUDIO_CATEGORIES,
   AVATAR_PART_KEYS,
   findAvatarItem,
   avatarSelection,
   skinHex,
+  eyeColorHex,
+  eyebrowColorHex,
+  hairColorHex,
   isFreeAvatarCategory,
   migrateAvatarFormat,
   defaultAvatarSelection,
@@ -65,6 +73,7 @@ export function renderAvatarHtml(profile, { size = "md", className = "" } = {}) 
   const costume = findAvatarItem("costume", sel.costume);
   const eyes = findAvatarItem("eyes", sel.eyes);
   const mouth = findAvatarItem("mouth", sel.mouth);
+  const hair = findAvatarItem("hair", sel.hair);
   const tint = costume.tint || "#e85d04";
   const skin = skinHex(profile);
 
@@ -72,7 +81,8 @@ export function renderAvatarHtml(profile, { size = "md", className = "" } = {}) 
     <div class="avatar-compose avatar-compose--${size} ${className}" style="--avatar-tint:${tint};--avatar-skin:${skin}" aria-hidden="true">
       <span class="avatar-layer avatar-clothes">${costume.emoji || "👕"}</span>
       <span class="avatar-layer avatar-face">${mouth.emoji || "🙂"}</span>
-      <span class="avatar-layer avatar-hair">${eyes.emoji || "👀"}</span>
+      <span class="avatar-layer avatar-hair">${hair.emoji || "🧑‍🦲"}</span>
+      <span class="avatar-layer avatar-eyes">${eyes.emoji || "👀"}</span>
     </div>
   `;
 }

@@ -151,34 +151,47 @@ function buildEyebrows(group, browsId, colorHex) {
 }
 
 function buildEyes(group, eyesId, colorHex) {
-  const eye = mat(parseInt(String(colorHex).replace("#", ""), 16) || 0x1a120c);
+  const iris = mat(parseInt(String(colorHex).replace("#", ""), 16) || 0x6b4423);
+  const pupil = mat(0x0a0a0a);
   const white = mat(0xf8f9fa);
   const y = HEAD_Y + 0.02;
   const z = 0.28;
 
-  const addRoundEyes = (rx = 0.035, ry = 0.035) => {
-    addMesh(group, new THREE.SphereGeometry(rx, 8, 8), white, [-0.11, y, z], [0, 0, 0], [1, ry / rx, 1]);
-    addMesh(group, new THREE.SphereGeometry(rx, 8, 8), white, [0.11, y, z], [0, 0, 0], [1, ry / rx, 1]);
-    addMesh(group, new THREE.SphereGeometry(rx * 0.55, 8, 8), eye, [-0.11, y, z + 0.02]);
-    addMesh(group, new THREE.SphereGeometry(rx * 0.55, 8, 8), eye, [0.11, y, z + 0.02]);
+  const addRoundEyes = (rx = 0.058, ry = 0.05) => {
+    const irisR = rx * 0.68;
+    const irisRy = ry * 0.68;
+    const pupilR = irisR * 0.42;
+
+    for (const x of [-0.11, 0.11]) {
+      addMesh(group, new THREE.SphereGeometry(rx, 10, 10), white, [x, y, z], [0, 0, 0], [1, ry / rx, 1]);
+      addMesh(
+        group,
+        new THREE.SphereGeometry(irisR, 10, 10),
+        iris,
+        [x, y, z + 0.018],
+        [0, 0, 0],
+        [1, irisRy / irisR, 1]
+      );
+      addMesh(group, new THREE.SphereGeometry(pupilR, 10, 10), pupil, [x, y, z + 0.03]);
+    }
   };
 
   switch (eyesId) {
     case "narrow":
-      addRoundEyes(0.04, 0.022);
+      addRoundEyes(0.062, 0.034);
       break;
     case "wide":
-      addRoundEyes(0.05, 0.045);
+      addRoundEyes(0.072, 0.062);
       break;
     case "intense":
-      addRoundEyes(0.032, 0.032);
-      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), eye, [-0.11, y + 0.05, z + 0.01], [0, 0, 0.2]);
-      addMesh(group, new THREE.BoxGeometry(0.14, 0.018, 0.02), eye, [0.11, y + 0.05, z + 0.01], [0, 0, -0.2]);
+      addRoundEyes(0.052, 0.052);
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.022, 0.02), pupil, [-0.11, y + 0.06, z + 0.01], [0, 0, 0.2]);
+      addMesh(group, new THREE.BoxGeometry(0.16, 0.022, 0.02), pupil, [0.11, y + 0.06, z + 0.01], [0, 0, -0.2]);
       break;
     case "sleepy":
-      addRoundEyes(0.034, 0.028);
-      addMesh(group, new THREE.BoxGeometry(0.15, 0.025, 0.02), mat(0xc68642), [-0.11, y + 0.04, z + 0.01], [0, 0, -0.25]);
-      addMesh(group, new THREE.BoxGeometry(0.15, 0.025, 0.02), mat(0xc68642), [0.11, y + 0.04, z + 0.01], [0, 0, 0.25]);
+      addRoundEyes(0.055, 0.045);
+      addMesh(group, new THREE.BoxGeometry(0.17, 0.028, 0.02), mat(0xc68642), [-0.11, y + 0.045, z + 0.01], [0, 0, -0.25]);
+      addMesh(group, new THREE.BoxGeometry(0.17, 0.028, 0.02), mat(0xc68642), [0.11, y + 0.045, z + 0.01], [0, 0, 0.25]);
       break;
     case "star": {
       const star = mat(0xffd166, { emissive: 0xffb703, emissiveIntensity: 0.35 });

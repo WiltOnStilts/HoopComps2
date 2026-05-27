@@ -53,13 +53,12 @@ function renderStudioItem({ category, item, state }) {
     pendingConfirm.category === category &&
     pendingConfirm.id === item.id;
 
-  let primaryLabel = "Equip";
+  let primaryLabel = "Buy and equip";
   let primaryAction = "equip";
   if (isEquipped) {
     primaryLabel = "Unequip";
     primaryAction = "unequip-request";
   } else if (!isOwned) {
-    primaryLabel = item.price === 0 ? "Equip" : "Buy & equip";
     primaryAction = item.price === 0 ? "equip" : "buy-request";
   }
 
@@ -78,19 +77,19 @@ function renderStudioItem({ category, item, state }) {
         ${isEquipped ? `<span class="shop-tag">Equipped</span>` : ""}
       </div>
       <div class="avatar-studio-item-actions">
-        <button type="button" class="btn-secondary btn-xs" data-studio="preview" data-category="${category}" data-id="${item.id}">Preview first</button>
         ${
           !isPendingPurchase && !isPendingUnequip
-            ? `<button type="button" class="btn-primary btn-xs" data-studio="${primaryAction}" data-category="${category}" data-id="${item.id}" data-price="${item.price ?? 0}">${primaryLabel}</button>`
+            ? `<button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--buy" data-studio="${primaryAction}" data-category="${category}" data-id="${item.id}" data-price="${item.price ?? 0}">${primaryLabel}</button>`
             : ""
         }
+        <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview" data-studio="preview" data-category="${category}" data-id="${item.id}">Preview first</button>
       </div>
       ${
         isPendingPurchase
           ? `
         <div class="avatar-studio-confirm">
-          <button type="button" class="btn-primary btn-xs" data-studio="confirm-purchase" data-category="${category}" data-id="${item.id}" data-price="${item.price ?? 0}">Confirm purchase (${item.price} coins)</button>
-          <button type="button" class="btn-secondary btn-xs" data-studio="cancel">Cancel</button>
+          <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--buy" data-studio="confirm-purchase" data-category="${category}" data-id="${item.id}" data-price="${item.price ?? 0}">Confirm purchase (${item.price} coins)</button>
+          <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview" data-studio="cancel">Cancel</button>
         </div>
       `
           : ""
@@ -99,8 +98,8 @@ function renderStudioItem({ category, item, state }) {
         isPendingUnequip
           ? `
         <div class="avatar-studio-confirm">
-          <button type="button" class="btn-primary btn-xs" data-studio="confirm-unequip" data-category="${category}" data-id="${item.id}">Confirm unequip</button>
-          <button type="button" class="btn-secondary btn-xs" data-studio="cancel">Cancel</button>
+          <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--buy" data-studio="confirm-unequip" data-category="${category}" data-id="${item.id}">Confirm unequip</button>
+          <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview" data-studio="cancel">Cancel</button>
         </div>
       `
           : ""
@@ -145,9 +144,6 @@ export function renderAvatarStudio(state, { onChange } = {}) {
   const items = AVATAR_CATALOG[categoryMeta.key] || [];
 
   const categoryButtons = AVATAR_STUDIO_CATEGORIES.map((cat) => {
-    const equippedId = state.profile?.avatar?.[cat.key];
-    const equippedItem = (AVATAR_CATALOG[cat.key] || []).find((i) => i.id === equippedId);
-    const sub = equippedItem ? equippedItem.label : "";
     return `
       <button
         type="button"
@@ -157,29 +153,32 @@ export function renderAvatarStudio(state, { onChange } = {}) {
         aria-expanded="${cat.key === activeCategory ? "true" : "false"}"
       >
         <span class="avatar-cat-label">${escapeHtml(cat.label)}</span>
-        ${sub ? `<span class="avatar-cat-sub muted-text">${escapeHtml(sub)}</span>` : ""}
       </button>
     `;
   }).join("");
 
   root.innerHTML = `
-    <div class="panel avatar-studio-hero-panel">
-      <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
-      ${
-        isPreviewing(state)
-          ? `<p class="avatar-studio-preview-note">Previewing — not saved yet</p>`
-          : `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`
-      }
-    </div>
+    <div class="avatar-studio-main">
+      <div class="avatar-studio-controls">
+        <div class="avatar-studio-bar panel" role="tablist" aria-label="Avatar categories">
+          ${categoryButtons}
+        </div>
 
-    <div class="avatar-studio-bar panel" role="tablist" aria-label="Avatar categories">
-      ${categoryButtons}
-    </div>
+        <div class="panel avatar-studio-dropdown" data-panel="${categoryMeta.key}">
+          <h3 class="avatar-studio-panel-title">${escapeHtml(categoryMeta.label)}</h3>
+          <div class="avatar-studio-item-list">
+            ${items.map((item) => renderStudioItem({ category: categoryMeta.key, item, state })).join("")}
+          </div>
+        </div>
+      </div>
 
-    <div class="panel avatar-studio-dropdown" data-panel="${categoryMeta.key}">
-      <h3 class="avatar-studio-panel-title">${escapeHtml(categoryMeta.label)}</h3>
-      <div class="avatar-studio-item-list">
-        ${items.map((item) => renderStudioItem({ category: categoryMeta.key, item, state })).join("")}
+      <div class="panel avatar-studio-hero-panel">
+        <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
+        ${
+          isPreviewing(state)
+            ? `<p class="avatar-studio-preview-note">Previewing — not saved yet</p>`
+            : `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`
+        }
       </div>
     </div>
   `;

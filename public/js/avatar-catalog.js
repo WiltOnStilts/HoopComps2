@@ -66,13 +66,13 @@ export const AVATAR_CATALOG = {
     { id: "ebony", label: "Ebony", hex: "#4a3728", price: 0 },
   ],
   eyeColor: [
-    { id: "brown", label: "Brown", hex: "#5c3d2e", price: 0 },
-    { id: "black", label: "Black", hex: "#1a120c", price: 0 },
-    { id: "tan", label: "Tan", hex: "#8d5524", price: 0 },
+    { id: "blue", label: "Blue", hex: "#3d6bb3", price: 0 },
+    { id: "green", label: "Green", hex: "#4a7c59", price: 0 },
+    { id: "brown", label: "Brown", hex: "#6b4423", price: 0 },
   ],
   eyebrowColor: [
-    { id: "brown", label: "Brown", hex: "#2b2118", price: 0 },
     { id: "black", label: "Black", hex: "#1a120c", price: 0 },
+    { id: "brown", label: "Brown", hex: "#2b2118", price: 0 },
     { id: "tan", label: "Tan", hex: "#6b4423", price: 0 },
   ],
   eyes: [
@@ -252,6 +252,10 @@ export function avatarSelection(profile = {}) {
     out[key] = sel[key] || defaults[key];
   }
   out.costume = normalizeCostumeId(out.costume);
+  if (out.eyeColor === "black" || out.eyeColor === "tan") out.eyeColor = "brown";
+  if (!AVATAR_CATALOG.eyeColor.some((item) => item.id === out.eyeColor)) {
+    out.eyeColor = defaults.eyeColor;
+  }
   return out;
 }
 
@@ -283,7 +287,7 @@ export function skinHex(profile = {}) {
 
 export function eyeColorHex(profile = {}) {
   const sel = avatarSelection(profile);
-  return findAvatarItem("eyeColor", sel.eyeColor)?.hex || "#5c3d2e";
+  return findAvatarItem("eyeColor", sel.eyeColor)?.hex || "#6b4423";
 }
 
 export function eyebrowColorHex(profile = {}) {

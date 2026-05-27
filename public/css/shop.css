@@ -324,8 +324,23 @@
   gap: 0.75rem;
 }
 
+.avatar-studio-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(300px, 34vw);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.avatar-studio-controls {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .avatar-studio-hero-panel {
   text-align: center;
+  position: sticky;
+  top: 0.75rem;
 }
 
 .avatar-studio-preview-note {
@@ -346,34 +361,34 @@
 }
 
 .avatar-cat-btn {
-  display: grid;
-  gap: 0.1rem;
-  padding: 0.45rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
   color: inherit;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   min-width: 5.5rem;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.avatar-cat-btn:hover {
+  border-color: rgba(255, 107, 44, 0.35);
+  background: rgba(255, 107, 44, 0.08);
 }
 
 .avatar-cat-btn.active {
-  border-color: rgba(255, 209, 102, 0.55);
-  background: rgba(255, 209, 102, 0.1);
+  border-color: rgba(255, 107, 44, 0.65);
+  background: linear-gradient(135deg, rgba(255, 107, 44, 0.22), rgba(255, 209, 102, 0.12));
+  box-shadow: 0 0 0 1px rgba(255, 107, 44, 0.2);
 }
 
 .avatar-cat-label {
   font-size: 0.82rem;
   font-weight: 600;
-}
-
-.avatar-cat-sub {
-  font-size: 0.72rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 7rem;
 }
 
 .avatar-studio-panel-title {
@@ -430,18 +445,59 @@
 
 .avatar-studio-item-actions {
   grid-area: actions;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  min-width: 11.5rem;
 }
 
 .avatar-studio-confirm {
   grid-area: confirm;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.avatar-studio-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.avatar-studio-action-btn:active {
+  transform: scale(0.98);
+}
+
+.avatar-studio-action-btn--buy {
+  border: 1px solid rgba(255, 107, 44, 0.45);
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(255, 107, 44, 0.28);
+}
+
+.avatar-studio-action-btn--buy:hover {
+  box-shadow: 0 6px 18px rgba(255, 107, 44, 0.38);
+}
+
+.avatar-studio-action-btn--preview {
+  border: 1px solid rgba(255, 107, 44, 0.35);
+  background: rgba(255, 107, 44, 0.1);
+  color: var(--text);
+}
+
+.avatar-studio-action-btn--preview:hover {
+  background: rgba(255, 107, 44, 0.16);
+  border-color: rgba(255, 107, 44, 0.5);
 }
 
 .shop-avatar-entry .btn-primary {
@@ -450,6 +506,17 @@
 
 .profile-avatar-edit {
   margin-top: 0.55rem;
+}
+
+@media (max-width: 900px) {
+  .avatar-studio-main {
+    grid-template-columns: 1fr;
+  }
+
+  .avatar-studio-hero-panel {
+    order: -1;
+    top: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -463,11 +530,6 @@
 
   .avatar-studio-item-actions,
   .avatar-studio-confirm {
-    justify-content: stretch;
-  }
-
-  .avatar-studio-item-actions .btn-xs,
-  .avatar-studio-confirm .btn-xs {
-    flex: 1 1 auto;
+    min-width: 0;
   }
 }

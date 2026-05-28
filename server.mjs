@@ -28,6 +28,10 @@ import {
   saveUserState,
   mergeGuestIntoCloud,
   alignStateWithAccountDisplayName,
+  sessionCookieHeader,
+  sessionFromToken,
+  getRequestToken,
+  verifyToken,
 } from "./lib/auth.mjs";
 import {
   getSocialOverview,
@@ -128,15 +132,22 @@ function readBody(req) {
   });
 }
 
-function send(res, status, body, type = "application/json") {
+function send(res, status, body, type = "application/json", extraHeaders = {}) {
   const data = typeof body === "string" ? body : JSON.stringify(body);
   res.writeHead(status, {
     "Content-Type": type,
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    ...extraHeaders,
   });
   res.end(data);
+}
+
+function sendAuthResult(res, status, result) {
+  send(res, status, result, "application/json", {
+    "Set-Cookie": sessionCookieHeader(result.token),
+  });
 }
 
 function serveStatic(req, res) {
@@ -242,7 +253,7 @@ const server = http.createServer(async (req, res) => {
         result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
         result.user.displayName = merged.profile?.displayName || result.user.displayName;
       }
-      send(res, 200, result);
+      sendAuthResult(res, 200, result);
     } catch (e) {
       send(res, 400, { error: e.message });
     }
@@ -269,7 +280,7 @@ const server = http.createServer(async (req, res) => {
         result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
         result.user.displayName = merged.profile?.displayName || result.user.displayName;
       }
-      send(res, 200, result);
+      sendAuthResult(res, 200, result);
     } catch (e) {
       send(res, 401, { error: e.message });
     }
@@ -309,10 +320,36 @@ const server = http.createServer(async (req, res) => {
         result.publicLeaderboard = Boolean(merged.profile?.publicLeaderboard);
         result.user.displayName = merged.profile?.displayName || result.user.displayName;
       }
-      send(res, 200, result);
+      sendAuthResult(res, 200, result);
     } catch (e) {
       send(res, 400, { error: e.message });
     }
+    return;
+  }
+
+  if (req.method === "GET" && url === "/api/auth/session") {
+    if (!isDbReady()) {
+      send(res, 503, { error: "Multi-user not available" });
+      return;
+    }
+    const token = getRequestToken(req);
+    const session = await sessionFromToken(token);
+    if (!session) {
+      send(res, 401, { error: "Not signed in" }, "application/json", {
+        "Set-Cookie": sessionCookieHeader(null),
+      });
+      return;
+    }
+    send(res, 200, session, "application/json", {
+      "Set-Cookie": sessionCookieHeader(session.token),
+    });
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/auth/logout") {
+    send(res, 200, { ok: true }, "application/json", {
+      "Set-Cookie": sessionCookieHeader(null),
+    });
     return;
   }
 

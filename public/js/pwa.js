@@ -1,6 +1,17 @@
 let deferredPrompt = null;
 
+export function isStandaloneApp() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
 export function initPwa() {
+  if (isStandaloneApp()) {
+    document.body.classList.add("standalone-app");
+  }
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   }

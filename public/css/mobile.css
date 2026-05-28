@@ -665,7 +665,20 @@ body {
 
 @media (max-width: 768px) {
   .top-bar {
-    padding: 0.85rem 1rem;
+    padding-top: calc(0.85rem + env(safe-area-inset-top, 0px));
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    padding-bottom: 0.85rem;
+  }
+
+  .install-banner {
+    padding-top: calc(0.55rem + env(safe-area-inset-top, 0px));
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  body.standalone-app .top-bar {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   }
 
   /* Signed-in: full-width session bar at top; hides on scroll */

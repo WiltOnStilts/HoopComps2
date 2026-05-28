@@ -36,6 +36,7 @@ import {
 } from "./scout-wizard.js";
 import {
  loadStoredSession,
+ restoreSessionFromServer,
  isLoggedIn,
  getCurrentUser,
  register,
@@ -1234,7 +1235,7 @@ async function reconcileCloudState() {
 }
 
 async function bootstrapSession() {
-  loadStoredSession();
+  await restoreSessionFromServer();
   renderAuthUI();
 
   if (isLoggedIn()) {

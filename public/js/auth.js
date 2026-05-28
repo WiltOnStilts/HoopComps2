@@ -1,10 +1,30 @@
 const TOKEN_KEY = "hoopcomps_token";
 const USER_KEY = "hoopcomps_user";
+const SESSION_COOKIE = "hoopcomps_session";
 
 let currentUser = null;
 let authToken = null;
 let syncTimer = null;
 let onAuthChange = null;
+
+function readSessionCookie() {
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`));
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCookie(token) {
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  if (!token) {
+    document.cookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+    return;
+  }
+  document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${31536000}; SameSite=Lax${secure}`;
+}
 
 function decodeJwtPayload(token) {
   try {
@@ -34,9 +54,11 @@ function persistSession(token, user) {
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    writeSessionCookie(token);
   } else {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    writeSessionCookie(null);
   }
 }
 
@@ -62,7 +84,10 @@ export function isLoggedIn() {
 }
 
 export function loadStoredSession() {
-  let token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem("compscourt_token");
+  let token =
+    localStorage.getItem(TOKEN_KEY) ||
+    localStorage.getItem("compscourt_token") ||
+    readSessionCookie();
   let userRaw = localStorage.getItem(USER_KEY) || localStorage.getItem("compscourt_user");
 
   if (token && token !== localStorage.getItem(TOKEN_KEY)) {
@@ -93,7 +118,44 @@ export function loadStoredSession() {
     }
   }
 
+  if (token) writeSessionCookie(token);
+
   return { token: authToken, user: currentUser };
+}
+
+export async function restoreSessionFromServer() {
+  loadStoredSession();
+  if (isLoggedIn()) {
+    try {
+      const res = await fetch("/api/auth/session", {
+        credentials: "same-origin",
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token && data.user) {
+          persistSession(data.token, data.user);
+        }
+      }
+    } catch {
+      /* offline */
+    }
+    return { token: authToken, user: currentUser };
+  }
+
+  try {
+    const res = await fetch("/api/auth/session", { credentials: "same-origin" });
+    if (!res.ok) return loadStoredSession();
+    const data = await res.json();
+    if (data.token && data.user) {
+      persistSession(data.token, data.user);
+      return { token: data.token, user: data.user };
+    }
+  } catch {
+    /* offline or server unavailable */
+  }
+
+  return loadStoredSession();
 }
 
 export async function authFetch(path, options = {}) {
@@ -104,7 +166,7 @@ export async function authFetch(path, options = {}) {
   const token = getAuthToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(path, { ...options, headers, credentials: "same-origin" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error || "Request failed");
@@ -115,10 +177,18 @@ export async function authFetch(path, options = {}) {
 }
 
 export async function resetPassword({ email, newPassword, confirmPassword, guestState }) {
-  const data = await authFetch("/api/auth/reset-password", {
+  const res = await fetch("/api/auth/reset-password", {
     method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, newPassword, confirmPassword, guestState }),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
   persistSession(data.token, data.user);
   onAuthChange?.({
     user: data.user,
@@ -130,20 +200,36 @@ export async function resetPassword({ email, newPassword, confirmPassword, guest
 }
 
 export async function register({ email, password, displayName, guestState }) {
-  const data = await authFetch("/api/auth/register", {
+  const res = await fetch("/api/auth/register", {
     method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, displayName, guestState }),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
   persistSession(data.token, data.user);
   onAuthChange?.({ user: data.user, state: data.state, mode: "register" });
   return data;
 }
 
 export async function login({ email, password, guestState }) {
-  const data = await authFetch("/api/auth/login", {
+  const res = await fetch("/api/auth/login", {
     method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, guestState }),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
   persistSession(data.token, data.user);
   onAuthChange?.({
     user: data.user,
@@ -156,6 +242,7 @@ export async function login({ email, password, guestState }) {
 
 export function logout() {
   persistSession(null, null);
+  void fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
   onAuthChange?.({ user: null, mode: "logout" });
 }
 

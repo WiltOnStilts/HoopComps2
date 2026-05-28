@@ -71,6 +71,13 @@ export async function acceptCodCommentAgreement() {
   });
 }
 
+export async function castCodVote(vote) {
+  return authFetch("/api/card-of-day/poll", {
+    method: "POST",
+    body: JSON.stringify({ vote }),
+  });
+}
+
 export async function postCodComment(text) {
   return authFetch("/api/card-of-day/comments", {
     method: "POST",

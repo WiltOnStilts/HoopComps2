@@ -40,6 +40,7 @@ import {
   createProfilePost,
   listCodComments,
   addCodComment,
+  castCodVote,
   acceptCodCommentAgreement,
   oneTimeTestUnban,
   clearCommentBan,
@@ -550,6 +551,21 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       send(res, 200, await acceptCodCommentAgreement(user.id));
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/card-of-day/poll") {
+    const user = await requireUser(req);
+    if (!user) {
+      send(res, 401, { error: "Sign in to vote" });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      send(res, 200, await castCodVote(user.id, body.vote));
     } catch (e) {
       send(res, 400, { error: e.message });
     }

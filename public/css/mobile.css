@@ -870,6 +870,13 @@ body {
     gap: 0.5rem;
   }
 
+  .friend-search-wrap input,
+  #communityFriendSearch {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
   .friend-add-row input,
   .field input,
   .field select,

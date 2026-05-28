@@ -173,9 +173,42 @@ node server.mjs</code>
               </div>
               <p class="cow-blurb" id="cowBlurb"></p>
               <div class="price-variation-bar" id="cowVariation"></div>
-              <div class="cow-actions">
-                <button type="button" class="btn-secondary" id="cowCommentBtn">Comment on this card</button>
+
+              <div class="cow-poll panel-inset" id="cowPollPanel">
+                <p class="section-label">Hold or sell?</p>
+                <p class="hint cow-poll-hint">Vote once per day — helps the owner decide what to do with this card.</p>
+                <div class="cow-poll-actions">
+                  <button type="button" class="btn-secondary cow-poll-btn" id="cowHoldBtn" data-vote="hold">Hold</button>
+                  <button type="button" class="btn-secondary cow-poll-btn" id="cowSellBtn" data-vote="sell">Sell</button>
+                </div>
+                <div class="cow-poll-stats" id="cowPollStats">
+                  <span class="muted-text">Sign in to vote</span>
+                </div>
               </div>
+
+              <details class="cow-conversation" id="cowConversation">
+                <summary id="cowConversationSummary">Today's conversation</summary>
+                <div class="cow-conversation-panel">
+                  <div id="cowCommentsList" class="comment-list cow-comment-list"></div>
+                  <div id="cowCommentSignIn" class="social-empty hidden">Sign in to join today's Card of the Day conversation.</div>
+                  <div id="cowCommentBan" class="comment-ban hidden">
+                    <p id="cowCommentBanText"></p>
+                    <button type="button" class="btn-secondary btn-sm hidden" id="cowTestUnbanBtn">One-time test unban</button>
+                  </div>
+                  <div id="cowCommentAgreement" class="cod-comment-agreement hidden">
+                    <p id="cowAgreementText"></p>
+                    <label class="checkbox-field agreement-check">
+                      <input type="checkbox" id="cowAgreementCheck" />
+                      <span>I agree to today's community rules</span>
+                    </label>
+                    <button type="button" class="btn-secondary btn-sm" id="cowAgreementSubmit" disabled>Continue</button>
+                  </div>
+                  <div id="cowCommentCompose" class="comment-compose hidden">
+                    <input type="text" id="cowCommentInput" maxlength="1000" placeholder="Share your take on today's card…" />
+                    <button type="button" class="btn-secondary" id="cowCommentSubmit">Post</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
         </div>
@@ -666,6 +699,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=42" type="module"></script>
+    <script src="/js/app.js?v=43" type="module"></script>
   </body>
 </html>

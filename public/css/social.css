@@ -147,9 +147,86 @@
   margin-top: 0.75rem;
 }
 
-.cow-actions .btn-secondary {
-  flex: 1;
-  min-width: 140px;
+.panel-inset {
+  margin-top: 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+}
+
+.cow-poll-hint {
+  margin: 0.25rem 0 0.75rem;
+}
+
+.cow-poll-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cow-poll-btn.active {
+  border-color: var(--gold-light);
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 102, 0.35);
+}
+
+.cow-poll-stats {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.cow-poll-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.45rem;
+}
+
+.cow-poll-bar-hold {
+  display: block;
+  background: #4ade80;
+}
+
+.cow-poll-bar-sell {
+  display: block;
+  background: #f87171;
+}
+
+.cow-poll-percentages {
+  margin: 0;
+}
+
+.cow-conversation {
+  margin-top: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.cow-conversation summary {
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.cow-conversation summary::-webkit-details-marker {
+  display: none;
+}
+
+.cow-conversation-panel {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.cow-comment-list {
+  max-height: min(42vh, 320px);
+  overflow-y: auto;
+  margin: 0.75rem 0;
 }
 
 .social-modal-sub {
@@ -300,6 +377,7 @@
 
 .friend-search-wrap input {
   width: 100%;
+  min-width: 0;
 }
 
 .friend-search-menu {

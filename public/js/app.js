@@ -52,6 +52,7 @@ import {
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI, openFriendModal } from "./social-ui.js";
 import { renderCommunityFriends, initCommunityFriendsUI } from "./community-friends-ui.js";
+import { renderCodDayEngagement, initCodDayUI } from "./cod-day-ui.js";
 import { resolveCollectionImage } from "./card-image.js";
 import { uniqueScoutCount } from "./card-fingerprint.js";
 import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } from "./economy.js";
@@ -285,6 +286,7 @@ function renderDashboard() {
 
 async function renderCommunity() {
  await loadCardOfDay();
+ await renderCodDayEngagement({ openAuthModal });
  await renderCommunityFriends();
  await renderCommunityChat();
 }
@@ -463,6 +465,8 @@ function renderCardOfDay(data) {
  }
  $("cowBlurb").textContent = data?.blurb || "Check back soon for today's spotlight card.";
  $("cowEstimate").textContent = "—";
+ $("cowPollPanel")?.classList.add("hidden");
+ $("cowConversation")?.classList.add("hidden");
  renderCardOfDayImage(null, null);
  const varEl = $("cowVariation");
  if (varEl) {
@@ -493,9 +497,11 @@ function renderCardOfDay(data) {
 
  $("cowSub").textContent = `${dayLabel} · ${profileHint}`;
  $("cowBlurb").textContent = blurb || "";
+ $("cowPollPanel")?.classList.remove("hidden");
+ $("cowConversation")?.classList.remove("hidden");
 
  const est = scout?.valuation?.estimate ?? savedEstimate;
- $("cowEstimate").textContent = est != null ? formatUsd(est) : "Scout for value";
+ $("cowEstimate").textContent = est != null ? formatUsd(est) : "—";
 
  const pv = scout?.valuation?.priceVariation;
  const varEl = $("cowVariation");
@@ -1026,7 +1032,12 @@ function initProfileForm() {
  renderProfile();
  updateHeaderStats();
  if (isLoggedIn()) {
-   await pushLocalToCloud();
+   try {
+     await pushLocalToCloud();
+   } catch (err) {
+     alert(err.message || "Could not save profile to cloud");
+     return;
+   }
  }
  loadLeaderboard();
  });
@@ -1230,6 +1241,7 @@ async function bootstrapSession() {
 
 async function refreshSocialPanels() {
   await renderProfileSocial(state);
+  await renderCodDayEngagement({ openAuthModal });
   await renderCommunityFriends();
   await renderCommunityChat();
 }
@@ -1279,6 +1291,10 @@ function init() {
    openAuthModal,
    openFriendModal,
    refreshFriends: () => renderCommunityFriends(),
+ });
+ initCodDayUI({
+   openAuthModal,
+   refreshEngagement: () => renderCodDayEngagement({ openAuthModal }),
  });
  initScoutWizard($("scoutForm"));
  resetScoutSession();

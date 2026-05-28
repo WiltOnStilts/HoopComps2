@@ -389,64 +389,6 @@ export function initSocialUI({ getState, openAuthModal }) {
     }
   });
 
-  $("cowCommentBtn")?.addEventListener("click", () => {
-    const title = $("cowTitle")?.textContent || "";
-    openCodCommentsModal(title !== "Loading spotlight…" ? title : "");
-  });
-
-  $("codAgreementCheck")?.addEventListener("change", (e) => {
-    const btn = $("codAgreementSubmit");
-    if (btn) btn.disabled = !e.target.checked;
-  });
-
-  $("codAgreementSubmit")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    if (!$("codAgreementCheck")?.checked) return;
-    const btn = $("codAgreementSubmit");
-    btn.disabled = true;
-    try {
-      await acceptCodCommentAgreement();
-      await openCodCommentsModal($("codCommentsTitle")?.textContent?.replace(/^Talk: /, "") || "");
-    } catch (err) {
-      alert(err.message);
-      btn.disabled = false;
-    }
-  });
-
-  $("codTestUnbanBtn")?.addEventListener("click", async () => {
-    const btn = $("codTestUnbanBtn");
-    if (btn) btn.disabled = true;
-    try {
-      const result = await oneTimeTestUnbanComments();
-      alert(result.message || "Comment ban cleared.");
-      await openCodCommentsModal($("codCommentsTitle")?.textContent?.replace(/^Talk: /, "") || "");
-    } catch (err) {
-      alert(err.message);
-      if (btn) btn.disabled = false;
-    }
-  });
-
-  $("codCommentSubmit")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    const input = $("codCommentInput");
-    const text = input?.value?.trim();
-    if (!text) return;
-    try {
-      await postCodComment(text);
-      input.value = "";
-      await openCodCommentsModal($("codCommentsTitle")?.textContent?.replace(/^Talk: /, "") || "");
-    } catch (err) {
-      alert(err.message);
-      await openCodCommentsModal($("codCommentsTitle")?.textContent?.replace(/^Talk: /, "") || "");
-    }
-  });
-
   $("friendModalClose")?.addEventListener("click", closeFriendModal);
   $("friendModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeFriendModal);
   $("codCommentsClose")?.addEventListener("click", closeCodCommentsModal);

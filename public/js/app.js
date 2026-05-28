@@ -59,7 +59,7 @@ import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } 
 import { renderShop, updateProfileAvatarMount, disposeShopAvatarPreview } from "./shop-ui.js";
 import { renderAvatarStudio, disposeAvatarStudio } from "./avatar-studio-ui.js";
 import { showDailyNotificationQueue } from "./daily-notifications.js";
-import { maybeShowPushPermissionPrompt, syncPendingPushSubscription } from "./push-notifications.js";
+import { maybeShowPushPermissionPrompt, syncPendingPushSubscription, initPushSettingsUI, renderPushSettings } from "./push-notifications.js";
 
 const APP_NAME = "HoopComps";
 
@@ -685,6 +685,10 @@ function renderProfile() {
  $("profileCollectionValue").textContent = total > 0 ? formatUsd(total) : "—";
  $("profileCardCount").textContent = coll.length;
  $("profileValuedCount").textContent = collectionValuedCount(state);
+ void renderPushSettings({
+   multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),
+   openAuthModal,
+ });
 }
 
 async function checkHealth() {
@@ -1067,6 +1071,7 @@ function initAuth() {
  refreshSocialPanels();
  await maybeShowDailyLoginNotifications();
  await syncPendingPushSubscription();
+ renderProfile();
  });
 
  $("authHeaderBtn")?.addEventListener("click", () => {
@@ -1298,6 +1303,10 @@ function init() {
  initCodDayUI({
    openAuthModal,
    refreshEngagement: () => renderCodDayEngagement({ openAuthModal }),
+ });
+ initPushSettingsUI({
+   getMultiUserEnabled: () => Boolean(health?.multiUserEnabled && health?.pushEnabled),
+   openAuthModal,
  });
  initScoutWizard($("scoutForm"));
  resetScoutSession();

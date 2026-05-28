@@ -5,6 +5,10 @@ import { authFetch, isLoggedIn } from "./auth.js";
 const PROMPT_KEY = "hoopPushPromptV1";
 const PENDING_SUB_KEY = "hoopPendingPushSub";
 
+function $(id) {
+  return document.getElementById(id);
+}
+
 function supportsPush() {
   return (
     typeof window !== "undefined" &&
@@ -121,7 +125,7 @@ function ensurePromptModal() {
       <p class="hint push-prompt-copy">
         Get reminders to keep your streak, alerts when your card is featured, and friend updates — like a text, but from HoopComps.
       </p>
-      <p class="muted-text push-prompt-note">You can change this later in your browser or device settings.</p>
+      <p class="muted-text push-prompt-note">You can also turn these on anytime from Profile → Notifications.</p>
       <div class="push-prompt-actions">
         <button type="button" class="btn-scout" id="pushPromptAllow">Allow</button>
         <button type="button" class="btn-secondary" id="pushPromptDeny">Not now</button>
@@ -194,4 +198,151 @@ export async function maybeShowPushPermissionPrompt({ multiUserEnabled = true } 
   } finally {
     promptInFlight = false;
   }
+}
+
+export function supportsPushNotifications() {
+  return supportsPush();
+}
+
+async function hasLocalPushSubscription() {
+  if (!supportsPush() || Notification.permission !== "granted") return false;
+  try {
+    const registration = await waitForServiceWorkerRegistration();
+    const subscription = await registration.pushManager.getSubscription();
+    return Boolean(subscription);
+  } catch {
+    return false;
+  }
+}
+
+export async function requestPushNotifications({ multiUserEnabled = true } = {}) {
+  if (!supportsPush()) {
+    throw new Error("This browser does not support notifications.");
+  }
+  if (!multiUserEnabled) {
+    throw new Error("Notifications are not available right now. Try again in a moment.");
+  }
+  if (!isLoggedIn()) {
+    throw new Error("Sign in first to enable notifications on this device.");
+  }
+  if (Notification.permission === "denied") {
+    throw new Error(
+      "Notifications are blocked in your browser settings. Open your device settings and allow notifications for HoopComps."
+    );
+  }
+
+  if (Notification.permission !== "granted") {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      localStorage.setItem(PROMPT_KEY, "denied");
+      throw new Error("Notifications were not allowed.");
+    }
+  }
+
+  localStorage.setItem(PROMPT_KEY, "granted");
+  const ok = await ensurePushSubscription();
+  if (!ok) {
+    throw new Error("Could not register this device for notifications.");
+  }
+  return true;
+}
+
+export async function renderPushSettings({ multiUserEnabled = true, openAuthModal } = {}) {
+  const panel = $("pushSettingsPanel");
+  const hint = $("pushSettingsHint");
+  const status = $("pushSettingsStatus");
+  const btn = $("enablePushBtn");
+  if (!panel || !btn) return;
+
+  if (!supportsPush()) {
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+
+  if (!multiUserEnabled) {
+    if (hint) {
+      hint.textContent = "Notifications will be available once the server finishes connecting.";
+    }
+    if (status) status.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Enable notifications";
+    return;
+  }
+
+  if (hint) {
+    hint.textContent =
+      "Get streak reminders, Card of the Day alerts, and friend updates on your phone.";
+  }
+
+  if (!isLoggedIn()) {
+    if (status) status.textContent = "Sign in to enable notifications on this device.";
+    btn.disabled = false;
+    btn.textContent = "Sign in to enable";
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    if (status) {
+      status.textContent =
+        "Notifications are blocked. Allow HoopComps in your browser or device notification settings, then tap below to try again.";
+    }
+    btn.disabled = false;
+    btn.textContent = "Try again";
+    return;
+  }
+
+  const subscribed = await hasLocalPushSubscription();
+  if (Notification.permission === "granted" && subscribed) {
+    if (status) status.textContent = "Notifications are enabled on this device.";
+    btn.disabled = false;
+    btn.textContent = "Refresh notifications";
+    return;
+  }
+
+  if (status) {
+    status.textContent = Notification.permission === "granted"
+      ? "Permission granted — tap below to finish setup."
+      : "Enable alerts for streaks, Card of the Day, and friends.";
+  }
+  btn.disabled = false;
+  btn.textContent = "Enable notifications";
+}
+
+let pushSettingsBound = false;
+
+export function initPushSettingsUI({ getMultiUserEnabled, openAuthModal } = {}) {
+  if (pushSettingsBound) return;
+  pushSettingsBound = true;
+
+  $("enablePushBtn")?.addEventListener("click", async () => {
+    const btn = $("enablePushBtn");
+    if (!supportsPush()) return;
+
+    if (!isLoggedIn()) {
+      openAuthModal?.("login");
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    try {
+      await requestPushNotifications({
+        multiUserEnabled: getMultiUserEnabled?.() ?? true,
+      });
+      await renderPushSettings({
+        multiUserEnabled: getMultiUserEnabled?.() ?? true,
+        openAuthModal,
+      });
+    } catch (err) {
+      alert(err.message);
+      await renderPushSettings({
+        multiUserEnabled: getMultiUserEnabled?.() ?? true,
+        openAuthModal,
+      });
+    } finally {
+      if (btn && btn.textContent !== "Refresh notifications") {
+        btn.disabled = false;
+      }
+    }
+  });
 }

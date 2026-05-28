@@ -473,7 +473,22 @@
   font-size: 0.82rem;
 }
 
-.push-prompt-actions {
+ .push-prompt-actions {
   display: grid;
   gap: 0.65rem;
+}
+
+.push-settings-panel {
+  margin-top: 0;
+}
+
+.push-settings-status {
+  margin: 0.5rem 0 0.75rem;
+  min-height: 1.25rem;
+  font-size: 0.85rem;
+}
+
+#enablePushBtn {
+  width: 100%;
+  max-width: 280px;
 }

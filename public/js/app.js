@@ -200,8 +200,11 @@ function navigate(view) {
  if (view === "community") renderCommunity();
  if (view === "collection") renderCollection();
  if (view === "profile") {
-   renderProfile();
-   void renderProfileSocial(state);
+   void (async () => {
+     if (!health?.pushEnabled) await checkHealth();
+     renderProfile();
+     await renderProfileSocial(state);
+   })();
  }
  if (view === "shop") renderShopView();
  else disposeShopAvatarPreview();
@@ -691,6 +694,7 @@ function renderProfile() {
  void renderPushSettings({
    multiUserEnabled: Boolean(health?.multiUserEnabled),
    pushConfigured: Boolean(health?.pushEnabled),
+   pushInitError: health?.pushInitError || null,
    openAuthModal,
  });
 }
@@ -738,6 +742,9 @@ async function checkHealth() {
    if (!health.ebayConfigured) apiSetup?.setAttribute("open", "");
  }
  renderAuthUI();
+ if (document.querySelector('[data-view="profile"]')?.classList.contains("active")) {
+   renderProfile();
+ }
  } catch {
  health.ebayTip =
  "Tip: Set EBAY_APP_ID and EBAY_CLIENT_SECRET for live prices (free at developer.ebay.com)";

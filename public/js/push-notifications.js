@@ -313,6 +313,7 @@ export async function requestPushNotifications({ multiUserEnabled = true, pushCo
 export async function renderPushSettings({
   multiUserEnabled = true,
   pushConfigured = true,
+  pushInitError = null,
   openAuthModal,
 } = {}) {
   const panel = $("pushSettingsPanel");
@@ -365,9 +366,13 @@ export async function renderPushSettings({
 
   if (!pushConfigured) {
     if (hint) hint.textContent = "Get streak reminders, Card of the Day alerts, and friend updates on your phone.";
-    if (status) status.textContent = "Server push is not configured yet — check back soon.";
-    btn.disabled = true;
-    btn.textContent = "Enable notifications";
+    if (status) {
+      status.textContent = pushInitError
+        ? "Notifications are temporarily unavailable on the server. Try again in a moment."
+        : "Server push is not configured yet — check back soon.";
+    }
+    btn.disabled = false;
+    btn.textContent = "Try again";
     return;
   }
 
@@ -433,6 +438,9 @@ export function initPushSettingsUI({ getMultiUserEnabled, getPushConfigured, ope
 
     if (btn) btn.disabled = true;
     try {
+      if (!(getPushConfigured?.() ?? true)) {
+        throw new Error("Push notifications are not available on the server yet. Try again in a moment.");
+      }
       await requestPushNotifications({
         multiUserEnabled: getMultiUserEnabled?.() ?? true,
         pushConfigured: getPushConfigured?.() ?? true,

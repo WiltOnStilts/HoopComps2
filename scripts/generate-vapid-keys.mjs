@@ -15,7 +15,7 @@ function generateVapidKeys() {
   const curve = crypto.createECDH("prime256v1");
   curve.generateKeys();
   return {
-    publicKey: urlBase64(curve.getPublicKey()),
+    publicKey: urlBase64(curve.getPublicKey(null, "uncompressed")),
     privateKey: urlBase64(curve.getPrivateKey()),
   };
 }

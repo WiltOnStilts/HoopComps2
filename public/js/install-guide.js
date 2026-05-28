@@ -40,7 +40,7 @@ export function hasDeclinedInstallGuide() {
 }
 
 export function shouldShowInstallGuideInProfile() {
-  return isMobileInstallTarget() && !isStandaloneApp() && hasDeclinedInstallGuide();
+  return isMobileInstallTarget() && !isStandaloneApp();
 }
 
 export function shouldOfferInstallGuideOnFirstVisit() {

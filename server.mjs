@@ -47,6 +47,9 @@ import {
   listHubMessages,
   addHubMessage,
 } from "./lib/social.mjs";
+import { getVapidPublicKey, initPushVapid } from "./lib/push-vapid.mjs";
+import { upsertPushSubscription, removePushSubscription } from "./lib/push-store.mjs";
+import { startPushScheduler } from "./lib/push-scheduler.mjs";
 
 const SITE_NAME = process.env.SITE_NAME || "HoopComps";
 const EBAY_TIP =
@@ -156,6 +159,17 @@ function serveStatic(req, res) {
 }
 
 await initDb();
+initPushVapid();
+
+if (isDbReady()) {
+  startPushScheduler({
+    getCommunityCards: getAllCommunityCards,
+    buildSpotlightCards: (communityCards) =>
+      buildSpotlightCommunityCards(communityCards, findUserByEmail),
+    getUserBoosts: getAllUserCodBoosts,
+    getUserState,
+  });
+}
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
@@ -188,7 +202,8 @@ const server = http.createServer(async (req, res) => {
       ebayClientSecretSet: hasSecret,
       ebayApi: "browse",
       priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
-      openAiConfigured: Boolean(process.env.OPENAI_API_KEY),
+      pushEnabled: isDbReady(),
+      vapidPublicKey: isDbReady() ? getVapidPublicKey() : null,
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",
@@ -513,6 +528,62 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       send(res, 200, await addHubMessage(user.id, body));
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (url?.startsWith("/api/push") && !isDbReady()) {
+    send(res, 503, { error: "Push notifications require the server database" });
+    return;
+  }
+
+  if (req.method === "GET" && url === "/api/push/vapid-public-key") {
+    send(res, 200, { publicKey: getVapidPublicKey() });
+    return;
+  }
+
+  if (req.method === "POST" && url === "/api/push/subscribe") {
+    const user = await requireUser(req);
+    if (!user) {
+      send(res, 401, { error: "Sign in required" });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      const sub = body.subscription || body;
+      const endpoint = sub.endpoint;
+      const p256dh = sub.keys?.p256dh;
+      const auth = sub.keys?.auth;
+      if (!endpoint || !p256dh || !auth) {
+        send(res, 400, { error: "Invalid push subscription" });
+        return;
+      }
+      await upsertPushSubscription({
+        userId: user.id,
+        endpoint,
+        p256dh,
+        auth,
+        timezoneOffsetMinutes: Number(body.timezoneOffsetMinutes) || 0,
+      });
+      send(res, 200, { ok: true });
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
+  if (req.method === "DELETE" && url === "/api/push/subscribe") {
+    const user = await requireUser(req);
+    if (!user) {
+      send(res, 401, { error: "Sign in required" });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      if (body.endpoint) await removePushSubscription(body.endpoint);
+      send(res, 200, { ok: true });
     } catch (e) {
       send(res, 400, { error: e.message });
     }

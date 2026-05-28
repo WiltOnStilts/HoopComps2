@@ -453,3 +453,27 @@
   color: var(--gold-light);
   font-weight: 600;
 }
+
+.push-prompt-panel {
+  max-width: 420px;
+  text-align: center;
+}
+
+.push-prompt-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.push-prompt-copy {
+  margin: 0.75rem 0 0.35rem;
+}
+
+.push-prompt-note {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+}
+
+.push-prompt-actions {
+  display: grid;
+  gap: 0.65rem;
+}

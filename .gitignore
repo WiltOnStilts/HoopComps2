@@ -4,3 +4,5 @@ data/*.db
 data/*.db-*
 data/users.json
 data/spotlight-runtime.json
+data/vapid.json
+data/push.json

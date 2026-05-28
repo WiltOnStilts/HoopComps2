@@ -1,4 +1,4 @@
-const CACHE = "hoopcomps-v52";
+const CACHE = "hoopcomps-v53";
 const ASSETS = [
   "/css/styles.css",
   "/css/mobile.css",
@@ -48,6 +48,54 @@ self.addEventListener("fetch", (e) => {
         })
         .catch(() => cached);
       return cached || fetchPromise;
+    })
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "HoopComps",
+    body: "You have a new update.",
+    url: "/",
+    tag: "hoopcomps",
+  };
+
+  try {
+    if (event.data) {
+      payload = { ...payload, ...event.data.json() };
+    }
+  } catch {
+    /* use defaults */
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/icon-192.svg",
+      badge: "/icons/icon-192.svg",
+      tag: payload.tag || "hoopcomps",
+      data: { url: payload.url || "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+  const absoluteUrl = new URL(targetUrl, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
+          if ("navigate" in client) {
+            return client.navigate(absoluteUrl).then(() => client.focus());
+          }
+          client.focus();
+          return client;
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(absoluteUrl);
     })
   );
 });

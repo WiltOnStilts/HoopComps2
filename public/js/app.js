@@ -59,6 +59,7 @@ import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } 
 import { renderShop, updateProfileAvatarMount, disposeShopAvatarPreview } from "./shop-ui.js";
 import { renderAvatarStudio, disposeAvatarStudio } from "./avatar-studio-ui.js";
 import { showDailyNotificationQueue } from "./daily-notifications.js";
+import { maybeShowPushPermissionPrompt, syncPendingPushSubscription } from "./push-notifications.js";
 
 const APP_NAME = "HoopComps";
 
@@ -1065,6 +1066,7 @@ function initAuth() {
  loadLeaderboard();
  refreshSocialPanels();
  await maybeShowDailyLoginNotifications();
+ await syncPendingPushSubscription();
  });
 
  $("authHeaderBtn")?.addEventListener("click", () => {
@@ -1237,6 +1239,7 @@ async function bootstrapSession() {
   renderAuthUI();
   refreshSocialPanels();
   await maybeShowDailyLoginNotifications();
+  await syncPendingPushSubscription();
 }
 
 async function refreshSocialPanels() {
@@ -1307,12 +1310,15 @@ function init() {
  initMobileSessionHeader();
 
  updateHeaderStats();
- checkHealth().then(() => {
+ checkHealth().then(async () => {
    renderDashboard();
    loadCardOfDay();
    loadLeaderboard();
    navigate("dashboard");
-   bootstrapSession();
+   await bootstrapSession();
+   void maybeShowPushPermissionPrompt({
+     multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),
+   });
  });
 }
 

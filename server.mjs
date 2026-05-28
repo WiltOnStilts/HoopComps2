@@ -35,6 +35,7 @@ import {
   respondFriendRequest,
   removeFriend,
   getFriendAccount,
+  searchFriendCandidates,
   listProfilePosts,
   createProfilePost,
   listCodComments,
@@ -383,6 +384,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url?.startsWith("/api/social/friends/search")) {
+    const user = await requireUser(req);
+    if (!user) {
+      send(res, 401, { error: "Sign in required" });
+      return;
+    }
+    try {
+      const q = new URL(req.url, "http://localhost").searchParams.get("q") || "";
+      send(res, 200, await searchFriendCandidates(user.id, q));
+    } catch (e) {
+      send(res, 400, { error: e.message });
+    }
+    return;
+  }
+
   if (req.method === "POST" && url === "/api/social/friends/request") {
     const user = await requireUser(req);
     if (!user) {
@@ -391,7 +407,7 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       const body = await readBody(req);
-      send(res, 200, await sendFriendRequest(user.id, body.lookup || body.identifier || body.email));
+      send(res, 200, await sendFriendRequest(user.id, body.targetUserId ? { targetUserId: body.targetUserId } : body.lookup || body.identifier || body.email));
     } catch (e) {
       send(res, 400, { error: e.message });
     }

@@ -217,55 +217,33 @@ node server.mjs</code>
           </div>
 
           <div class="community-side">
-            <div id="profileSocialGuest" class="panel social-panel hidden">
-              <h3>Friends &amp; posts</h3>
-              <p class="hint">Sign in to add friends, view their collections, and post about your latest pulls.</p>
+            <div id="communityFriendsGuest" class="panel social-panel hidden">
+              <h3>Friends</h3>
+              <p class="hint">Sign in to search for collectors and send friend requests.</p>
             </div>
 
-            <div id="profileSocialSignedIn">
-              <div class="panel social-panel">
-                <h3>Friends</h3>
-                <p class="hint">Add collectors by phone number or username. Friends can view each other's collections and posts.</p>
-                <div class="friend-add-row">
-                  <input type="text" id="friendLookupInput" placeholder="@username or phone number" autocomplete="off" />
-                  <button type="button" class="btn-secondary" id="addFriendBtn">Add friend</button>
+            <div id="communityFriendsSignedIn">
+              <div class="panel social-panel profile-friends-panel">
+                <h3>Add friends</h3>
+                <p class="hint">Search by username or phone number. Keep typing until one match appears, then tap to send a request.</p>
+                <div class="friend-search-wrap">
+                  <input
+                    type="search"
+                    id="communityFriendSearch"
+                    placeholder="@username or phone number"
+                    autocomplete="off"
+                    aria-autocomplete="list"
+                    aria-controls="communityFriendSearchMenu"
+                    aria-expanded="false"
+                  />
+                  <div id="communityFriendSearchMenu" class="friend-search-menu hidden" role="listbox" aria-label="Friend search results"></div>
                 </div>
-                <p class="section-label">Your friends</p>
-                <div class="friend-list" id="friendsList"></div>
-                <p class="section-label">Requests</p>
-                <div class="request-list" id="friendRequestsList"></div>
-              </div>
 
-              <div class="panel social-panel collector-feed-panel">
-                <h3>Collector feed</h3>
-                <div class="feed-about-callout" role="note">
-                  <span class="feed-about-icon" aria-hidden="true">📣</span>
-                  <div class="feed-about-copy">
-                    <strong>What is this?</strong>
-                    <p>Your personal timeline for card pulls, new pickups, and price checks. Post updates here — friends see them in Community, and you can look back at what you've shared.</p>
-                  </div>
-                </div>
-                <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
-                <div class="post-compose">
-                  <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
-                  <div class="post-compose-grid">
-                    <label class="field">
-                      <span>Recent card (optional)</span>
-                      <select id="postRecentCard"></select>
-                    </label>
-                    <label class="field">
-                      <span>Or card title</span>
-                      <input type="text" id="postCardTitle" placeholder="2026 Topps Flagship #202" />
-                    </label>
-                    <label class="field">
-                      <span>Est. value ($)</span>
-                      <input type="number" id="postCardValue" min="0" step="0.01" placeholder="Optional" />
-                    </label>
-                  </div>
-                  <button type="button" class="btn-secondary" id="publishPostBtn">Post update</button>
-                </div>
-                <p class="section-label">Your posts</p>
-                <div class="post-list" id="profilePostsList"></div>
+                <h4 class="section-label">Friend requests</h4>
+                <div class="request-list" id="communityFriendRequestsList"></div>
+
+                <h4 class="section-label">Your friends</h4>
+                <div class="friend-list" id="communityFriendsList"></div>
               </div>
             </div>
           </div>
@@ -419,21 +397,6 @@ node server.mjs</code>
         </label>
 
         <div class="panel profile-prefs">
-          <h3>Find me</h3>
-          <p class="hint">Optional — lets friends add you by username or phone instead of email.</p>
-          <div class="field-grid">
-            <label class="field">
-              <span>Username</span>
-              <input type="text" id="profileUsername" placeholder="e.g. cardking23" autocomplete="username" />
-            </label>
-            <label class="field">
-              <span>Phone</span>
-              <input type="tel" id="profilePhone" placeholder="e.g. (555) 123-4567" autocomplete="tel" />
-            </label>
-          </div>
-        </div>
-
-        <div class="panel profile-prefs">
           <h3>Collector profile</h3>
           <p class="hint">Your collector preferences — for your profile and leaderboard.</p>
           <div class="field-grid">
@@ -495,23 +458,41 @@ node server.mjs</code>
           </div>
         </div>
 
-        <div class="dash-grid profile-shortcuts">
-          <button type="button" class="dash-card" data-goto="scout">
-            <span class="dash-icon">🔍</span>
-            <span class="dash-name">Scout a card</span>
-          </button>
-          <button type="button" class="dash-card" data-goto="collection">
-            <span class="dash-icon">📦</span>
-            <span class="dash-name">View collection</span>
-          </button>
-          <button type="button" class="dash-card" data-goto="shop">
-            <span class="dash-icon">🛒</span>
-            <span class="dash-name">Shop</span>
-          </button>
-          <button type="button" class="dash-card" data-goto="community">
-            <span class="dash-icon">👥</span>
-            <span class="dash-name">Community</span>
-          </button>
+        <div id="profileFeedGuest" class="panel collector-feed-panel hidden">
+          <h3>Collector feed</h3>
+          <p class="hint">Sign in to post about your latest pulls and track what you've shared.</p>
+        </div>
+
+        <div id="profileFeedSignedIn" class="panel collector-feed-panel hidden">
+          <h3>Collector feed</h3>
+          <div class="feed-about-callout" role="note">
+            <span class="feed-about-icon" aria-hidden="true">📣</span>
+            <div class="feed-about-copy">
+              <strong>What is this?</strong>
+              <p>Your personal timeline for card pulls, new pickups, and price checks. Friends can see your posts in Community.</p>
+            </div>
+          </div>
+          <p class="hint">Post about a recent pull, a new pickup, or what a card is worth today.</p>
+          <div class="post-compose">
+            <textarea id="profilePostText" placeholder="Just pulled a Dylan Harper RC — comps look strong at $5…"></textarea>
+            <div class="post-compose-grid">
+              <label class="field">
+                <span>Recent card (optional)</span>
+                <select id="postRecentCard"></select>
+              </label>
+              <label class="field">
+                <span>Or card title</span>
+                <input type="text" id="postCardTitle" placeholder="2026 Topps Flagship #202" />
+              </label>
+              <label class="field">
+                <span>Est. value ($)</span>
+                <input type="number" id="postCardValue" min="0" step="0.01" placeholder="Optional" />
+              </label>
+            </div>
+            <button type="button" class="btn-secondary" id="publishPostBtn">Post update</button>
+          </div>
+          <p class="section-label">Your posts</p>
+          <div class="post-list" id="profilePostsList"></div>
         </div>
         </div>
       </section>
@@ -685,6 +666,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=40" type="module"></script>
+    <script src="/js/app.js?v=42" type="module"></script>
   </body>
 </html>

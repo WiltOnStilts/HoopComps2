@@ -50,7 +50,8 @@ import {
  pushCloudState,
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
-import { renderProfileSocial, renderCommunityChat, initSocialUI } from "./social-ui.js";
+import { renderProfileSocial, renderCommunityChat, initSocialUI, openFriendModal } from "./social-ui.js";
+import { renderCommunityFriends, initCommunityFriendsUI } from "./community-friends-ui.js";
 import { resolveCollectionImage } from "./card-image.js";
 import { uniqueScoutCount } from "./card-fingerprint.js";
 import { COINS_HELP_TEXT, COINS_PER_UNIQUE_SCAN, shouldShowDailyNotifications } from "./economy.js";
@@ -145,8 +146,6 @@ function collectionImageSourceLabel(item) {
 function getProfileFormValues() {
  return {
  displayName: $("profileNameInput")?.value.trim() || "Scout",
- username: $("profileUsername")?.value.trim() || "",
- phone: $("profilePhone")?.value.trim() || "",
  favoritePlayer: $("profileFavoritePlayer")?.value.trim() || "",
  favoriteTeam: $("profileFavoriteTeam")?.value.trim() || "",
  collectorStyle: $("profileCollectorStyle")?.value || "investor",
@@ -157,8 +156,6 @@ function getProfileFormValues() {
 function profileFormValuesEqual(a, b) {
  return (
  a.displayName === b.displayName &&
- a.username === b.username &&
- a.phone === b.phone &&
  a.favoritePlayer === b.favoritePlayer &&
  a.favoriteTeam === b.favoriteTeam &&
  a.collectorStyle === b.collectorStyle &&
@@ -197,7 +194,10 @@ function navigate(view) {
  if (view === "dashboard") renderDashboard();
  if (view === "community") renderCommunity();
  if (view === "collection") renderCollection();
- if (view === "profile") renderProfile();
+ if (view === "profile") {
+   renderProfile();
+   void renderProfileSocial(state);
+ }
  if (view === "shop") renderShopView();
  else disposeShopAvatarPreview();
  if (view === "avatar") renderAvatarStudioView();
@@ -285,7 +285,7 @@ function renderDashboard() {
 
 async function renderCommunity() {
  await loadCardOfDay();
- await renderProfileSocial(state);
+ await renderCommunityFriends();
  await renderCommunityChat();
 }
 
@@ -430,8 +430,6 @@ function applyCloudState(nextState) {
  renderProfile();
  renderAuthUI();
  $("profileNameInput").value = state.profile?.displayName || "";
- $("profileUsername").value = state.profile?.username || "";
- $("profilePhone").value = state.profile?.phone || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
@@ -999,8 +997,6 @@ function initMobileSessionHeader() {
 
 function initProfileForm() {
  $("profileNameInput").value = state.profile?.displayName || "";
- $("profileUsername").value = state.profile?.username || "";
- $("profilePhone").value = state.profile?.phone || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
  $("profileCollectorStyle").value = state.profile?.collectorStyle || "investor";
@@ -1009,8 +1005,6 @@ function initProfileForm() {
 
  for (const id of [
  "profileNameInput",
- "profileUsername",
- "profilePhone",
  "profileFavoritePlayer",
  "profileFavoriteTeam",
  "profileCollectorStyle",
@@ -1023,8 +1017,6 @@ function initProfileForm() {
  $("saveProfileBtn").addEventListener("click", async () => {
  state.profile = state.profile || {};
  state.profile.displayName = $("profileNameInput").value.trim() || "Scout";
- state.profile.username = $("profileUsername").value.trim();
- state.profile.phone = $("profilePhone").value.trim();
  state.profile.favoritePlayer = $("profileFavoritePlayer").value.trim();
  state.profile.favoriteTeam = $("profileFavoriteTeam").value.trim();
  state.profile.collectorStyle = $("profileCollectorStyle").value;
@@ -1238,6 +1230,7 @@ async function bootstrapSession() {
 
 async function refreshSocialPanels() {
   await renderProfileSocial(state);
+  await renderCommunityFriends();
   await renderCommunityChat();
 }
 
@@ -1282,6 +1275,11 @@ function init() {
   setupResultTabs();
  initListingModal();
  initSocialUI({ getState: () => state, openAuthModal });
+ initCommunityFriendsUI({
+   openAuthModal,
+   openFriendModal,
+   refreshFriends: () => renderCommunityFriends(),
+ });
  initScoutWizard($("scoutForm"));
  resetScoutSession();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);

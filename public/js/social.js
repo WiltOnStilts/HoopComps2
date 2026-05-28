@@ -5,10 +5,16 @@ export async function fetchSocialOverview() {
   return authFetch("/api/social/friends");
 }
 
-export async function sendFriendRequest(lookup) {
+export async function searchFriendCandidates(query) {
+  const q = encodeURIComponent(String(query || "").trim());
+  if (!q) return { count: 0, results: [], query: "", ready: false };
+  return authFetch(`/api/social/friends/search?q=${q}`);
+}
+
+export async function sendFriendRequest({ lookup, targetUserId } = {}) {
   return authFetch("/api/social/friends/request", {
     method: "POST",
-    body: JSON.stringify({ lookup }),
+    body: JSON.stringify(targetUserId ? { targetUserId } : { lookup }),
   });
 }
 

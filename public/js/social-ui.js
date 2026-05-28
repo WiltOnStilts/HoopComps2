@@ -1,12 +1,8 @@
 import { formatUsd, escapeHtml } from "./scout-ui.js";
 import { isLoggedIn, getCurrentUser } from "./auth.js";
 import {
-  fetchSocialOverview,
-  sendFriendRequest,
-  respondFriendRequest,
-  unfriend,
-  fetchFriendAccount,
   fetchProfilePosts,
+  fetchFriendAccount,
   createProfilePost,
   fetchCodComments,
   postCodComment,
@@ -66,13 +62,11 @@ function renderCommentCard(comment) {
 }
 
 export async function renderProfileSocial(state) {
-  const friendsEl = $("friendsList");
-  const requestsEl = $("friendRequestsList");
   const postsEl = $("profilePostsList");
-  const signedInPanel = $("profileSocialSignedIn");
-  const guestPanel = $("profileSocialGuest");
+  const signedInPanel = $("profileFeedSignedIn");
+  const guestPanel = $("profileFeedGuest");
 
-  if (!friendsEl) return;
+  if (!postsEl) return;
 
   if (!isLoggedIn()) {
     signedInPanel?.classList.add("hidden");
@@ -86,66 +80,14 @@ export async function renderProfileSocial(state) {
   populateRecentCardSelect(state);
 
   try {
-    const [overview, postsData] = await Promise.all([
-      fetchSocialOverview(),
-      fetchProfilePosts(getCurrentUser()?.id),
-    ]);
-
-    const friends = overview.friends || [];
-    friendsEl.innerHTML = friends.length
-      ? friends
-          .map(
-            (f) => `
-        <div class="friend-row">
-          <div class="friend-row-main">
-            <strong>${escapeHtml(f.displayName)}</strong>
-            <span>${f.cardCount} cards · ${f.collectionValue > 0 ? formatUsd(f.collectionValue) : "—"}</span>
-          </div>
-          <div class="friend-actions">
-            <button type="button" class="btn-ghost btn-xs" data-view-friend="${escapeHtml(f.id)}">View</button>
-            <button type="button" class="btn-ghost btn-xs danger" data-unfriend="${escapeHtml(f.id)}">Remove</button>
-          </div>
-        </div>`
-          )
-          .join("")
-      : `<div class="social-empty">No friends yet — add someone by their username or phone number.</div>`;
-
-    const incoming = overview.requests?.incoming || [];
-    const outgoing = overview.requests?.outgoing || [];
-    const requestRows = [
-      ...incoming.map(
-        (r) => `
-      <div class="request-row">
-        <div class="request-row-main">
-          <strong>${escapeHtml(r.from.displayName)}</strong>
-          <span>Wants to be friends</span>
-        </div>
-        <div class="request-actions">
-          <button type="button" class="btn-secondary btn-xs" data-accept-request="${escapeHtml(r.id)}">Accept</button>
-          <button type="button" class="btn-ghost btn-xs" data-decline-request="${escapeHtml(r.id)}">Decline</button>
-        </div>
-      </div>`
-      ),
-      ...outgoing.map(
-        (r) => `
-      <div class="request-row">
-        <div class="request-row-main">
-          <strong>${escapeHtml(r.to.displayName)}</strong>
-          <span>Request pending</span>
-        </div>
-      </div>`
-      ),
-    ];
-    requestsEl.innerHTML = requestRows.length
-      ? requestRows.join("")
-      : `<div class="social-empty">No pending friend requests.</div>`;
+    const postsData = await fetchProfilePosts(getCurrentUser()?.id);
 
     const posts = postsData.posts || [];
     postsEl.innerHTML = posts.length
       ? posts.map(renderPostCard).join("")
       : `<div class="social-empty">Share a recent pull or what your latest card is worth.</div>`;
   } catch (err) {
-    friendsEl.innerHTML = `<div class="social-empty">${escapeHtml(err.message)}</div>`;
+    postsEl.innerHTML = `<div class="social-empty">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -165,7 +107,7 @@ function populateRecentCardSelect(state) {
       .join("");
 }
 
-async function openFriendModal(userId) {
+export async function openFriendModal(userId) {
   const modal = $("friendModal");
   const body = $("friendModalBody");
   if (!modal || !body) return;
@@ -414,54 +356,9 @@ function setChatAudience(next) {
   void renderCommunityChat();
 }
 
-export function initSocialUI({ onNavigate, getState, openAuthModal }) {
+export function initSocialUI({ getState, openAuthModal }) {
   if (socialUiBound) return;
   socialUiBound = true;
-
-  $("addFriendBtn")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    const lookup = $("friendLookupInput")?.value?.trim();
-    if (!lookup) return;
-    try {
-      await sendFriendRequest(lookup);
-      $("friendLookupInput").value = "";
-      await renderProfileSocial(getState());
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-
-  $("friendsList")?.addEventListener("click", async (e) => {
-    const viewId = e.target.closest("[data-view-friend]")?.dataset.viewFriend;
-    const unfriendId = e.target.closest("[data-unfriend]")?.dataset.unfriend;
-    if (viewId) {
-      openFriendModal(viewId);
-      return;
-    }
-    if (unfriendId && confirm("Remove this friend?")) {
-      try {
-        await unfriend(unfriendId);
-        await renderProfileSocial(getState());
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-  });
-
-  $("friendRequestsList")?.addEventListener("click", async (e) => {
-    const acceptId = e.target.closest("[data-accept-request]")?.dataset.acceptRequest;
-    const declineId = e.target.closest("[data-decline-request]")?.dataset.declineRequest;
-    if (!acceptId && !declineId) return;
-    try {
-      await respondFriendRequest(acceptId || declineId, acceptId ? "accept" : "decline");
-      await renderProfileSocial(getState());
-    } catch (err) {
-      alert(err.message);
-    }
-  });
 
   $("publishPostBtn")?.addEventListener("click", async () => {
     if (!isLoggedIn()) {

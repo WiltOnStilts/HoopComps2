@@ -686,7 +686,8 @@ function renderProfile() {
  $("profileCardCount").textContent = coll.length;
  $("profileValuedCount").textContent = collectionValuedCount(state);
  void renderPushSettings({
-   multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),
+   multiUserEnabled: Boolean(health?.multiUserEnabled),
+   pushConfigured: Boolean(health?.pushEnabled),
    openAuthModal,
  });
 }
@@ -1305,7 +1306,8 @@ function init() {
    refreshEngagement: () => renderCodDayEngagement({ openAuthModal }),
  });
  initPushSettingsUI({
-   getMultiUserEnabled: () => Boolean(health?.multiUserEnabled && health?.pushEnabled),
+   getMultiUserEnabled: () => Boolean(health?.multiUserEnabled),
+   getPushConfigured: () => Boolean(health?.pushEnabled),
    openAuthModal,
  });
  initScoutWizard($("scoutForm"));

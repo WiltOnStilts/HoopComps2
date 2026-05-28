@@ -18,6 +18,39 @@ function supportsPush() {
   );
 }
 
+function isIosDevice() {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function isStandaloneApp() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true
+  );
+}
+
+/** Why push may be unavailable — null means ready to enable. */
+export function getPushBlockReason() {
+  if (isIosDevice() && !isStandaloneApp()) return "ios_needs_install";
+  if (!("Notification" in window)) return "unsupported";
+  if (!("serviceWorker" in navigator)) return "unsupported";
+  if (!("PushManager" in window)) return "unsupported";
+  return null;
+}
+
+function showIosInstallHelp() {
+  const banner = document.getElementById("installBanner");
+  if (banner) {
+    banner.classList.remove("hidden");
+    banner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  alert(
+    "To get notifications on iPhone:\n\n1. Tap Share in Safari (square with arrow)\n2. Tap Add to Home Screen\n3. Open HoopComps from your home screen\n4. Go to Profile → Enable notifications"
+  );
+}
+
 export function getTimezoneOffsetMinutes() {
   return -new Date().getTimezoneOffset();
 }
@@ -215,12 +248,20 @@ async function hasLocalPushSubscription() {
   }
 }
 
-export async function requestPushNotifications({ multiUserEnabled = true } = {}) {
-  if (!supportsPush()) {
+export async function requestPushNotifications({ multiUserEnabled = true, pushConfigured = true } = {}) {
+  const blockReason = getPushBlockReason();
+  if (blockReason === "ios_needs_install") {
+    showIosInstallHelp();
+    throw new Error("Add HoopComps to your Home Screen first, then enable notifications.");
+  }
+  if (blockReason) {
     throw new Error("This browser does not support notifications.");
   }
   if (!multiUserEnabled) {
     throw new Error("Notifications are not available right now. Try again in a moment.");
+  }
+  if (!pushConfigured) {
+    throw new Error("Push notifications are not configured on the server yet.");
   }
   if (!isLoggedIn()) {
     throw new Error("Sign in first to enable notifications on this device.");
@@ -247,24 +288,56 @@ export async function requestPushNotifications({ multiUserEnabled = true } = {})
   return true;
 }
 
-export async function renderPushSettings({ multiUserEnabled = true, openAuthModal } = {}) {
+export async function renderPushSettings({
+  multiUserEnabled = true,
+  pushConfigured = true,
+  openAuthModal,
+} = {}) {
   const panel = $("pushSettingsPanel");
   const hint = $("pushSettingsHint");
   const status = $("pushSettingsStatus");
   const btn = $("enablePushBtn");
   if (!panel || !btn) return;
 
-  if (!supportsPush()) {
-    panel.classList.add("hidden");
+  panel.classList.remove("hidden");
+
+  const blockReason = getPushBlockReason();
+  if (blockReason === "ios_needs_install") {
+    if (hint) {
+      hint.textContent = "On iPhone, notifications work from the app on your Home Screen.";
+    }
+    if (status) {
+      status.textContent =
+        'In Safari tap Share → "Add to Home Screen", open HoopComps from your home screen, then enable notifications here.';
+    }
+    btn.disabled = false;
+    btn.textContent = "How to enable on iPhone";
     return;
   }
-  panel.classList.remove("hidden");
+
+  if (blockReason) {
+    if (hint) hint.textContent = "Push notifications are not supported in this browser.";
+    if (status) {
+      status.textContent = "Try installing HoopComps on your Home Screen or use Chrome on Android.";
+    }
+    btn.disabled = true;
+    btn.textContent = "Enable notifications";
+    return;
+  }
 
   if (!multiUserEnabled) {
     if (hint) {
       hint.textContent = "Notifications will be available once the server finishes connecting.";
     }
     if (status) status.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Enable notifications";
+    return;
+  }
+
+  if (!pushConfigured) {
+    if (hint) hint.textContent = "Get streak reminders, Card of the Day alerts, and friend updates on your phone.";
+    if (status) status.textContent = "Server push is not configured yet — check back soon.";
     btn.disabled = true;
     btn.textContent = "Enable notifications";
     return;
@@ -311,12 +384,18 @@ export async function renderPushSettings({ multiUserEnabled = true, openAuthModa
 
 let pushSettingsBound = false;
 
-export function initPushSettingsUI({ getMultiUserEnabled, openAuthModal } = {}) {
+export function initPushSettingsUI({ getMultiUserEnabled, getPushConfigured, openAuthModal } = {}) {
   if (pushSettingsBound) return;
   pushSettingsBound = true;
 
   $("enablePushBtn")?.addEventListener("click", async () => {
     const btn = $("enablePushBtn");
+
+    if (getPushBlockReason() === "ios_needs_install") {
+      showIosInstallHelp();
+      return;
+    }
+
     if (!supportsPush()) return;
 
     if (!isLoggedIn()) {
@@ -328,15 +407,18 @@ export function initPushSettingsUI({ getMultiUserEnabled, openAuthModal } = {}) 
     try {
       await requestPushNotifications({
         multiUserEnabled: getMultiUserEnabled?.() ?? true,
+        pushConfigured: getPushConfigured?.() ?? true,
       });
       await renderPushSettings({
         multiUserEnabled: getMultiUserEnabled?.() ?? true,
+        pushConfigured: getPushConfigured?.() ?? true,
         openAuthModal,
       });
     } catch (err) {
-      alert(err.message);
+      if (err.message) alert(err.message);
       await renderPushSettings({
         multiUserEnabled: getMultiUserEnabled?.() ?? true,
+        pushConfigured: getPushConfigured?.() ?? true,
         openAuthModal,
       });
     } finally {

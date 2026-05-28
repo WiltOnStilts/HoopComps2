@@ -424,6 +424,13 @@ node server.mjs</code>
           <button type="button" class="btn-secondary profile-auth-btn" id="profileAuthBtn">Sign in</button>
         </div>
 
+        <div class="panel push-settings-panel" id="pushSettingsPanel">
+          <h3>Notifications</h3>
+          <p class="hint" id="pushSettingsHint">Get streak reminders, Card of the Day alerts, and friend updates on your phone.</p>
+          <p class="muted-text push-settings-status" id="pushSettingsStatus"></p>
+          <button type="button" class="btn-secondary" id="enablePushBtn">Enable notifications</button>
+        </div>
+
         <label class="field full panel">
           <span>Display name</span>
           <input type="text" id="profileNameInput" placeholder="Your name" />
@@ -458,13 +465,6 @@ node server.mjs</code>
           <button type="button" class="btn-secondary" id="saveProfileBtn">Save profile</button>
           <p id="cloudSyncStatus" class="auth-hint hidden muted-text"></p>
           <p id="authHint" class="auth-hint hidden muted-text">Sign in to sync your collection across devices.</p>
-        </div>
-
-        <div class="panel push-settings-panel" id="pushSettingsPanel">
-          <h3>Notifications</h3>
-          <p class="hint" id="pushSettingsHint">Get streak reminders, Card of the Day alerts, and friend updates on your phone.</p>
-          <p class="muted-text push-settings-status" id="pushSettingsStatus"></p>
-          <button type="button" class="btn-secondary" id="enablePushBtn">Enable notifications</button>
         </div>
 
         <div class="hero-card">
@@ -678,6 +678,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=46" type="module"></script>
+    <script src="/js/app.js?v=47" type="module"></script>
   </body>
 </html>

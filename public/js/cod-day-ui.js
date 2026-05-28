@@ -9,6 +9,7 @@ import {
   oneTimeTestUnbanComments,
   castCodVote,
 } from "./social.js";
+import { bindGuardedSubmit, createSubmitGuard, dedupeByKey } from "./submit-guard.js";
 
 function $(id) {
   return document.getElementById(id);
@@ -52,6 +53,12 @@ function renderCommentCard(comment) {
       <p>${escapeHtml(comment.text)}</p>
     </article>
   `;
+}
+
+function dedupeComments(comments) {
+  return dedupeByKey(comments, (comment) =>
+    comment.id || `${comment.userId}|${comment.authorName}|${comment.text}|${comment.createdAt}`
+  );
 }
 
 function renderPollStats(poll) {
@@ -143,101 +150,115 @@ function renderCodCommentControls(data) {
   if (agreementSubmit) agreementSubmit.disabled = true;
 }
 
+function updateConversationHeading(count) {
+  const heading = $("cowConversationHeading");
+  if (!heading) return;
+  heading.textContent =
+    count === 1 ? "Today's conversation (1 comment)" : `Today's conversation (${count} comments)`;
+}
+
 export async function renderCodDayEngagement({ openAuthModal } = {}) {
   const list = $("cowCommentsList");
-  const summary = $("cowConversationSummary");
   if (!list) return;
 
   try {
     const data = await fetchCodComments();
-    const comments = data.comments || [];
+    const comments = dedupeComments(data.comments || []);
     list.innerHTML = comments.length
       ? comments.map(renderCommentCard).join("")
       : `<div class="social-empty">Be the first to comment on today's card.</div>`;
     list.scrollTop = list.scrollHeight;
 
-    if (summary) {
-      summary.textContent =
-        comments.length === 1
-          ? "Today's conversation (1 comment)"
-          : `Today's conversation (${comments.length} comments)`;
-    }
-
+    updateConversationHeading(comments.length);
     renderCodCommentControls(data);
     renderPollStats(data.poll);
     syncPollButtons(data.poll);
   } catch (err) {
     list.innerHTML = `<div class="social-empty">${escapeHtml(err.message)}</div>`;
+    updateConversationHeading(0);
     renderCodCommentControls({});
   }
 
   void openAuthModal;
 }
 
+const codCommentGuard = createSubmitGuard();
+const codVoteGuard = createSubmitGuard();
+const codAgreementGuard = createSubmitGuard();
+const codUnbanGuard = createSubmitGuard();
 let codDayBound = false;
 
 export function initCodDayUI({ openAuthModal, refreshEngagement }) {
   if (codDayBound) return;
   codDayBound = true;
 
-  $("cowConversation")?.addEventListener("toggle", (event) => {
-    if (event.target.open) void refreshEngagement?.();
+  $("cowHoldBtn")?.addEventListener("click", () => {
+    if (codVoteGuard.isBusy()) return;
+    void codVoteGuard.run(() => submitCodVote("hold", { openAuthModal, refreshEngagement }));
   });
-
-  $("cowHoldBtn")?.addEventListener("click", () => void submitCodVote("hold", { openAuthModal, refreshEngagement }));
-  $("cowSellBtn")?.addEventListener("click", () => void submitCodVote("sell", { openAuthModal, refreshEngagement }));
+  $("cowSellBtn")?.addEventListener("click", () => {
+    if (codVoteGuard.isBusy()) return;
+    void codVoteGuard.run(() => submitCodVote("sell", { openAuthModal, refreshEngagement }));
+  });
 
   $("cowAgreementCheck")?.addEventListener("change", (e) => {
     const btn = $("cowAgreementSubmit");
     if (btn) btn.disabled = !e.target.checked;
   });
 
-  $("cowAgreementSubmit")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal?.("login");
-      return;
-    }
-    if (!$("cowAgreementCheck")?.checked) return;
-    const btn = $("cowAgreementSubmit");
-    btn.disabled = true;
-    try {
-      await acceptCodCommentAgreement();
-      await refreshEngagement?.();
-    } catch (err) {
-      alert(err.message);
-      btn.disabled = false;
-    }
+  bindGuardedSubmit({
+    button: $("cowAgreementSubmit"),
+    guard: codAgreementGuard,
+    handler: async () => {
+      if (!isLoggedIn()) {
+        openAuthModal?.("login");
+        return;
+      }
+      if (!$("cowAgreementCheck")?.checked) return;
+      try {
+        await acceptCodCommentAgreement();
+        await refreshEngagement?.();
+      } catch (err) {
+        alert(err.message);
+      }
+    },
   });
 
-  $("cowTestUnbanBtn")?.addEventListener("click", async () => {
-    const btn = $("cowTestUnbanBtn");
-    if (btn) btn.disabled = true;
-    try {
-      const result = await oneTimeTestUnbanComments();
-      alert(result.message || "Comment ban cleared.");
-      await refreshEngagement?.();
-    } catch (err) {
-      alert(err.message);
-      if (btn) btn.disabled = false;
-    }
+  bindGuardedSubmit({
+    button: $("cowTestUnbanBtn"),
+    guard: codUnbanGuard,
+    handler: async () => {
+      try {
+        const result = await oneTimeTestUnbanComments();
+        alert(result.message || "Comment ban cleared.");
+        await refreshEngagement?.();
+      } catch (err) {
+        alert(err.message);
+      }
+    },
   });
 
-  $("cowCommentSubmit")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal?.("login");
-      return;
-    }
-    const input = $("cowCommentInput");
-    const text = input?.value?.trim();
-    if (!text) return;
-    try {
-      await postCodComment(text);
-      input.value = "";
-      await refreshEngagement?.();
-    } catch (err) {
-      alert(err.message);
-      await refreshEngagement?.();
-    }
+  bindGuardedSubmit({
+    button: $("cowCommentSubmit"),
+    input: $("cowCommentInput"),
+    guard: codCommentGuard,
+    handler: async () => {
+      if (!isLoggedIn()) {
+        openAuthModal?.("login");
+        return;
+      }
+      const input = $("cowCommentInput");
+      const text = input?.value?.trim();
+      if (!text) return;
+      try {
+        await postCodComment(text);
+        input.value = "";
+        await refreshEngagement?.();
+      } catch (err) {
+        alert(err.message);
+        await refreshEngagement?.();
+      }
+    },
   });
 }
 

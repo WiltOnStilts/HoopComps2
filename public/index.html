@@ -186,8 +186,8 @@ node server.mjs</code>
                 </div>
               </div>
 
-              <details class="cow-conversation" id="cowConversation">
-                <summary id="cowConversationSummary">Today's conversation</summary>
+              <section class="cow-conversation" id="cowConversation" aria-labelledby="cowConversationHeading">
+                <h4 class="cow-conversation-heading" id="cowConversationHeading">Today's conversation</h4>
                 <div class="cow-conversation-panel">
                   <div id="cowCommentsList" class="comment-list cow-comment-list"></div>
                   <div id="cowCommentSignIn" class="social-empty hidden">Sign in to join today's Card of the Day conversation.</div>
@@ -208,7 +208,7 @@ node server.mjs</code>
                     <button type="button" class="btn-secondary" id="cowCommentSubmit">Post</button>
                   </div>
                 </div>
-              </details>
+              </section>
             </div>
           </div>
         </div>
@@ -655,34 +655,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <div id="codCommentsModal" class="listing-modal hidden" role="dialog" aria-modal="true">
-      <div class="modal-backdrop"></div>
-      <div class="modal-panel">
-        <button type="button" class="modal-close" id="codCommentsClose" aria-label="Close">×</button>
-        <h2 id="codCommentsTitle">Card of the Day conversation</h2>
-        <p class="daily-reset-note">Today's thread only — conversations and comment agreements reset at midnight UTC when the Card of the Day changes.</p>
-        <div class="comment-list" id="codCommentsList"></div>
-        <div id="codCommentSignIn" class="social-empty hidden">Sign in to join today's Card of the Day conversation.</div>
-        <div id="codCommentBan" class="comment-ban-notice hidden">
-          <p id="codCommentBanText"></p>
-          <button type="button" class="btn-secondary hidden" id="codTestUnbanBtn">Restore access (one-time test)</button>
-        </div>
-        <div id="codCommentAgreement" class="cod-comment-agreement hidden">
-          <p class="agreement-lead">Before you comment today, please agree to our community rules:</p>
-          <p class="agreement-text" id="codAgreementText"></p>
-          <label class="checkbox-field agreement-check">
-            <input type="checkbox" id="codAgreementCheck" />
-            <span>I agree — no bullying, harassment, hate speech, threats, or personal attacks.</span>
-          </label>
-          <button type="button" class="btn-secondary" id="codAgreementSubmit" disabled>Continue to comments</button>
-        </div>
-        <div id="codCommentCompose" class="comment-compose hidden">
-          <input type="text" id="codCommentInput" maxlength="1000" placeholder="Share your take on today's card…" />
-          <button type="button" class="btn-secondary" id="codCommentSubmit">Post</button>
-        </div>
-      </div>
-    </div>
-
     <div id="friendModal" class="listing-modal hidden" role="dialog" aria-modal="true">
       <div class="modal-backdrop"></div>
       <div class="modal-panel">
@@ -699,6 +671,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=43" type="module"></script>
+    <script src="/js/app.js?v=44" type="module"></script>
   </body>
 </html>

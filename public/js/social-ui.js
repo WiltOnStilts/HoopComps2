@@ -4,13 +4,11 @@ import {
   fetchProfilePosts,
   fetchFriendAccount,
   createProfilePost,
-  fetchCodComments,
-  postCodComment,
   acceptCodCommentAgreement,
-  oneTimeTestUnbanComments,
   fetchHubMessages,
   postHubMessage,
 } from "./social.js";
+import { bindGuardedSubmit, createSubmitGuard, dedupeByKey } from "./submit-guard.js";
 
 function $(id) {
   return document.getElementById(id);
@@ -82,7 +80,7 @@ export async function renderProfileSocial(state) {
   try {
     const postsData = await fetchProfilePosts(getCurrentUser()?.id);
 
-    const posts = postsData.posts || [];
+    const posts = dedupePosts(postsData.posts || []);
     postsEl.innerHTML = posts.length
       ? posts.map(renderPostCard).join("")
       : `<div class="social-empty">Share a recent pull or what your latest card is worth.</div>`;
@@ -160,54 +158,6 @@ function closeFriendModal() {
   $("friendModal")?.classList.add("hidden");
 }
 
-function renderCodCommentControls(data) {
-  const agreement = data?.communityAgreement || {};
-  const signInEl = $("codCommentSignIn");
-  const agreementEl = $("codCommentAgreement");
-  const composeEl = $("codCommentCompose");
-  const agreementText = $("codAgreementText");
-  const agreementCheck = $("codAgreementCheck");
-  const agreementSubmit = $("codAgreementSubmit");
-  const banEl = $("codCommentBan");
-  const banTextEl = $("codCommentBanText");
-  const testUnbanBtn = $("codTestUnbanBtn");
-
-  signInEl?.classList.add("hidden");
-  agreementEl?.classList.add("hidden");
-  composeEl?.classList.add("hidden");
-  banEl?.classList.add("hidden");
-  testUnbanBtn?.classList.add("hidden");
-
-  if (agreement.commentBan) {
-    if (banTextEl) {
-      banTextEl.textContent = `You cannot comment until ${formatBanWhen(agreement.commentBan.until)} due to a community guidelines violation.`;
-    }
-    banEl?.classList.remove("hidden");
-    if (testUnbanBtn && agreement.testUnbanAvailable) {
-      testUnbanBtn.classList.remove("hidden");
-    }
-    return;
-  }
-
-  if (!agreement.signedIn) {
-    signInEl?.classList.remove("hidden");
-    return;
-  }
-
-  if (agreementText && agreement.text) {
-    agreementText.textContent = agreement.text;
-  }
-
-  if (agreement.canComment) {
-    composeEl?.classList.remove("hidden");
-    return;
-  }
-
-  agreementEl?.classList.remove("hidden");
-  if (agreementCheck) agreementCheck.checked = false;
-  if (agreementSubmit) agreementSubmit.disabled = true;
-}
-
 function formatBanWhen(iso) {
   try {
     return new Date(iso).toLocaleString(undefined, {
@@ -222,47 +172,23 @@ function formatBanWhen(iso) {
   }
 }
 
-export async function openCodCommentsModal(cardTitle) {
-  const modal = $("codCommentsModal");
-  const list = $("codCommentsList");
-  if (!modal || !list) return;
-  modal.classList.remove("hidden");
-  $("codCommentsTitle").textContent = cardTitle
-    ? `Talk: ${cardTitle}`
-    : "Card of the Day conversation";
-  list.innerHTML = `<p class="muted-text">Loading today's conversation…</p>`;
-
-  try {
-    const data = await fetchCodComments();
-    const comments = data.comments || [];
-    list.innerHTML = comments.length
-      ? comments.map(renderCommentCard).join("")
-      : `<div class="social-empty">Be the first to comment on today's card.</div>`;
-    list.scrollTop = list.scrollHeight;
-    renderCodCommentControls(data);
-  } catch (err) {
-    list.innerHTML = `<div class="social-empty">${escapeHtml(err.message)}</div>`;
-    renderCodCommentControls({});
-  }
-}
-
-function closeCodCommentsModal() {
-  $("codCommentsModal")?.classList.add("hidden");
-}
-
 let chatAudience = "everyone";
 let chatTargetUsername = "";
-let hubMessageSubmitting = false;
+const profilePostGuard = createSubmitGuard();
+const hubMessageGuard = createSubmitGuard();
+const chatAgreementGuard = createSubmitGuard();
 let socialUiBound = false;
 
 function dedupeMessages(messages) {
-  const seen = new Set();
-  return (messages || []).filter((message) => {
-    const key = message.id || `${message.authorName}|${message.text}|${message.createdAt}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return dedupeByKey(messages, (message) =>
+    message.id || `${message.authorName}|${message.text}|${message.createdAt}`
+  );
+}
+
+function dedupePosts(posts) {
+  return dedupeByKey(posts, (post) =>
+    post.id || `${post.userId}|${post.authorName}|${post.text}|${post.createdAt}`
+  );
 }
 
 function chatAudienceLabel(audience, targetUser) {
@@ -360,39 +286,41 @@ export function initSocialUI({ getState, openAuthModal }) {
   if (socialUiBound) return;
   socialUiBound = true;
 
-  $("publishPostBtn")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    const text = $("profilePostText")?.value?.trim();
-    const collectionEntryId = $("postRecentCard")?.value || null;
-    const cardTitle = $("postCardTitle")?.value?.trim() || null;
-    const valRaw = $("postCardValue")?.value;
-    const estimatedValue = valRaw !== "" && valRaw != null ? Number(valRaw) : null;
+  bindGuardedSubmit({
+    button: $("publishPostBtn"),
+    guard: profilePostGuard,
+    handler: async () => {
+      if (!isLoggedIn()) {
+        openAuthModal("login");
+        return;
+      }
+      const text = $("profilePostText")?.value?.trim();
+      const collectionEntryId = $("postRecentCard")?.value || null;
+      const cardTitle = $("postCardTitle")?.value?.trim() || null;
+      const valRaw = $("postCardValue")?.value;
+      const estimatedValue = valRaw !== "" && valRaw != null ? Number(valRaw) : null;
 
-    try {
-      await createProfilePost({
-        text,
-        cardTitle,
-        estimatedValue: Number.isFinite(estimatedValue) ? estimatedValue : null,
-        collectionEntryId,
-      });
-      $("profilePostText").value = "";
-      $("postCardTitle").value = "";
-      $("postCardValue").value = "";
-      if ($("postRecentCard")) $("postRecentCard").value = "";
-      await renderProfileSocial(getState());
-    } catch (err) {
-      alert(err.message);
-      await renderProfileSocial(getState());
-    }
+      try {
+        await createProfilePost({
+          text,
+          cardTitle,
+          estimatedValue: Number.isFinite(estimatedValue) ? estimatedValue : null,
+          collectionEntryId,
+        });
+        $("profilePostText").value = "";
+        $("postCardTitle").value = "";
+        $("postCardValue").value = "";
+        if ($("postRecentCard")) $("postRecentCard").value = "";
+        await renderProfileSocial(getState());
+      } catch (err) {
+        alert(err.message);
+        await renderProfileSocial(getState());
+      }
+    },
   });
 
   $("friendModalClose")?.addEventListener("click", closeFriendModal);
   $("friendModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeFriendModal);
-  $("codCommentsClose")?.addEventListener("click", closeCodCommentsModal);
-  $("codCommentsModal")?.querySelector(".modal-backdrop")?.addEventListener("click", closeCodCommentsModal);
 
   document.querySelectorAll(".chat-audience-tab").forEach((tab) => {
     tab.addEventListener("click", () => setChatAudience(tab.dataset.chatAudience));
@@ -416,53 +344,53 @@ export function initSocialUI({ getState, openAuthModal }) {
     if (btn) btn.disabled = !e.target.checked;
   });
 
-  $("communityChatAgreementBtn")?.addEventListener("click", async () => {
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    if (!$("communityChatAgreementCheck")?.checked) return;
-    try {
-      await acceptCodCommentAgreement();
-      await renderCommunityChat();
-    } catch (err) {
-      alert(err.message);
-    }
+  bindGuardedSubmit({
+    button: $("communityChatAgreementBtn"),
+    guard: chatAgreementGuard,
+    handler: async () => {
+      if (!isLoggedIn()) {
+        openAuthModal("login");
+        return;
+      }
+      if (!$("communityChatAgreementCheck")?.checked) return;
+      try {
+        await acceptCodCommentAgreement();
+        await renderCommunityChat();
+      } catch (err) {
+        alert(err.message);
+      }
+    },
   });
 
-  $("communityChatSubmit")?.addEventListener("click", async () => {
-    if (hubMessageSubmitting) return;
-    if (!isLoggedIn()) {
-      openAuthModal("login");
-      return;
-    }
-    const input = $("communityChatInput");
-    const text = input?.value?.trim();
-    if (!text) return;
-    const audience = chatAudience === "user" ? "direct" : chatAudience;
-    if (audience === "direct" && !chatTargetUsername) {
-      alert("Enter a username first");
-      return;
-    }
+  bindGuardedSubmit({
+    button: $("communityChatSubmit"),
+    guard: hubMessageGuard,
+    handler: async () => {
+      if (!isLoggedIn()) {
+        openAuthModal("login");
+        return;
+      }
+      const input = $("communityChatInput");
+      const text = input?.value?.trim();
+      if (!text) return;
+      const audience = chatAudience === "user" ? "direct" : chatAudience;
+      if (audience === "direct" && !chatTargetUsername) {
+        alert("Enter a username first");
+        return;
+      }
 
-    hubMessageSubmitting = true;
-    const submitBtn = $("communityChatSubmit");
-    if (submitBtn) submitBtn.disabled = true;
-
-    try {
-      await postHubMessage({
-        text,
-        audience,
-        targetUsername: chatTargetUsername,
-      });
-      input.value = "";
-      await renderCommunityChat();
-    } catch (err) {
-      alert(err.message);
-      await renderCommunityChat();
-    } finally {
-      hubMessageSubmitting = false;
-      if (submitBtn) submitBtn.disabled = false;
-    }
+      try {
+        await postHubMessage({
+          text,
+          audience,
+          targetUsername: chatTargetUsername,
+        });
+        input.value = "";
+        await renderCommunityChat();
+      } catch (err) {
+        alert(err.message);
+        await renderCommunityChat();
+      }
+    },
   });
 }

@@ -20,6 +20,7 @@ import {
  formToCard,
  renderScoutResults,
  clearScoutResults,
+ setAddToCollectionAvailable,
  setupResultTabs,
 } from "./scout-ui.js";
 import { initListingModal } from "./listings-ui.js";
@@ -715,7 +716,14 @@ async function checkHealth() {
  renderEbayBanner("collectionEbayBanner");
  }
 
- if (!health.ebayConfigured) $("apiSetup")?.setAttribute("open", "");
+ const apiSetup = $("apiSetup");
+ if (health.ebayConfigured) {
+   apiSetup?.removeAttribute("open");
+   apiSetup?.classList.add("hidden");
+ } else {
+   apiSetup?.classList.remove("hidden");
+   if (!health.ebayConfigured) apiSetup?.setAttribute("open", "");
+ }
  renderAuthUI();
  } catch {
  health.ebayTip =
@@ -754,13 +762,20 @@ async function performScout(card) {
     lastScoutData = exactData;
     lastScoutCard = exactData.card || card;
 
-    state.lastScout = { card: lastScoutCard, data: exactData, at: new Date().toISOString() };
-    const isNewScan = registerUniqueScan(state, card);
+    const registeredNew = registerUniqueScan(state, card);
+    state.lastScout = {
+      card: lastScoutCard,
+      data: exactData,
+      at: new Date().toISOString(),
+      isNewScan: registeredNew,
+    };
     saveState(state);
+
+    setAddToCollectionAvailable(registeredNew);
 
     const dupNotice = $("scoutDuplicateNotice");
     if (dupNotice) {
-      if (isNewScan) {
+      if (registeredNew) {
         dupNotice.textContent = `+${COINS_PER_UNIQUE_SCAN} coins for a unique scan!`;
         dupNotice.classList.remove("hidden");
       } else {
@@ -770,10 +785,7 @@ async function performScout(card) {
       }
     }
 
-    const addBtn = $("addToCollectionBtn");
-    addBtn.disabled = false;
-
-    handleScoutRewards(state, { isNewScan });
+    handleScoutRewards(state, { isNewScan: registeredNew });
     state = loadState();
     updateHeaderStats();
     renderDashboard();
@@ -950,6 +962,7 @@ function initNavigation() {
  renderScoutResults(state.lastScout.data, {
  ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
  });
+ setAddToCollectionAvailable(state.lastScout.isNewScan !== false);
  if (state.lastScout.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
  } else {
  navigate(target);
@@ -1215,6 +1228,7 @@ async function bootstrapSession() {
 
   if (isLoggedIn()) {
     await reconcileCloudState();
+    state = replaceState(state);
   }
 
   renderAuthUI();
@@ -1274,12 +1288,6 @@ function init() {
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
  $("refreshCollectionBtn").addEventListener("click", refreshCollectionValues);
  $("aiEstimateBtn").addEventListener("click", runAiInsights);
- $("cowScoutBtn")?.addEventListener("click", () => {
- if (!cardOfDayData?.card) return;
- navigate("scout");
- fillScoutWizard($("scoutForm"), cardOfDayData.card);
- $("scoutForm").requestSubmit();
- });
  initProfileForm();
  initCollectionBrowser();
  initMobileSessionHeader();

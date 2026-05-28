@@ -46,7 +46,11 @@ export function loadState() {
     if ((legacyComps || legacy) && !raw) {
       localStorage.setItem(STORAGE_KEY, parsed);
     }
-    return applyDailySession(normalizeState(data));
+    const normalized = normalizeState(data);
+    const deferDaily = Boolean(
+      localStorage.getItem("hoopcomps_token") || localStorage.getItem("compscourt_token")
+    );
+    return deferDaily ? normalized : applyDailySession(normalized);
   } catch {
     return defaultState();
   }
@@ -154,10 +158,8 @@ function defaultState() {
 }
 
 export function replaceState(next) {
-  const state = normalizeState(next || {});
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  notifyChange(state);
-  return state;
+  pendingDailyEvents = [];
+  return applyDailySession(normalizeState(next || {}));
 }
 
 export function saveState(state) {

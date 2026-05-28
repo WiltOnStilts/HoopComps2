@@ -65,7 +65,9 @@ function showOneNotification(event) {
       case "streak_broken":
         iconChar = "💔";
         titleText = "Streak broken";
-        bodyHtml = `You missed scouting and your <strong>${event.previousStreak} day</strong> streak ended. Scout a card today to start building a new streak.`;
+        bodyHtml = event.penalty
+          ? `You missed scouting and your <strong>${event.previousStreak} day</strong> streak ended. You lost <strong>${event.penalty} coins</strong>. Scout a card today to start building a new streak.`
+          : `You missed scouting and your <strong>${event.previousStreak} day</strong> streak ended. Scout a card today to start building a new streak.`;
         break;
       default:
         bodyHtml = escapeHtml(event.message || "Something happened.");

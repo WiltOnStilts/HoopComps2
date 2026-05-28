@@ -22,6 +22,11 @@ import { saveState } from "./storage.js";
 let studioPreview = null;
 let activeCategory = "mouth";
 let pendingConfirm = null;
+let mountedThumbnailCategory = null;
+let studioState = null;
+let studioOnChange = null;
+
+const HERO_OPTS = { size: "hero", autoRotate: true, interactive: true };
 
 function heroProfile(state) {
   if (studioPreview) {
@@ -122,17 +127,135 @@ function refreshHero(state, remount = false) {
   const profile = heroProfile(state);
   if (remount || !mount.querySelector("canvas")) {
     disposeAvatar3D(mount);
-    renderAvatarInto(mount, profile, { size: "hero", autoRotate: true, interactive: true });
+    renderAvatarInto(mount, profile, HERO_OPTS);
   } else {
-    refreshAvatar3D(mount, profile, { size: "hero", autoRotate: true, interactive: true });
+    refreshAvatar3D(mount, profile, HERO_OPTS);
   }
+}
+
+function heroFooterHtml() {
+  if (studioPreview) {
+    return `
+      <p class="avatar-studio-preview-note">Previewing — not saved yet</p>
+      <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview avatar-studio-stop-preview" data-studio="stop-preview">Stop previewing</button>
+    `;
+  }
+  return `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`;
+}
+
+function syncHeroFooter() {
+  const mount = document.getElementById("avatarStudioHeroMount");
+  const panel = mount?.closest(".avatar-studio-hero-panel");
+  if (!mount || !panel) return;
+
+  let sibling = mount.nextElementSibling;
+  while (sibling) {
+    const next = sibling.nextElementSibling;
+    sibling.remove();
+    sibling = next;
+  }
+  panel.insertAdjacentHTML("beforeend", heroFooterHtml());
+}
+
+function syncPreviewUi(state) {
+  document.querySelector(".avatar-studio-main")?.classList.toggle(
+    "avatar-studio-main--preview-active",
+    Boolean(studioPreview)
+  );
+  syncHeroFooter();
+  document.querySelectorAll(".avatar-studio-item").forEach((el) => {
+    const previewing =
+      studioPreview?.category === el.dataset.category && studioPreview?.id === el.dataset.id;
+    el.classList.toggle("previewing", previewing);
+  });
+  refreshHero(state, false);
+}
+
+function handleStudioAction(action, state, { onChange, category, id, price } = {}) {
+  if (action === "category") {
+    activeCategory = category;
+    pendingConfirm = null;
+    mountedThumbnailCategory = null;
+    renderAvatarStudio(state, { onChange });
+    return;
+  }
+
+  if (action === "preview") {
+    studioPreview = { category, id };
+    syncPreviewUi(state);
+    return;
+  }
+
+  if (action === "stop-preview") {
+    studioPreview = null;
+    syncPreviewUi(state);
+    return;
+  }
+
+  if (action === "cancel") {
+    pendingConfirm = null;
+    renderAvatarStudio(state, { onChange });
+    return;
+  }
+
+  if (action === "buy-request") {
+    pendingConfirm = { kind: "purchase", category, id, price };
+    renderAvatarStudio(state, { onChange });
+    return;
+  }
+
+  if (action === "unequip-request") {
+    pendingConfirm = { kind: "unequip", category, id };
+    renderAvatarStudio(state, { onChange });
+    return;
+  }
+
+  let result = { ok: false, error: "Unknown action" };
+
+  if (action === "confirm-purchase") {
+    result = purchaseAvatarPart(state, category, id, price);
+    if (result.ok) result = equipAvatarPart(state, category, id);
+  } else if (action === "confirm-unequip") {
+    result = unequipAvatarPart(state, category);
+  } else if (action === "equip") {
+    result = equipAvatarPart(state, category, id);
+  }
+
+  if (!result.ok) {
+    alert(result.error || "Action failed");
+    return;
+  }
+
+  studioPreview = null;
+  pendingConfirm = null;
+  saveState(state);
+  onChange?.(state);
+  renderAvatarStudio(state, { onChange });
+}
+
+function bindStudioActions(root, state, onChange) {
+  studioState = state;
+  studioOnChange = onChange;
+  if (root.dataset.studioBound) return;
+  root.dataset.studioBound = "1";
+  root.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-studio]");
+    if (!btn) return;
+    handleStudioAction(btn.dataset.studio, studioState, {
+      onChange: studioOnChange,
+      category: btn.dataset.category,
+      id: btn.dataset.id,
+      price: Number(btn.dataset.price) || 0,
+    });
+  });
 }
 
 export function renderAvatarStudio(state, { onChange } = {}) {
   const root = document.getElementById("avatarStudioRoot");
   if (!root) return;
 
-  disposeAvatarThumbnailRenderer();
+  const prevHero = document.getElementById("avatarStudioHeroMount");
+  if (prevHero) disposeAvatar3D(prevHero);
 
   const categoryMeta = AVATAR_STUDIO_CATEGORIES.find((c) => c.key === activeCategory) || AVATAR_STUDIO_CATEGORIES[0];
   const items = AVATAR_CATALOG[categoryMeta.key] || [];
@@ -156,14 +279,7 @@ export function renderAvatarStudio(state, { onChange } = {}) {
       <div class="avatar-studio-hero-slot">
         <div class="panel avatar-studio-hero-panel">
           <div id="avatarStudioHeroMount" class="avatar-3d-mount avatar-3d-mount--hero"></div>
-          ${
-            studioPreview
-              ? `
-            <p class="avatar-studio-preview-note">Previewing — not saved yet</p>
-            <button type="button" class="avatar-studio-action-btn avatar-studio-action-btn--preview avatar-studio-stop-preview" data-studio="stop-preview">Stop previewing</button>
-          `
-              : `<p class="hint avatar-studio-drag-hint">Drag to spin your avatar</p>`
-          }
+          ${heroFooterHtml()}
         </div>
       </div>
 
@@ -185,88 +301,31 @@ export function renderAvatarStudio(state, { onChange } = {}) {
   const balance = document.getElementById("avatarStudioBalance");
   if (balance) balance.textContent = `${state.coins ?? 0} coins available`;
 
-  root.querySelectorAll("[data-studio]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const action = btn.dataset.studio;
-      const category = btn.dataset.category;
-      const id = btn.dataset.id;
-      const price = Number(btn.dataset.price) || 0;
-
-      if (action === "category") {
-        activeCategory = category;
-        pendingConfirm = null;
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      if (action === "preview") {
-        studioPreview = { category, id };
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      if (action === "stop-preview") {
-        studioPreview = null;
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      if (action === "cancel") {
-        pendingConfirm = null;
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      if (action === "buy-request") {
-        pendingConfirm = { kind: "purchase", category, id, price };
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      if (action === "unequip-request") {
-        pendingConfirm = { kind: "unequip", category, id };
-        renderAvatarStudio(state, { onChange });
-        return;
-      }
-
-      let result = { ok: false, error: "Unknown action" };
-
-      if (action === "confirm-purchase") {
-        result = purchaseAvatarPart(state, category, id, price);
-        if (result.ok) result = equipAvatarPart(state, category, id);
-      } else if (action === "confirm-unequip") {
-        result = unequipAvatarPart(state, category);
-      } else if (action === "equip") {
-        result = equipAvatarPart(state, category, id);
-      }
-
-      if (!result.ok) {
-        alert(result.error || "Action failed");
-        return;
-      }
-
-      studioPreview = null;
-      pendingConfirm = null;
-      saveState(state);
-      onChange?.(state);
-      renderAvatarStudio(state, { onChange });
-    });
-  });
+  bindStudioActions(root, state, onChange);
 
   refreshHero(state, true);
-  mountCategoryThumbnails(root, state.profile, categoryMeta.key);
+  if (mountedThumbnailCategory !== categoryMeta.key) {
+    mountedThumbnailCategory = categoryMeta.key;
+    mountCategoryThumbnails(root, state.profile, categoryMeta.key);
+  }
 }
 
 export function disposeAvatarStudio() {
   const hero = document.getElementById("avatarStudioHeroMount");
   if (hero) disposeAvatar3D(hero);
   disposeAvatarThumbnailRenderer();
+  const root = document.getElementById("avatarStudioRoot");
+  if (root) delete root.dataset.studioBound;
   studioPreview = null;
   pendingConfirm = null;
+  mountedThumbnailCategory = null;
+  studioState = null;
+  studioOnChange = null;
 }
 
 export function resetAvatarStudioUi() {
   studioPreview = null;
   pendingConfirm = null;
   activeCategory = "mouth";
+  mountedThumbnailCategory = null;
 }

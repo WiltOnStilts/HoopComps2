@@ -5,6 +5,20 @@ import { avatarSelection, findAvatarItem, skinHex, eyeColorHex, eyebrowColorHex,
 
 const mounts = new WeakMap();
 const HEAD_Y = 0.52;
+const THUMB_CACHE_MAX = 96;
+const MATERIAL_CACHE = new Map();
+
+const BUILD_TORSO_SPECS = {
+  slim: { w: 0.62, h: 0.52, d: 0.34, armRadius: 0.07, armLength: 0.42, armX: 0.46 },
+  average: { w: 0.72, h: 0.56, d: 0.38, armRadius: 0.09, armLength: 0.44, armX: 0.48 },
+  athletic: { w: 0.76, h: 0.58, d: 0.4, armRadius: 0.1, armLength: 0.46, armX: 0.5 },
+  strong: { w: 0.82, h: 0.6, d: 0.42, armRadius: 0.12, armLength: 0.48, armX: 0.52 },
+  powerhouse: { w: 0.9, h: 0.62, d: 0.44, armRadius: 0.14, armLength: 0.5, armX: 0.54 },
+};
+
+function torsoSpec(buildId) {
+  return BUILD_TORSO_SPECS[buildId] || BUILD_TORSO_SPECS.average;
+}
 
 /** Single shared WebGL context for shop thumbnails — avoids browser context limits */
 let thumbRenderer = null;
@@ -17,8 +31,10 @@ function disposeObject3D(root) {
   root.traverse((child) => {
     if (child.geometry) child.geometry.dispose();
     if (child.material) {
-      if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
-      else child.material.dispose();
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      for (const m of mats) {
+        if (!m.userData?.pooled) m.dispose();
+      }
     }
   });
 }
@@ -66,6 +82,10 @@ export async function captureAvatarThumbnail(profile, size = 88) {
     thumbScene.add(thumbAvatar);
     renderer.render(thumbScene, thumbCamera);
     const url = renderer.domElement.toDataURL("image/png");
+    if (thumbCache.size >= THUMB_CACHE_MAX) {
+      const oldest = thumbCache.keys().next().value;
+      if (oldest) thumbCache.delete(oldest);
+    }
     thumbCache.set(cacheKey, url);
     clearThumbAvatar();
     return url;
@@ -87,16 +107,28 @@ export function disposeAvatarThumbnailRenderer() {
 }
 
 function mat(color, opts = {}) {
-  const c = typeof color === "string" ? new THREE.Color(color) : color;
-  return new THREE.MeshStandardMaterial({
+  const c = color instanceof THREE.Color ? color : new THREE.Color(color);
+  const roughness = opts.roughness ?? 0.62;
+  const metalness = opts.metalness ?? 0.08;
+  const emissive = opts.emissive ?? 0x000000;
+  const emissiveIntensity = opts.emissiveIntensity ?? 0;
+  const transparent = Boolean(opts.transparent);
+  const opacity = opts.opacity ?? 1;
+  const cacheKey = `${c.getHexString()}:${roughness}:${metalness}:${emissive}:${emissiveIntensity}:${transparent}:${opacity}`;
+  if (MATERIAL_CACHE.has(cacheKey)) return MATERIAL_CACHE.get(cacheKey);
+
+  const material = new THREE.MeshStandardMaterial({
     color: c,
-    roughness: opts.roughness ?? 0.62,
-    metalness: opts.metalness ?? 0.08,
-    emissive: opts.emissive ?? 0x000000,
-    emissiveIntensity: opts.emissiveIntensity ?? 0,
-    transparent: Boolean(opts.transparent),
-    opacity: opts.opacity ?? 1,
+    roughness,
+    metalness,
+    emissive,
+    emissiveIntensity,
+    transparent,
+    opacity,
   });
+  material.userData.pooled = true;
+  MATERIAL_CACHE.set(cacheKey, material);
+  return material;
 }
 
 function addMesh(group, geometry, material, position, rotation, scale) {
@@ -345,41 +377,27 @@ function buildMouth(group, mouthId) {
 }
 
 function buildArms(group, buildId, fabric) {
-  const specs = {
-    slim: { radius: 0.07, length: 0.42, x: 0.46 },
-    average: { radius: 0.09, length: 0.44, x: 0.48 },
-    athletic: { radius: 0.1, length: 0.46, x: 0.5 },
-    strong: { radius: 0.12, length: 0.48, x: 0.52 },
-    powerhouse: { radius: 0.14, length: 0.5, x: 0.54 },
-  };
-  const spec = specs[buildId] || specs.average;
+  const spec = torsoSpec(buildId);
   const armY = 0.02;
 
   addMesh(
     group,
-    new THREE.CylinderGeometry(spec.radius, spec.radius * 0.92, spec.length, 10),
+    new THREE.CylinderGeometry(spec.armRadius, spec.armRadius * 0.92, spec.armLength, 8),
     fabric,
-    [-spec.x, armY, 0],
+    [-spec.armX, armY, 0],
     [0, 0, 0.35]
   );
   addMesh(
     group,
-    new THREE.CylinderGeometry(spec.radius, spec.radius * 0.92, spec.length, 10),
+    new THREE.CylinderGeometry(spec.armRadius, spec.armRadius * 0.92, spec.armLength, 8),
     fabric,
-    [spec.x, armY, 0],
+    [spec.armX, armY, 0],
     [0, 0, -0.35]
   );
 }
 
 function buildTorsoBase(group, buildId, fabric) {
-  const specs = {
-    slim: { w: 0.62, h: 0.52, d: 0.34 },
-    average: { w: 0.72, h: 0.56, d: 0.38 },
-    athletic: { w: 0.76, h: 0.58, d: 0.4 },
-    strong: { w: 0.82, h: 0.6, d: 0.42 },
-    powerhouse: { w: 0.9, h: 0.62, d: 0.44 },
-  };
-  const spec = specs[buildId] || specs.average;
+  const spec = torsoSpec(buildId);
   addMesh(group, new THREE.BoxGeometry(spec.w, spec.h, spec.d), fabric, [0, -0.08, 0]);
   buildArms(group, buildId, fabric);
 }
@@ -396,29 +414,38 @@ function buildCostume(group, costumeId, tint, buildId) {
 
   switch (costumeId) {
     case "garbage": {
+      const t = torsoSpec(buildId);
       const vest = mat(0xffc300);
-      addMesh(group, new THREE.BoxGeometry(0.78, 0.62, 0.02), vest, [0, -0.02, 0.2]);
-      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [-0.18, 0.08, 0.22]);
-      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [0.18, 0.08, 0.22]);
-      addMesh(group, new THREE.CylinderGeometry(0.08, 0.08, 0.14, 8), neon, [0.28, 0.12, 0.15], [0, 0, Math.PI / 2]);
+      addMesh(group, new THREE.BoxGeometry(t.w * 1.04, t.h * 1.05, 0.02), vest, [0, -0.02, t.d * 0.52]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [-t.w * 0.42, 0.08, t.d * 0.58]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.12, 0.03), dark, [t.w * 0.42, 0.08, t.d * 0.58]);
+      addMesh(group, new THREE.CylinderGeometry(0.08, 0.08, 0.14, 8), neon, [t.w * 0.65, 0.12, t.d * 0.38], [0, 0, Math.PI / 2]);
       break;
     }
-    case "fastfood":
-      addMesh(group, new THREE.BoxGeometry(0.74, 0.28, 0.02), mat(0xffffff), [0, -0.02, 0.2]);
-      addMesh(group, new THREE.BoxGeometry(0.36, 0.08, 0.12), fabric, [0, 0.34, 0.02]);
+    case "fastfood": {
+      const t = torsoSpec(buildId);
+      addMesh(group, new THREE.BoxGeometry(t.w * 0.98, 0.28, 0.02), mat(0xffffff), [0, -0.02, t.d * 0.52]);
+      addMesh(group, new THREE.BoxGeometry(t.w * 0.48, 0.08, t.d * 0.28), fabric, [0, t.h * 0.45, t.d * 0.04]);
       break;
-    case "retail":
-      addMesh(group, new THREE.BoxGeometry(0.74, 0.08, 0.39), trim, [0, 0.18, 0.01]);
-      addMesh(group, new THREE.BoxGeometry(0.12, 0.06, 0.02), mat(0xffd166), [0.14, 0.04, 0.21]);
+    }
+    case "retail": {
+      const t = torsoSpec(buildId);
+      addMesh(group, new THREE.BoxGeometry(t.w * 0.97, 0.08, t.d * 0.98), trim, [0, t.h * 0.28, 0.01]);
+      addMesh(group, new THREE.BoxGeometry(0.12, 0.06, 0.02), mat(0xffd166), [t.w * 0.38, 0.04, t.d * 0.54]);
       break;
-    case "intern":
-      addMesh(group, new THREE.BoxGeometry(0.22, 0.36, 0.02), mat(0xf8f9fa), [0, 0.02, 0.2]);
-      addMesh(group, new THREE.BoxGeometry(0.04, 0.22, 0.02), mat(0xe63946), [-0.06, -0.02, 0.21]);
+    }
+    case "intern": {
+      const t = torsoSpec(buildId);
+      addMesh(group, new THREE.BoxGeometry(t.w * 0.28, t.h * 0.58, 0.02), mat(0xf8f9fa), [0, 0.02, t.d * 0.52]);
+      addMesh(group, new THREE.BoxGeometry(0.04, t.h * 0.36, 0.02), mat(0xe63946), [-0.06, -0.02, t.d * 0.54]);
       break;
-    case "teacher":
-      addMesh(group, new THREE.BoxGeometry(0.76, 0.14, 0.41), mat(0xf4a261), [0, 0.12, 0.01]);
-      addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
+    }
+    case "teacher": {
+      const t = torsoSpec(buildId);
+      addMesh(group, new THREE.BoxGeometry(t.w * 1.02, 0.14, t.d * 1.04), mat(0xf4a261), [0, t.h * 0.18, 0.01]);
+      addMesh(group, new THREE.BoxGeometry(t.w * 0.22, t.h * 0.36, 0.02), trim, [0, t.h * 0.08, t.d * 0.54]);
       break;
+    }
     case "coach_hs":
       addMesh(group, new THREE.BoxGeometry(0.7, 0.12, 0.02), trim, [0, 0.02, 0.19]);
       addMesh(group, new THREE.BoxGeometry(0.16, 0.22, 0.02), trim, [0, 0.08, 0.21]);
@@ -623,5 +650,15 @@ export function refreshAvatar3D(container, profile, options) {
   const entry = mounts.get(container);
   const key = avatarKey(profile);
   if (entry?.profileKey === key) return true;
+
+  if (entry?.scene && entry.avatar) {
+    disposeObject3D(entry.avatar);
+    entry.scene.remove(entry.avatar);
+    entry.avatar = buildAvatarGroup(profile);
+    entry.scene.add(entry.avatar);
+    entry.profileKey = key;
+    return true;
+  }
+
   return mountAvatar3D(container, profile, options);
 }

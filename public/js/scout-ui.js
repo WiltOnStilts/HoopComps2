@@ -150,11 +150,32 @@ export function renderScoutResults(data, { ebayTipBanner }) {
 
   const addBtn = document.getElementById("addToCollectionBtn");
   if (addBtn) {
-    addBtn.dataset.ready = "1";
-    addBtn.disabled = false;
+    addBtn.disabled = true;
+    delete addBtn.dataset.ready;
+    addBtn.classList.add("hidden");
   }
+  document.querySelector(".add-qty-field")?.classList.add("hidden");
 
   return exactData;
+}
+
+export function setAddToCollectionAvailable(available) {
+  const addBtn = document.getElementById("addToCollectionBtn");
+  const qtyField = document.querySelector(".add-qty-field");
+  if (addBtn) {
+    if (available) {
+      addBtn.disabled = false;
+      addBtn.dataset.ready = "1";
+      addBtn.classList.remove("hidden");
+    } else {
+      addBtn.disabled = true;
+      delete addBtn.dataset.ready;
+      addBtn.classList.add("hidden");
+    }
+  }
+  if (qtyField) {
+    qtyField.classList.toggle("hidden", !available);
+  }
 }
 
 export function clearScoutResults() {
@@ -166,7 +187,9 @@ export function clearScoutResults() {
   if (addBtn) {
     addBtn.disabled = true;
     delete addBtn.dataset.ready;
+    addBtn.classList.add("hidden");
   }
+  document.querySelector(".add-qty-field")?.classList.add("hidden");
   const dupNotice = document.getElementById("scoutDuplicateNotice");
   dupNotice?.classList.add("hidden");
   if (dupNotice) dupNotice.textContent = "";

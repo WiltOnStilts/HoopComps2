@@ -425,9 +425,11 @@ node server.mjs</code>
         </div>
 
         <div class="panel push-settings-panel" id="pushSettingsPanel">
-          <h3>Notifications</h3>
+          <h3 id="profileSetupTitle">Notifications</h3>
           <p class="hint" id="pushSettingsHint">Get streak reminders, Card of the Day alerts, and friend updates on your phone.</p>
+          <div id="installGuideProfileSteps" class="install-guide-steps-wrap hidden"></div>
           <p class="muted-text push-settings-status" id="pushSettingsStatus"></p>
+          <button type="button" class="btn-secondary hidden" id="profileInstallGuideBtn">Show steps again</button>
           <button type="button" class="btn-secondary" id="enablePushBtn">Enable notifications</button>
         </div>
 
@@ -678,6 +680,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=48" type="module"></script>
+    <script src="/js/app.js?v=50" type="module"></script>
   </body>
 </html>

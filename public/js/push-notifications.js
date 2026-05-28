@@ -1,9 +1,28 @@
-/** Web Push — first-visit permission prompt + subscription sync */
+/** Web Push — subscription sync + notification prompts (standalone app only) */
 
 import { authFetch, isLoggedIn } from "./auth.js";
+import { isStandaloneApp } from "./pwa.js";
+import {
+  shouldShowInstallGuideInProfile,
+  renderInstallGuideProfile,
+  hideInstallGuideProfile,
+  markInstalledFromStandalone,
+  showInstallGuideModal,
+  markInstallGuideDismissed,
+} from "./install-guide.js";
 
-const PROMPT_KEY = "hoopPushPromptV1";
+const PROMPT_KEY = "hoopPushPromptV2";
+const STANDALONE_PROMPT_KEY = "hoopPushPromptStandaloneV2";
 const PENDING_SUB_KEY = "hoopPendingPushSub";
+const LEGACY_PROMPT_KEYS = ["hoopPushPromptV1", "hoopPushPromptStandaloneV1"];
+
+function clearLegacyPromptKeys() {
+  for (const key of LEGACY_PROMPT_KEYS) {
+    localStorage.removeItem(key);
+  }
+}
+
+clearLegacyPromptKeys();
 
 function $(id) {
   return document.getElementById(id);
@@ -25,12 +44,6 @@ function isIosDevice() {
   );
 }
 
-function isStandaloneApp() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true
-  );
-}
-
 /** Why push may be unavailable — null means ready to enable. */
 export function getPushBlockReason() {
   if (isIosDevice() && !isStandaloneApp()) return "ios_needs_install";
@@ -41,14 +54,9 @@ export function getPushBlockReason() {
 }
 
 function showIosInstallHelp() {
-  const banner = document.getElementById("installBanner");
-  if (banner) {
-    banner.classList.remove("hidden");
-    banner.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-  alert(
-    "To get notifications on iPhone:\n\n1. Tap Share in Safari (square with arrow)\n2. Tap Add to Home Screen\n3. Open HoopComps from your home screen\n4. Go to Profile → Enable notifications"
-  );
+  void showInstallGuideModal().then((decision) => {
+    if (decision === "dismiss") markInstallGuideDismissed();
+  });
 }
 
 export function getTimezoneOffsetMinutes() {
@@ -158,7 +166,7 @@ function ensurePromptModal() {
       <p class="hint push-prompt-copy">
         Get reminders to keep your streak, alerts when your card is featured, and friend updates — like a text, but from HoopComps.
       </p>
-      <p class="muted-text push-prompt-note">You can also turn these on anytime from Profile → Notifications.</p>
+      <p class="muted-text push-prompt-note">You can also turn these on anytime from Profile.</p>
       <div class="push-prompt-actions">
         <button type="button" class="btn-scout" id="pushPromptAllow">Allow</button>
         <button type="button" class="btn-secondary" id="pushPromptDeny">Not now</button>
@@ -204,28 +212,42 @@ function showPushPromptModal() {
 let promptInFlight = false;
 
 export async function maybeShowPushPermissionPrompt({ multiUserEnabled = true } = {}) {
+  if (!isStandaloneApp()) return;
   if (!supportsPush() || !multiUserEnabled) return;
-  if (localStorage.getItem(PROMPT_KEY)) {
-    if (localStorage.getItem(PROMPT_KEY) === "granted") {
-      await ensurePushSubscription();
-    }
+
+  markInstalledFromStandalone();
+
+  if (Notification.permission === "granted") {
+    localStorage.setItem(PROMPT_KEY, "granted");
+    localStorage.setItem(STANDALONE_PROMPT_KEY, "granted");
+    await ensurePushSubscription();
     return;
   }
+  if (Notification.permission === "denied") {
+    localStorage.setItem(PROMPT_KEY, "denied");
+    localStorage.setItem(STANDALONE_PROMPT_KEY, "denied");
+    return;
+  }
+
+  if (localStorage.getItem(STANDALONE_PROMPT_KEY)) return;
   if (promptInFlight) return;
   promptInFlight = true;
 
   try {
     const decision = await showPushPromptModal();
     if (decision === "deny") {
+      localStorage.setItem(STANDALONE_PROMPT_KEY, "denied");
       localStorage.setItem(PROMPT_KEY, "denied");
       return;
     }
 
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
+      localStorage.setItem(STANDALONE_PROMPT_KEY, "granted");
       localStorage.setItem(PROMPT_KEY, "granted");
       await ensurePushSubscription();
     } else {
+      localStorage.setItem(STANDALONE_PROMPT_KEY, "denied");
       localStorage.setItem(PROMPT_KEY, "denied");
     }
   } finally {
@@ -299,6 +321,12 @@ export async function renderPushSettings({
   const btn = $("enablePushBtn");
   if (!panel || !btn) return;
 
+  if (shouldShowInstallGuideInProfile()) {
+    renderInstallGuideProfile();
+    return;
+  }
+
+  hideInstallGuideProfile();
   panel.classList.remove("hidden");
 
   const blockReason = getPushBlockReason();

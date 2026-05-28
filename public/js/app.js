@@ -61,6 +61,8 @@ import { renderShop, updateProfileAvatarMount, disposeShopAvatarPreview } from "
 import { renderAvatarStudio, disposeAvatarStudio } from "./avatar-studio-ui.js";
 import { showDailyNotificationQueue } from "./daily-notifications.js";
 import { maybeShowPushPermissionPrompt, syncPendingPushSubscription, initPushSettingsUI, renderPushSettings } from "./push-notifications.js";
+import { maybeShowInstallGuide, initInstallGuideUI } from "./install-guide.js";
+import { isStandaloneApp } from "./pwa.js";
 
 const APP_NAME = "HoopComps";
 
@@ -1311,6 +1313,13 @@ function init() {
    getPushConfigured: () => Boolean(health?.pushEnabled),
    openAuthModal,
  });
+ initInstallGuideUI({
+   onDismissed: () => {
+     if (document.querySelector('[data-view="profile"]')?.classList.contains("active")) {
+       renderProfile();
+     }
+   },
+ });
  initScoutWizard($("scoutForm"));
  resetScoutSession();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
@@ -1328,9 +1337,13 @@ function init() {
    loadLeaderboard();
    navigate("dashboard");
    await bootstrapSession();
-   void maybeShowPushPermissionPrompt({
-     multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),
-   });
+   if (isStandaloneApp()) {
+     void maybeShowPushPermissionPrompt({
+       multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),
+     });
+   } else {
+     void maybeShowInstallGuide();
+   }
  });
 }
 

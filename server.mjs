@@ -47,7 +47,7 @@ import {
   listHubMessages,
   addHubMessage,
 } from "./lib/social.mjs";
-import { getVapidPublicKey, initPushVapid } from "./lib/push-vapid.mjs";
+import { getVapidPublicKey, initPushVapidAsync, isPushConfigured, getPushInitError } from "./lib/push-vapid.mjs";
 import { upsertPushSubscription, removePushSubscription } from "./lib/push-store.mjs";
 import { startPushScheduler } from "./lib/push-scheduler.mjs";
 
@@ -159,9 +159,14 @@ function serveStatic(req, res) {
 }
 
 await initDb();
-initPushVapid();
 
-if (isDbReady()) {
+try {
+  await initPushVapidAsync();
+} catch (err) {
+  console.warn("  Push init failed:", err.message);
+}
+
+if (isDbReady() && isPushConfigured()) {
   startPushScheduler({
     getCommunityCards: getAllCommunityCards,
     buildSpotlightCards: (communityCards) =>
@@ -202,8 +207,9 @@ const server = http.createServer(async (req, res) => {
       ebayClientSecretSet: hasSecret,
       ebayApi: "browse",
       priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
-      pushEnabled: isDbReady(),
-      vapidPublicKey: isDbReady() ? getVapidPublicKey() : null,
+      pushEnabled: isDbReady() && isPushConfigured(),
+      vapidPublicKey: isPushConfigured() ? getVapidPublicKey() : null,
+      pushInitError: getPushInitError(),
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",
@@ -540,7 +546,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && url === "/api/push/vapid-public-key") {
-    send(res, 200, { publicKey: getVapidPublicKey() });
+    const key = getVapidPublicKey();
+    if (!key) {
+      send(res, 503, { error: getPushInitError() || "Push notifications are not configured" });
+      return;
+    }
+    send(res, 200, { publicKey: key });
     return;
   }
 

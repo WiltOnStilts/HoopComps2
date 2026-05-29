@@ -53,7 +53,7 @@ import {
 } from "./lib/social.mjs";
 import { getVapidPublicKey, initPushVapidAsync, isPushConfigured, getPushInitError } from "./lib/push-vapid.mjs";
 import { upsertPushSubscription, removePushSubscription } from "./lib/push-store.mjs";
-import { startPushScheduler } from "./lib/push-scheduler.mjs";
+import { startPushScheduler, triggerPushSchedulerTick, isPushSchedulerRunning, getPushSchedulerLastTickAt } from "./lib/push-scheduler.mjs";
 
 const SITE_NAME = process.env.SITE_NAME || "HoopComps";
 const EBAY_TIP =
@@ -187,11 +187,33 @@ if (isDbReady() && isPushConfigured()) {
   });
 }
 
+let lastTrafficScheduler = 0;
+
+function authorizePushCron(req) {
+  const secret = process.env.PUSH_CRON_SECRET || process.env.JWT_SECRET;
+  if (!secret) return false;
+  const urlObj = new URL(req.url || "/", "http://localhost");
+  const querySecret = urlObj.searchParams.get("secret");
+  const authHeader = req.headers.authorization || "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  return querySecret === secret || bearer === secret;
+}
+
+function maybeRunPushSchedulerFromTraffic() {
+  if (!isPushConfigured()) return;
+  const now = Date.now();
+  if (now - lastTrafficScheduler < 10 * 60 * 1000) return;
+  lastTrafficScheduler = now;
+  void triggerPushSchedulerTick();
+}
+
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     send(res, 204, "");
     return;
   }
+
+  maybeRunPushSchedulerFromTraffic();
 
   const url = req.url?.split("?")[0];
 
@@ -221,6 +243,8 @@ const server = http.createServer(async (req, res) => {
       pushEnabled: isDbReady() && isPushConfigured(),
       vapidPublicKey: isPushConfigured() ? getVapidPublicKey() : null,
       pushInitError: getPushInitError(),
+      pushSchedulerRunning: isPushSchedulerRunning(),
+      pushSchedulerLastTickAt: getPushSchedulerLastTickAt(),
       ebayTip: EBAY_TIP,
       ebaySetupCommand:
         "EBAY_APP_ID=your_app_id EBAY_CLIENT_SECRET=your_cert_id node server.mjs",
@@ -579,6 +603,16 @@ const server = http.createServer(async (req, res) => {
 
   if (url?.startsWith("/api/push") && !isDbReady()) {
     send(res, 503, { error: "Push notifications require the server database" });
+    return;
+  }
+
+  if (url === "/api/push/cron" && (req.method === "GET" || req.method === "POST")) {
+    if (!authorizePushCron(req)) {
+      send(res, 401, { error: "Unauthorized" });
+      return;
+    }
+    const result = await triggerPushSchedulerTick();
+    send(res, 200, result);
     return;
   }
 

@@ -14,3 +14,20 @@ services:
       - key: SPOTLIGHT_USER_EMAILS
         value: builtwilt@icloud.com
       # Set DATABASE_URL in the Render dashboard (Neon Postgres connection string)
+      # Set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT for push notifications
+
+  # Wakes the web service and runs the push scheduler every 10 minutes (Render free tier sleeps otherwise).
+  - type: cron
+    name: hoopcomps-push-cron
+    runtime: node
+    schedule: "*/10 * * * *"
+    buildCommand: npm install
+    startCommand: node scripts/push-cron.mjs
+    envVars:
+      - key: HOOPCOMPS_URL
+        value: https://hoopcomps.onrender.com
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: hoopcomps
+          envVarKey: JWT_SECRET

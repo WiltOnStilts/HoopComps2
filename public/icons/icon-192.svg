@@ -6,22 +6,22 @@
       <stop offset="100%" stop-color="#2a1208"/>
     </radialGradient>
     <g id="basketball">
-      <circle cx="0" cy="0" r="24" fill="#ff8a4d"/>
-      <path d="M0 -24V24" stroke="#2a1208" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M-24 0C-12 -14 12 -14 24 0C12 14 -12 14 -24 0Z" stroke="#2a1208" stroke-width="2.2" fill="none"/>
-      <path d="M-24 0C-8 8 8 8 24 0" stroke="#2a1208" stroke-width="2.2" fill="none"/>
+      <circle cx="0" cy="0" r="28" fill="#ffb066"/>
+      <path d="M0 -28V28" stroke="#3a1808" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M-28 0C-14 -16 14 -16 28 0C14 16 -14 16 -28 0Z" stroke="#3a1808" stroke-width="2.4" fill="none"/>
+      <path d="M-28 0C-10 10 10 10 28 0" stroke="#3a1808" stroke-width="2.4" fill="none"/>
     </g>
   </defs>
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
   <circle cx="256" cy="256" r="210" fill="#ff8a4d" opacity="0.14"/>
-  <use href="#basketball" transform="translate(88 92) scale(0.72)" opacity="0.34"/>
-  <use href="#basketball" transform="translate(418 118) scale(0.58) rotate(18)" opacity="0.28"/>
-  <use href="#basketball" transform="translate(64 248) scale(0.5) rotate(-12)" opacity="0.24"/>
-  <use href="#basketball" transform="translate(448 268) scale(0.66) rotate(24)" opacity="0.3"/>
-  <use href="#basketball" transform="translate(112 408) scale(0.54) rotate(-20)" opacity="0.26"/>
-  <use href="#basketball" transform="translate(392 412) scale(0.48) rotate(10)" opacity="0.22"/>
-  <use href="#basketball" transform="translate(256 52) scale(0.42) rotate(6)" opacity="0.2"/>
-  <use href="#basketball" transform="translate(320 460) scale(0.4) rotate(-8)" opacity="0.18"/>
+  <use href="#basketball" transform="translate(78 82) scale(1.05)" opacity="0.58"/>
+  <use href="#basketball" transform="translate(428 108) scale(0.92) rotate(18)" opacity="0.52"/>
+  <use href="#basketball" transform="translate(52 238) scale(0.84) rotate(-12)" opacity="0.48"/>
+  <use href="#basketball" transform="translate(458 258) scale(1.02) rotate(24)" opacity="0.55"/>
+  <use href="#basketball" transform="translate(98 398) scale(0.88) rotate(-20)" opacity="0.5"/>
+  <use href="#basketball" transform="translate(402 402) scale(0.8) rotate(10)" opacity="0.46"/>
+  <use href="#basketball" transform="translate(256 42) scale(0.76) rotate(6)" opacity="0.44"/>
+  <use href="#basketball" transform="translate(330 452) scale(0.74) rotate(-8)" opacity="0.42"/>
   <rect x="146" y="96" width="220" height="320" rx="18" fill="#73737d" stroke="#ffffff" stroke-width="10"/>
   <rect x="166" y="116" width="180" height="120" rx="8" fill="#5c5c64" opacity="0.55"/>
   <text

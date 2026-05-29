@@ -1,8 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
-  <rect width="192" height="192" rx="40" fill="#1c1008"/>
-  <circle cx="96" cy="96" r="68" fill="#ff6b2c" opacity="0.18"/>
-  <circle cx="96" cy="96" r="52" stroke="#ff6b2c" stroke-width="4" fill="none"/>
-  <path d="M96 44v104M44 96h104" stroke="#f5b942" stroke-width="3" opacity="0.55"/>
-  <path d="M60 60c20 20 52 20 72 0M60 132c20-20 52-20 72 0" stroke="#8f5a30" stroke-width="3" fill="none"/>
-  <text x="96" y="108" text-anchor="middle" font-family="system-ui,sans-serif" font-size="48" font-weight="700" fill="#ff6b2c">??</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a0f08"/>
+      <stop offset="100%" stop-color="#3d2414"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="146" y="96" width="220" height="320" rx="18" fill="#73737d" stroke="#ffffff" stroke-width="10"/>
+  <rect x="166" y="116" width="180" height="120" rx="8" fill="#5c5c64" opacity="0.55"/>
+  <text
+    x="256"
+    y="292"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="132"
+    font-weight="800"
+    fill="#22c55e"
+  >$</text>
 </svg>

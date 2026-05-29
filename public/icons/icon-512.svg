@@ -1,29 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="44%" r="72%" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="#ff6b2c"/>
-      <stop offset="52%" stop-color="#d95418"/>
-      <stop offset="100%" stop-color="#2a1208"/>
-    </radialGradient>
     <g id="basketball">
-      <circle cx="0" cy="0" r="28" fill="#ffb066"/>
-      <path d="M0 -28V28" stroke="#3a1808" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M-28 0C-14 -16 14 -16 28 0C14 16 -14 16 -28 0Z" stroke="#3a1808" stroke-width="2.4" fill="none"/>
-      <path d="M-28 0C-10 10 10 10 28 0" stroke="#3a1808" stroke-width="2.4" fill="none"/>
+      <circle cx="0" cy="0" r="34" fill="#ffd089"/>
+      <path d="M0 -34V34" stroke="#6b3012" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M-34 0C-17 -19 17 -19 34 0C17 19 -17 19 -34 0Z" stroke="#6b3012" stroke-width="2.8" fill="none"/>
+      <path d="M-34 0C-12 12 12 12 34 0" stroke="#6b3012" stroke-width="2.8" fill="none"/>
     </g>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="210" fill="#ff8a4d" opacity="0.14"/>
+  <!-- Uniform orange with black mixed in — no edge vignette -->
+  <rect width="512" height="512" rx="96" fill="#c04e1a"/>
 
-  <!-- Background basketballs -->
-  <use href="#basketball" transform="translate(78 82) scale(1.05)" opacity="0.58"/>
-  <use href="#basketball" transform="translate(428 108) scale(0.92) rotate(18)" opacity="0.52"/>
-  <use href="#basketball" transform="translate(52 238) scale(0.84) rotate(-12)" opacity="0.48"/>
-  <use href="#basketball" transform="translate(458 258) scale(1.02) rotate(24)" opacity="0.55"/>
-  <use href="#basketball" transform="translate(98 398) scale(0.88) rotate(-20)" opacity="0.5"/>
-  <use href="#basketball" transform="translate(402 402) scale(0.8) rotate(10)" opacity="0.46"/>
-  <use href="#basketball" transform="translate(256 42) scale(0.76) rotate(6)" opacity="0.44"/>
-  <use href="#basketball" transform="translate(330 452) scale(0.74) rotate(-8)" opacity="0.42"/>
+  <!-- Background basketballs — large and high contrast -->
+  <use href="#basketball" transform="translate(56 64) scale(1.35)" opacity="0.88"/>
+  <use href="#basketball" transform="translate(448 88) scale(1.22) rotate(22)" opacity="0.82"/>
+  <use href="#basketball" transform="translate(24 252) scale(1.18) rotate(-14)" opacity="0.78"/>
+  <use href="#basketball" transform="translate(472 248) scale(1.4) rotate(28)" opacity="0.85"/>
+  <use href="#basketball" transform="translate(72 420) scale(1.25) rotate(-18)" opacity="0.8"/>
+  <use href="#basketball" transform="translate(420 432) scale(1.15) rotate(12)" opacity="0.76"/>
+  <use href="#basketball" transform="translate(256 28) scale(1.08) rotate(8)" opacity="0.72"/>
 
   <!-- Trading card -->
   <rect x="146" y="96" width="220" height="320" rx="18" fill="#73737d" stroke="#ffffff" stroke-width="10"/>

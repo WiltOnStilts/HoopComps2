@@ -4,8 +4,8 @@
   "description": "HoopComps — basketball card comps, cloud collections, AI insights",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#d95418",
-  "theme_color": "#d95418",
+  "background_color": "#c04e1a",
+  "theme_color": "#c04e1a",
   "orientation": "portrait-primary",
   "categories": ["finance", "sports", "shopping"],
   "icons": [

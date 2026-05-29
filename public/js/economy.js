@@ -101,6 +101,7 @@ export function normalizeEconomy(state) {
   state.lastCoinDayKey = normalizeDayKey(state.lastCoinDayKey);
   state.lastDailySessionKey = normalizeDayKey(state.lastDailySessionKey);
   state.lastDailyNotifyShownKey = normalizeDayKey(state.lastDailyNotifyShownKey);
+  state.lastStreakDayKey = normalizeDayKey(state.lastStreakDayKey);
   state.lastScoutDate = normalizeDayKey(state.lastScoutDate);
 
   if (state.codBoost && typeof state.codBoost === "object") {
@@ -149,9 +150,54 @@ export function grantDailyCoins(state) {
 }
 
 /**
- * Once per local day: grant daily coins and resolve overnight streak (freeze or break).
- * Returns events for first-login notifications.
+ * Once per local day: grant daily coins, extend login streak, handle missed days.
  */
+function advanceLoginStreak(state, today, events) {
+  const lastDay =
+    normalizeDayKey(state.lastStreakDayKey) ||
+    normalizeDayKey(state.lastScoutDate);
+  const previousStreak = state.streak || 0;
+
+  if (!lastDay) {
+    state.streak = 1;
+    state.lastStreakDayKey = today;
+    events.push({ type: "streak_extended", streak: 1 });
+    return;
+  }
+
+  const gap = daysBetweenLocalDates(lastDay, today);
+  if (gap <= 0) return;
+
+  if (gap === 1) {
+    state.streak = previousStreak + 1;
+    state.lastStreakDayKey = today;
+    events.push({ type: "streak_extended", streak: state.streak });
+    return;
+  }
+
+  if (gap === 2 && previousStreak > 0 && (state.streakFreezes || 0) > 0) {
+    state.streakFreezes -= 1;
+    state.streak = previousStreak + 1;
+    state.lastStreakDayKey = today;
+    events.push({
+      type: "freeze_used",
+      streak: state.streak,
+      freezesLeft: state.streakFreezes,
+    });
+    return;
+  }
+
+  if (gap >= 2 && previousStreak > 0) {
+    const penalty = Math.min(state.coins || 0, STREAK_BREAK_PENALTY);
+    state.coins = Math.max(0, (state.coins || 0) - STREAK_BREAK_PENALTY);
+    events.push({ type: "streak_broken", previousStreak, penalty });
+  }
+
+  state.streak = 1;
+  state.lastStreakDayKey = today;
+  events.push({ type: "streak_extended", streak: 1 });
+}
+
 export function processDailySession(state) {
   const today = localDayKey();
   const events = [];
@@ -159,28 +205,7 @@ export function processDailySession(state) {
 
   if (!sessionAlreadyToday) {
     state.lastDailySessionKey = today;
-
-    if (state.lastScoutDate) {
-      const gap = daysBetweenLocalDates(state.lastScoutDate, today);
-      const previousStreak = state.streak || 0;
-
-      if (gap >= 2 && previousStreak > 0) {
-        if (gap === 2 && (state.streakFreezes || 0) > 0) {
-          state.streakFreezes -= 1;
-          state.lastScoutDate = yesterdayLocalDayKey();
-          events.push({
-            type: "freeze_used",
-            streak: state.streak,
-            freezesLeft: state.streakFreezes,
-          });
-        } else {
-          state.streak = 0;
-          const penalty = Math.min(state.coins || 0, STREAK_BREAK_PENALTY);
-          state.coins = Math.max(0, (state.coins || 0) - STREAK_BREAK_PENALTY);
-          events.push({ type: "streak_broken", previousStreak, penalty });
-        }
-      }
-    }
+    advanceLoginStreak(state, today, events);
   }
 
   const coinsGranted = grantDailyCoins(state);
@@ -209,26 +234,11 @@ function daysBetweenLocalDates(a, b) {
   return Math.round((db - da) / (24 * 60 * 60 * 1000));
 }
 
-/** Update streak when user scouts; freeze for one missed day handled on daily session open */
+/** Legacy — streak now advances on daily app open via processDailySession. */
 export function recordScoutStreak(state) {
   const today = localDayKey();
-  if (state.lastScoutDate === today) return state;
-
-  if (!state.lastScoutDate) {
-    state.streak = 1;
-  } else {
-    const gap = daysBetweenLocalDates(state.lastScoutDate, today);
-    if (gap === 1) {
-      state.streak = (state.streak || 0) + 1;
-    } else if (gap === 2 && (state.streakFreezes || 0) > 0) {
-      state.streakFreezes -= 1;
-      state.streak = (state.streak || 0) + 1;
-    } else {
-      state.streak = 1;
-    }
-  }
-
-  state.lastScoutDate = today;
+  if (!state.lastScoutDate) state.lastScoutDate = today;
+  else if (state.lastScoutDate !== today) state.lastScoutDate = today;
   return state;
 }
 
@@ -297,7 +307,7 @@ export function equipAvatarPart(state, category, itemId) {
 }
 
 export const COINS_HELP_TEXT =
-  "Coins unlock streak freezes, avatar styles, and tomorrow's Card of the Day boost in the Shop. Earn 200 coins per unique scan and 300 coins at the start of each day.";
+  "Open HoopComps each day to grow your streak and earn 300 coins. Unique scans add 200 coins. Spend coins on streak freezes, avatars, and Card of the Day boosts in the Shop.";
 
 function mergeOwnedAvatarParts(a = {}, b = {}) {
   const out = defaultOwnedAvatarParts();
@@ -329,16 +339,15 @@ function mergeMostRecentDayKey(a, b) {
   return na >= nb ? na : nb;
 }
 
-function mergeStreak(cloudState, localState, lastScoutDate) {
-  const cloudDate = normalizeDayKey(cloudState.lastScoutDate);
-  const localDate = normalizeDayKey(localState.lastScoutDate);
-  if (!lastScoutDate) return 0;
-  if (cloudDate === localDate) {
-    return Math.max(cloudState.streak || 0, localState.streak || 0);
-  }
-  if (cloudDate === lastScoutDate) return cloudState.streak || 0;
-  if (localDate === lastScoutDate) return localState.streak || 0;
+function mergeStreak(cloudState, localState) {
   return Math.max(cloudState.streak || 0, localState.streak || 0);
+}
+
+function mergeStreakDayKey(cloudState, localState) {
+  return mergeMostRecentDayKey(
+    cloudState.lastStreakDayKey || cloudState.lastScoutDate,
+    localState.lastStreakDayKey || localState.lastScoutDate
+  );
 }
 
 export function mergedEconomyFields(cloudState = {}, localState = {}) {
@@ -355,7 +364,7 @@ export function mergedEconomyFields(cloudState = {}, localState = {}) {
 
   return {
     coins: Math.max(cloudState.coins || 0, localState.coins || 0),
-    streak: mergeStreak(cloudState, localState, lastScoutDate),
+    streak: mergeStreak(cloudState, localState),
     streakFreezes: Math.max(cloudState.streakFreezes || 0, localState.streakFreezes || 0),
     ownedAvatarParts: mergeOwnedAvatarParts(cloudState.ownedAvatarParts, localState.ownedAvatarParts),
     codBoost: mergeCodBoost(cloudState.codBoost, localState.codBoost),
@@ -368,6 +377,7 @@ export function mergedEconomyFields(cloudState = {}, localState = {}) {
       cloudState.lastDailyNotifyShownKey,
       localState.lastDailyNotifyShownKey
     ),
+    lastStreakDayKey: mergeStreakDayKey(cloudState, localState),
     lastScoutDate,
     economyVersion: Math.max(cloudState.economyVersion || 0, localState.economyVersion || 0, ECONOMY_VERSION),
   };

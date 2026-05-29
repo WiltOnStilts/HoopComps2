@@ -1,25 +1,31 @@
 {
   "name": "HoopComps",
   "short_name": "HoopComps",
-  "description": "HoopComps — basketball card comps, cloud collections, AI insights",
+  "description": "HoopComps — find the comp, value your card",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#c04e1a",
-  "theme_color": "#c04e1a",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
   "categories": ["finance", "sports", "shopping"],
   "icons": [
     {
-      "src": "/icons/icon-192.svg",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.svg",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

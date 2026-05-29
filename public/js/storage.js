@@ -13,7 +13,6 @@ import {
   processDailySession,
   markDailyNotificationsShown,
   shouldShowDailyNotifications,
-  recordScoutStreak,
   awardUniqueScanCoins,
   defaultAvatarSelection,
   defaultOwnedAvatarParts,
@@ -167,8 +166,6 @@ export function saveState(state) {
 export function handleScoutRewards(state, { isNewScan }) {
   if (isNewScan) {
     awardUniqueScanCoins(state);
-  } else {
-    recordScoutStreak(state);
   }
   saveState(state);
   return state;

@@ -1,5 +1,6 @@
 .env
 node_modules/
+.venv-icons/
 data/*.db
 data/*.db-*
 data/users.json

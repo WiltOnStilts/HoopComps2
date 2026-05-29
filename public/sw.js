@@ -1,4 +1,4 @@
-const CACHE = "hoopcomps-v64";
+const CACHE = "hoopcomps-v67";
 const ASSETS = [
   "/css/styles.css",
   "/css/mobile.css",
@@ -8,8 +8,11 @@ const ASSETS = [
   "/css/shop.css",
   "/css/social.css",
   "/manifest.json",
-  "/icons/icon-192.svg",
-  "/icons/icon-512.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-maskable-512.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/hoopcomps-logo.png",
 ];
 
 self.addEventListener("install", (e) => {
@@ -71,8 +74,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: "/icons/icon-192.svg",
-      badge: "/icons/icon-192.svg",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
       tag: payload.tag || "hoopcomps",
       data: { url: payload.url || "/" },
     })

@@ -57,17 +57,22 @@ function showOneNotification(event) {
         titleText = "Daily coins";
         bodyHtml = `You received <strong>${event.amount} coins</strong> for logging in today. Scout unique cards or visit the Shop to spend them.`;
         break;
+      case "streak_extended":
+        iconChar = "🔥";
+        titleText = "Streak extended!";
+        bodyHtml = `You're on a <strong>${event.streak} day</strong> streak. Open HoopComps again tomorrow to keep it going.`;
+        break;
       case "freeze_used":
         iconChar = "🧊";
         titleText = "Streak freeze used";
-        bodyHtml = `You missed a day scouting, but a streak freeze kept your <strong>${event.streak} day</strong> streak alive. You have <strong>${event.freezesLeft}</strong> freeze${event.freezesLeft === 1 ? "" : "s"} left.`;
+        bodyHtml = `You missed opening HoopComps yesterday, but a streak freeze kept your <strong>${event.streak} day</strong> streak alive. You have <strong>${event.freezesLeft}</strong> freeze${event.freezesLeft === 1 ? "" : "s"} left.`;
         break;
       case "streak_broken":
         iconChar = "💔";
         titleText = "Streak broken";
         bodyHtml = event.penalty
-          ? `You missed scouting and your <strong>${event.previousStreak} day</strong> streak ended. You lost <strong>${event.penalty} coins</strong>. Scout a card today to start building a new streak.`
-          : `You missed scouting and your <strong>${event.previousStreak} day</strong> streak ended. Scout a card today to start building a new streak.`;
+          ? `You missed a couple days and your <strong>${event.previousStreak} day</strong> streak ended. You lost <strong>${event.penalty} coins</strong>. You're starting fresh at day 1 today.`
+          : `You missed a couple days and your <strong>${event.previousStreak} day</strong> streak ended. You're starting fresh at day 1 today.`;
         break;
       default:
         bodyHtml = escapeHtml(event.message || "Something happened.");

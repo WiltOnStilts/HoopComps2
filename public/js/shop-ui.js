@@ -52,7 +52,7 @@ export function renderShop(state, { onChange, onNavigate } = {}) {
 
     <div class="panel shop-section">
       <h3>Streak freeze</h3>
-      <p class="hint">Miss a day scouting? A freeze keeps your streak alive (one freeze covers one missed day).</p>
+      <p class="hint">Miss a day? A freeze keeps your login streak alive (one freeze covers one missed day).</p>
       <div class="shop-item-row">
         <div>
           <strong>🧊 Streak freeze</strong>

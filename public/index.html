@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#c04e1a" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="HoopComps" />
-    <meta name="description" content="HoopComps — basketball card comps, cloud collections, and AI portfolio insights. Free to use." />
+    <meta name="description" content="HoopComps — find the comp, value your card. Free basketball card comps and collections." />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icons/icon-512.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>HoopComps</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -43,12 +43,8 @@
     </div>
 
     <header class="top-bar">
-      <button type="button" class="logo-btn" data-nav="dashboard" aria-label="Home">
-        <span class="logo-ball">🏀</span>
-        <div class="logo-text">
-          <h1>HoopComps</h1>
-          <p>Scout basketball card values</p>
-        </div>
+      <button type="button" class="logo-btn" data-nav="dashboard" aria-label="HoopComps home">
+        <img src="/icons/hoopcomps-logo.png" alt="HoopComps — find the comp, value your card" class="logo-img" width="160" height="160" />
       </button>
       <nav class="desktop-nav" aria-label="Sections">
         <button type="button" class="desktop-nav-item active" data-nav="dashboard">Home</button>
@@ -80,6 +76,10 @@
       <!-- DASHBOARD -->
       <section class="view active" data-view="dashboard">
         <div id="dashboardEbayBanner" class="banner-slot hidden"></div>
+
+        <div class="home-brand">
+          <img src="/icons/hoopcomps-logo.png" alt="HoopComps — find the comp, value your card" class="home-brand-logo" width="320" height="320" />
+        </div>
 
         <div class="dashboard-home-layout">
           <div class="hero-card">
@@ -680,6 +680,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=52" type="module"></script>
+    <script src="/js/app.js?v=54" type="module"></script>
   </body>
 </html>

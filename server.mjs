@@ -608,7 +608,10 @@ const server = http.createServer(async (req, res) => {
 
   if (url === "/api/push/cron" && (req.method === "GET" || req.method === "POST")) {
     if (!authorizePushCron(req)) {
-      send(res, 401, { error: "Unauthorized" });
+      send(res, 401, {
+        error: "Unauthorized",
+        hint: "On Render → hoopcomps → Environment, set PUSH_CRON_SECRET to any password you choose, redeploy, then use https://hoopcomps.onrender.com/api/push/cron?secret=YOUR_PASSWORD in cron-job.org (GET, no headers).",
+      });
       return;
     }
     const result = await triggerPushSchedulerTick();

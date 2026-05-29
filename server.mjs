@@ -190,13 +190,13 @@ if (isDbReady() && isPushConfigured()) {
 let lastTrafficScheduler = 0;
 
 function authorizePushCron(req) {
-  const secret = process.env.PUSH_CRON_SECRET || process.env.JWT_SECRET;
+  const secret = (process.env.PUSH_CRON_SECRET || process.env.JWT_SECRET || "").trim();
   if (!secret) return false;
   const urlObj = new URL(req.url || "/", "http://localhost");
-  const querySecret = urlObj.searchParams.get("secret");
-  const authHeader = req.headers.authorization || "";
-  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-  return querySecret === secret || bearer === secret;
+  const querySecret = (urlObj.searchParams.get("secret") || "").trim();
+  const authHeader = (req.headers.authorization || "").trim();
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : authHeader.trim();
+  return (querySecret && querySecret === secret) || (bearer && bearer === secret);
 }
 
 function maybeRunPushSchedulerFromTraffic() {

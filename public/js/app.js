@@ -13,6 +13,7 @@ import {
  registerUniqueScan,
  takePendingDailyEvents,
  finalizeDailyNotifications,
+ peekPendingDailyEvents,
 } from "./storage.js";
 import {
  formatUsd,
@@ -1236,6 +1237,12 @@ async function reconcileCloudState() {
  if (cloudResult.state) {
    const merged = mergeLocalAndCloud(localSnapshot, cloudResult.state);
    applyCloudState(merged);
+ } else {
+   state = replaceState(localSnapshot);
+   updateHeaderStats();
+   renderDashboard();
+   renderCollection();
+   renderProfile();
  }
 
  if ((state.collection?.length || 0) > 0 || state.profile?.publicLeaderboard || uniqueScoutCount(state) > 0) {
@@ -1249,6 +1256,7 @@ async function bootstrapSession() {
 
   if (isLoggedIn()) {
     await reconcileCloudState();
+  } else {
     state = replaceState(state);
   }
 
@@ -1271,9 +1279,22 @@ function setupSessionPersistence() {
       scoutPageWasHidden = true;
       return;
     }
-    if (document.visibilityState === "visible" && scoutPageWasHidden) {
+    if (document.visibilityState !== "visible") return;
+
+    if (scoutPageWasHidden) {
       scoutPageWasHidden = false;
       resetScoutSession();
+    }
+
+    const coinsBefore = getCoins(state);
+    state = replaceState(state);
+    const dailyChanged = getCoins(state) !== coinsBefore || peekPendingDailyEvents().length > 0;
+
+    if (dailyChanged) {
+      updateHeaderStats();
+      renderProfile();
+      void maybeShowDailyLoginNotifications();
+      if (isLoggedIn()) void pushLocalToCloud();
     }
   });
 

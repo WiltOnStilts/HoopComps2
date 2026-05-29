@@ -140,8 +140,7 @@ export function migrateEconomy(state) {
 
 export function grantDailyCoins(state) {
   const today = localDayKey();
-  if (state.lastCoinDayKey === today || state.lastDailySessionKey === today) {
-    state.lastCoinDayKey = today;
+  if (state.lastCoinDayKey === today) {
     return 0;
   }
   state.lastCoinDayKey = today;
@@ -155,40 +154,38 @@ export function grantDailyCoins(state) {
  */
 export function processDailySession(state) {
   const today = localDayKey();
-  if (state.lastDailySessionKey === today || state.lastCoinDayKey === today) {
-    state.lastDailySessionKey = today;
-    state.lastCoinDayKey = today;
-    return { state, events: [] };
-  }
-
-  state.lastDailySessionKey = today;
   const events = [];
+  const sessionAlreadyToday = state.lastDailySessionKey === today;
+
+  if (!sessionAlreadyToday) {
+    state.lastDailySessionKey = today;
+
+    if (state.lastScoutDate) {
+      const gap = daysBetweenLocalDates(state.lastScoutDate, today);
+      const previousStreak = state.streak || 0;
+
+      if (gap >= 2 && previousStreak > 0) {
+        if (gap === 2 && (state.streakFreezes || 0) > 0) {
+          state.streakFreezes -= 1;
+          state.lastScoutDate = yesterdayLocalDayKey();
+          events.push({
+            type: "freeze_used",
+            streak: state.streak,
+            freezesLeft: state.streakFreezes,
+          });
+        } else {
+          state.streak = 0;
+          const penalty = Math.min(state.coins || 0, STREAK_BREAK_PENALTY);
+          state.coins = Math.max(0, (state.coins || 0) - STREAK_BREAK_PENALTY);
+          events.push({ type: "streak_broken", previousStreak, penalty });
+        }
+      }
+    }
+  }
 
   const coinsGranted = grantDailyCoins(state);
   if (coinsGranted > 0) {
     events.push({ type: "coins", amount: coinsGranted });
-  }
-
-  if (state.lastScoutDate) {
-    const gap = daysBetweenLocalDates(state.lastScoutDate, today);
-    const previousStreak = state.streak || 0;
-
-    if (gap >= 2 && previousStreak > 0) {
-      if (gap === 2 && (state.streakFreezes || 0) > 0) {
-        state.streakFreezes -= 1;
-        state.lastScoutDate = yesterdayLocalDayKey();
-        events.push({
-          type: "freeze_used",
-          streak: state.streak,
-          freezesLeft: state.streakFreezes,
-        });
-      } else {
-        state.streak = 0;
-        const penalty = Math.min(state.coins || 0, STREAK_BREAK_PENALTY);
-        state.coins = Math.max(0, (state.coins || 0) - STREAK_BREAK_PENALTY);
-        events.push({ type: "streak_broken", previousStreak, penalty });
-      }
-    }
   }
 
   return { state, events };
@@ -325,10 +322,8 @@ function mergeCodBoost(a, b) {
 }
 
 function mergeMostRecentDayKey(a, b) {
-  const today = localDayKey();
   const na = normalizeDayKey(a);
   const nb = normalizeDayKey(b);
-  if (na === today || nb === today) return today;
   if (!na) return nb || null;
   if (!nb) return na || null;
   return na >= nb ? na : nb;

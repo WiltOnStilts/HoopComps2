@@ -46,11 +46,7 @@ export function loadState() {
     if ((legacyComps || legacy) && !raw) {
       localStorage.setItem(STORAGE_KEY, parsed);
     }
-    const normalized = normalizeState(data);
-    const deferDaily = Boolean(
-      localStorage.getItem("hoopcomps_token") || localStorage.getItem("compscourt_token")
-    );
-    return deferDaily ? normalized : applyDailySession(normalized);
+    return applyDailySession(normalizeState(data));
   } catch {
     return defaultState();
   }
@@ -158,7 +154,6 @@ function defaultState() {
 }
 
 export function replaceState(next) {
-  pendingDailyEvents = [];
   return applyDailySession(normalizeState(next || {}));
 }
 

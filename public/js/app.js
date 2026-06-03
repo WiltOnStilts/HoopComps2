@@ -41,6 +41,9 @@ import {
   getResumeScoutAction,
   normalizeScoutDraft,
   draftHasContent,
+  persistDraftPhoto,
+  loadDraftPhoto,
+  clearDraftPhoto,
 } from "./scout-draft.js";
 import { findCollectionByFingerprint, scanFingerprint } from "./card-fingerprint.js";
 import {
@@ -62,7 +65,12 @@ import {
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
 import { normalizeScoutCard } from "./card-image.js";
-import { getCachedScoutResult, setCachedScoutResult } from "./scout-cache.js";
+import {
+  getCachedScoutResult,
+  setCachedScoutResult,
+  resolveLastScoutData,
+  scoutCacheKey,
+} from "./scout-cache.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI, openFriendModal } from "./social-ui.js";
 import { renderCommunityFriends, initCommunityFriendsUI } from "./community-friends-ui.js";
 import { renderCodDayEngagement, initCodDayUI } from "./cod-day-ui.js";
@@ -78,9 +86,9 @@ import { isStandaloneApp } from "./pwa.js";
 
 const APP_NAME = "HoopComps";
 
-let state = loadState();
+let state = migrateLastScoutStorage(loadState());
 let health = { ebayConfigured: false, ebayTip: "", ebaySetupCommand: "", ebaySignupUrl: "" };
-let lastScoutData = state.lastScout?.data || null;
+let lastScoutData = resolveLastScoutData(state);
 let lastScoutCard = state.lastScout?.card || null;
 let cardOfDayData = null;
 let profileFormSavedSnapshot = null;
@@ -89,24 +97,67 @@ let scoutPageWasHidden = false;
 let collectionSearchQuery = "";
 let collectionSortMode = "recent";
 let scoutSessionAddFp = null;
+let draftSaveTimer = null;
+let collectionRenderTimer = null;
+let lastCloudReconcileAt = 0;
+let cloudReconcilePromise = null;
+const CLOUD_RECONCILE_MIN_MS = 12_000;
+
+function migrateLastScoutStorage(next) {
+  const ls = next?.lastScout;
+  if (!ls?.data || ls.cacheKey) return next;
+  const key = scoutCacheKey(ls.card || {});
+  if (!key || key === "title:unknown") return next;
+  setCachedScoutResult(next, ls.card, ls.data);
+  next.lastScout = {
+    card: ls.card,
+    cacheKey: key,
+    at: ls.at,
+    isNewScan: ls.isNewScan,
+  };
+  saveState(next, { sync: false });
+  return next;
+}
 
 function persistScoutDraft(partial) {
   if (!partial || !draftHasContent(partial)) return;
+  if (partial.photoUrl) persistDraftPhoto(partial.photoUrl);
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(() => {
+    state.scoutDraft = normalizeScoutDraft({
+      ...state.scoutDraft,
+      ...partial,
+      card: partial.card || state.scoutDraft?.card || {},
+      complete: false,
+      updatedAt: new Date().toISOString(),
+    });
+    saveState(state, { sync: false });
+    updateScoutResumeUI();
+  }, 650);
+}
+
+function flushScoutDraftNow() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = null;
+  const snap = captureScoutDraftSnapshot();
+  if (!snap || !draftHasContent(snap)) return;
+  if (snap.photoUrl) persistDraftPhoto(snap.photoUrl);
   state.scoutDraft = normalizeScoutDraft({
     ...state.scoutDraft,
-    ...partial,
-    card: partial.card || state.scoutDraft?.card || {},
+    ...snap,
     complete: false,
     updatedAt: new Date().toISOString(),
   });
-  saveState(state);
-  updateScoutResumeUI();
+  saveState(state, { sync: false });
 }
 
 function clearScoutDraft() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = null;
+  clearDraftPhoto();
   if (!state.scoutDraft) return;
   delete state.scoutDraft;
-  saveState(state);
+  saveState(state, { sync: false });
   updateScoutResumeUI();
 }
 
@@ -136,17 +187,18 @@ function resumeScoutSession() {
     const draft = normalizeScoutDraft(state.scoutDraft);
     scoutSessionAddFp = null;
     clearScoutResults();
-    restoreWizardProgress($("scoutForm"), draft);
+    restoreWizardProgress($("scoutForm"), { ...draft, photoUrl: loadDraftPhoto() });
     lastScoutData = null;
     lastScoutCard = null;
     return;
   }
 
-  if (state.lastScout?.data) {
+  const cachedReport = resolveLastScoutData(state);
+  if (cachedReport) {
     scoutSessionAddFp = null;
-    lastScoutData = state.lastScout.data;
+    lastScoutData = cachedReport;
     lastScoutCard = state.lastScout.card;
-    renderScoutResults(state.lastScout.data, {
+    renderScoutResults(cachedReport, {
       ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
     });
     if (state.lastScout.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
@@ -521,16 +573,17 @@ async function maybeShowDailyLoginNotifications() {
 }
 
 function applyCloudState(nextState) {
- state = replaceState(nextState);
- lastScoutData = state.lastScout?.data || null;
+ state = migrateLastScoutStorage(replaceState(nextState));
+ lastScoutData = resolveLastScoutData(state);
  lastScoutCard = state.lastScout?.card || null;
  scoutSessionAddFp = null;
  updateHeaderStats();
- renderDashboard();
- renderCollection();
- renderProfile();
  renderAuthUI();
  updateScoutResumeUI();
+ const activeView = document.querySelector(".view.active")?.dataset?.view;
+ if (activeView === "dashboard") renderDashboard();
+ if (activeView === "collection") renderCollection();
+ if (activeView === "profile") renderProfile();
  $("profileNameInput").value = state.profile?.displayName || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
@@ -718,7 +771,7 @@ function renderCollection() {
  return;
  }
 
- list.innerHTML = visible
+ const html = visible
  .map((item) => {
  const title = item.card?.title || "Untitled card";
  const tier = item.tier;
@@ -746,25 +799,28 @@ function renderCollection() {
  })
  .join("");
 
- list.querySelectorAll("[data-action=remove]").forEach((btn) => {
- btn.addEventListener("click", () => {
- removeFromCollection(state, btn.dataset.id);
- state = loadState();
- renderCollection();
- updateHeaderStats();
- renderDashboard();
- renderProfile();
- });
- });
+ if (list.innerHTML !== html) list.innerHTML = html;
+}
 
- list.querySelectorAll("[data-action=scout-again]").forEach((btn) => {
- btn.addEventListener("click", () => {
- const item = state.collection.find((c) => c.id === btn.dataset.id);
- if (!item) return;
- navigate("scout");
- fillScoutWizard($("scoutForm"), item.card);
- });
- });
+function handleCollectionListClick(e) {
+  const removeBtn = e.target.closest("[data-action=remove]");
+  if (removeBtn?.dataset.id) {
+    removeFromCollection(state, removeBtn.dataset.id);
+    renderCollection();
+    updateHeaderStats();
+    renderDashboard();
+    if (document.querySelector('[data-view="profile"]')?.classList.contains("active")) {
+      renderProfile();
+    }
+    return;
+  }
+  const scoutBtn = e.target.closest("[data-action=scout-again]");
+  if (scoutBtn?.dataset.id) {
+    const item = state.collection.find((c) => c.id === scoutBtn.dataset.id);
+    if (!item) return;
+    navigate("scout");
+    fillScoutWizard($("scoutForm"), item.card);
+  }
 }
 
 function renderProfile() {
@@ -892,9 +948,10 @@ async function performScout(card) {
     lastScoutCard = exactData.card || normalizedCard;
 
     const registeredNew = registerUniqueScan(state, normalizedCard);
+    const cacheKey = scoutCacheKey(normalizedCard);
     state.lastScout = {
       card: lastScoutCard,
-      data: exactData,
+      cacheKey,
       at: new Date().toISOString(),
       isNewScan: registeredNew,
     };
@@ -1101,9 +1158,15 @@ function initNavigation() {
 }
 
 function initCollectionBrowser() {
+ const list = $("collectionList");
+ if (list && !list.dataset.actionsBound) {
+   list.dataset.actionsBound = "1";
+   list.addEventListener("click", handleCollectionListClick);
+ }
  $("collectionSearchInput")?.addEventListener("input", (e) => {
    collectionSearchQuery = e.target.value || "";
-   renderCollection();
+   clearTimeout(collectionRenderTimer);
+   collectionRenderTimer = setTimeout(() => renderCollection(), 180);
  });
  $("collectionSortSelect")?.addEventListener("change", (e) => {
    collectionSortMode = e.target.value || "recent";
@@ -1322,6 +1385,18 @@ async function pushLocalToCloud() {
  return cloudPushPromise;
 }
 
+async function reconcileCloudStateDebounced(force = false) {
+  if (!isLoggedIn()) return;
+  const now = Date.now();
+  if (!force && now - lastCloudReconcileAt < CLOUD_RECONCILE_MIN_MS) return;
+  if (cloudReconcilePromise) return cloudReconcilePromise;
+  cloudReconcilePromise = reconcileCloudState().finally(() => {
+    cloudReconcilePromise = null;
+    lastCloudReconcileAt = Date.now();
+  });
+  return cloudReconcilePromise;
+}
+
 async function reconcileCloudState() {
  if (!isLoggedIn()) return;
 
@@ -1383,10 +1458,7 @@ async function refreshSocialPanels() {
 
 function setupSessionPersistence() {
   const syncOnHide = () => {
-    const snap = captureScoutDraftSnapshot();
-    if (snap && draftHasContent(snap)) {
-      persistScoutDraft(snap);
-    }
+    flushScoutDraftNow();
     if (!isLoggedIn()) return;
     void flushCloudSync(state, { publicLeaderboard: Boolean(state.profile?.publicLeaderboard) });
   };
@@ -1400,21 +1472,26 @@ function setupSessionPersistence() {
     if (document.visibilityState !== "visible") return;
 
     scoutPageWasHidden = false;
-    state = loadState();
+    const coinsBefore = getCoins(state);
+    const fresh = loadState();
+    const dailyChanged =
+      fresh.lastDailySessionKey !== state.lastDailySessionKey ||
+      peekPendingDailyEvents().length > 0;
+    state = fresh;
+    lastScoutData = resolveLastScoutData(state);
+    lastScoutCard = state.lastScout?.card || null;
     updateScoutResumeUI();
 
-    const coinsBefore = getCoins(state);
-    state = replaceState(state);
-    const dailyChanged = getCoins(state) !== coinsBefore || peekPendingDailyEvents().length > 0;
-
-    if (dailyChanged) {
+    if (dailyChanged || getCoins(state) !== coinsBefore) {
       updateHeaderStats();
-      renderProfile();
+      if (document.querySelector('[data-view="profile"]')?.classList.contains("active")) {
+        renderProfile();
+      }
       void maybeShowDailyLoginNotifications();
     }
 
     if (isLoggedIn()) {
-      void reconcileCloudState();
+      void reconcileCloudStateDebounced();
     }
   });
 
@@ -1423,27 +1500,25 @@ function setupSessionPersistence() {
   window.addEventListener("pageshow", (e) => {
     loadStoredSession();
     state = loadState();
+    lastScoutData = resolveLastScoutData(state);
+    lastScoutCard = state.lastScout?.card || null;
     updateHeaderStats();
-    renderDashboard();
-    renderCollection();
-    renderProfile();
-    renderAuthUI();
     updateScoutResumeUI();
+    const activeView = document.querySelector(".view.active")?.dataset?.view;
+    if (activeView === "dashboard") renderDashboard();
+    else if (activeView === "collection") renderCollection();
+    else if (activeView === "profile") renderProfile();
+    renderAuthUI();
     if (e.persisted) {
       resetScoutSession();
     }
     if (!isLoggedIn()) return;
-    void bootstrapSession();
+    void reconcileCloudStateDebounced(e.persisted);
   });
 
   window.addEventListener("online", () => {
     if (!isLoggedIn()) return;
-    reconcileCloudState();
-  });
-
-  window.addEventListener("focus", () => {
-    if (!isLoggedIn()) return;
-    void reconcileCloudState();
+    void reconcileCloudStateDebounced(true);
   });
 }
 

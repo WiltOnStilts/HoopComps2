@@ -106,7 +106,6 @@ function normalizeState(data) {
       avatar: defaultAvatarSelection(),
       ...data.profile,
     },
-    collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
     lastScout: data.lastScout ?? null,
     scoutDraft: data.scoutDraft ?? null,
     ...data,
@@ -158,12 +157,12 @@ export function replaceState(next) {
   return applyDailySession(normalizeState(next || {}));
 }
 
-export function saveState(state) {
+export function saveState(state, { sync = true } = {}) {
   syncScoutCount(state);
   normalizeEconomy(state);
   state.stateUpdatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  notifyChange(state);
+  if (sync) notifyChange(state);
 }
 
 export function handleScoutRewards(state, { isNewScan }) {

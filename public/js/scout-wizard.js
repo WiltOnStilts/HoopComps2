@@ -157,6 +157,9 @@ export function restoreScoutPhotoFromUrl(url) {
     preview.src = url;
     preview.classList.remove("hidden");
   }
+  clearBtn?.classList.remove("hidden");
+}
+
 export function clearPendingScoutPhoto() {
   pendingScoutPhotoUrl = null;
   const preview = document.getElementById("scoutPhotoPreview");

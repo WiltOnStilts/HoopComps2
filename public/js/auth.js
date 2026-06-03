@@ -277,7 +277,7 @@ export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
     } catch {
       /* local copy stays saved; will retry later */
     }
-  }, 400);
+  }, 1500);
 }
 
 export async function flushCloudSync(state, { publicLeaderboard } = {}) {

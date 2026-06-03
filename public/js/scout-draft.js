@@ -2,6 +2,30 @@
 
 import { buildCardTitle } from "./card-title.js";
 import { scanFingerprint } from "./card-fingerprint.js";
+import { resolveLastScoutData } from "./scout-cache.js";
+
+const DRAFT_PHOTO_KEY = "hoopcomps.scoutDraftPhoto";
+
+export function persistDraftPhoto(url) {
+  try {
+    if (url) sessionStorage.setItem(DRAFT_PHOTO_KEY, url);
+    else sessionStorage.removeItem(DRAFT_PHOTO_KEY);
+  } catch {
+    /* sessionStorage full — photo stays in memory only */
+  }
+}
+
+export function loadDraftPhoto() {
+  try {
+    return sessionStorage.getItem(DRAFT_PHOTO_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDraftPhoto() {
+  persistDraftPhoto(null);
+}
 
 export function draftHasContent(draft) {
   const card = draft?.card || {};
@@ -43,7 +67,7 @@ export function getResumeScoutAction(state) {
       hint: `Pick up where you left off — ${label}`,
     };
   }
-  if (state?.lastScout?.data) {
+  if (resolveLastScoutData(state)) {
     const card = state.lastScout.card || {};
     const label = buildCardTitle(card) || card.player?.trim() || "last scout";
     return {
@@ -65,7 +89,6 @@ export function normalizeScoutDraft(draft) {
   return {
     card,
     stepIndex: Number.isFinite(draft.stepIndex) ? Math.max(0, draft.stepIndex) : 0,
-    photoUrl: draft.photoUrl || null,
     updatedAt: draft.updatedAt || new Date().toISOString(),
     complete: Boolean(draft.complete),
   };

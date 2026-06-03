@@ -107,6 +107,17 @@ export function renderPriceVariationPanel(el, pv) {
   `;
 }
 
+let lastScoutRenderPayload = null;
+let activeScoutTab = "sold";
+
+function renderScoutTabContent(tab, data) {
+  const el = document.getElementById(`tab-${tab}`);
+  if (!el || !data) return;
+  if (tab === "sold") renderSoldCompsInApp(el, data);
+  else if (tab === "active") renderActiveCompsInApp(el, data);
+  else if (tab === "all") renderAllComps(el, data);
+}
+
 export function renderScoutResults(data, { ebayTipBanner }) {
   const exactData = applyExactMatchScout(data);
   const panel = document.getElementById("resultsPanel");
@@ -118,9 +129,14 @@ export function renderScoutResults(data, { ebayTipBanner }) {
   renderValuationHero(document.getElementById("valuationHero"), exactData);
   renderStatsRow(document.getElementById("statsRow"), exactData, ebayTipBanner);
 
-  renderSoldCompsInApp(document.getElementById("tab-sold"), exactData);
-  renderActiveCompsInApp(document.getElementById("tab-active"), exactData);
-  renderAllComps(document.getElementById("tab-all"), exactData);
+  lastScoutRenderPayload = exactData;
+  activeScoutTab = "sold";
+  for (const id of ["sold", "active", "all"]) {
+    const el = document.getElementById(`tab-${id}`);
+    if (el) el.innerHTML = "";
+  }
+  renderScoutTabContent(activeScoutTab, exactData);
+
   renderPriceVariationPanel(
     document.getElementById("priceVariationPanel"),
     exactData.valuation?.priceVariation
@@ -196,6 +212,7 @@ export function updateAddToCollectionState({ inCollection, sessionUsed }) {
 }
 
 export function clearScoutResults() {
+  lastScoutRenderPayload = null;
   const panel = document.getElementById("resultsPanel");
   const empty = document.getElementById("scoutEmptyState");
   panel?.classList.add("hidden");
@@ -218,11 +235,17 @@ export function clearScoutResults() {
 export function setupResultTabs() {
   document.querySelectorAll("#resultsPanel .tab").forEach((tab) => {
     tab.addEventListener("click", () => {
+      const tabId = tab.dataset.tab;
+      if (!tabId) return;
       const parent = tab.closest("#resultsPanel");
       parent.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
       parent.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       tab.classList.add("active");
-      document.getElementById(`tab-${tab.dataset.tab}`).classList.add("active");
+      document.getElementById(`tab-${tabId}`)?.classList.add("active");
+      activeScoutTab = tabId;
+      if (lastScoutRenderPayload) {
+        renderScoutTabContent(tabId, lastScoutRenderPayload);
+      }
     });
   });
 }

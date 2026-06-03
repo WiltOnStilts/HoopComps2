@@ -230,3 +230,53 @@
     min-height: 7rem;
   }
 }
+
+.resume-scout-btn {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: block;
+}
+
+.resume-scout-hint {
+  margin: 0.75rem auto 0;
+  max-width: 320px;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+#scoutEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  text-align: center;
+  padding: 2rem 1.25rem;
+}
+
+.add-to-collection-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+#addToCollectionBtn.btn-collection-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.add-to-collection-status {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f87171;
+  line-height: 1.3;
+}
+
+.add-to-collection-status.hidden {
+  display: none;
+}

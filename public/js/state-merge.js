@@ -25,6 +25,18 @@ function pickNewerProfile(localState, cloudState) {
   return { ...localProfile, ...cloudProfile };
 }
 
+function mergeScoutDraft(localState, cloudState) {
+  const local = localState?.scoutDraft;
+  const cloud = cloudState?.scoutDraft;
+  if (!local) return cloud || null;
+  if (!cloud) return local || null;
+  const localTs = new Date(local.updatedAt || 0).getTime();
+  const cloudTs = new Date(cloud.updatedAt || 0).getTime();
+  if (Number.isNaN(localTs)) return cloud;
+  if (Number.isNaN(cloudTs)) return local;
+  return localTs >= cloudTs ? local : cloud;
+}
+
 export function mergeLocalAndCloud(localState, cloudState) {
   if (!cloudState) return localState;
   if (!localState) return cloudState;
@@ -52,6 +64,8 @@ export function mergeLocalAndCloud(localState, cloudState) {
     ...(localState.scoutResultCache || {}),
   };
 
+  const scoutDraft = mergeScoutDraft(localState, cloudState);
+
   return {
     ...base,
     ...economy,
@@ -60,6 +74,7 @@ export function mergeLocalAndCloud(localState, cloudState) {
     collection,
     lastScout,
     scoutResultCache,
+    scoutDraft,
     stateUpdatedAt:
       localTs >= cloudTs
         ? localState.stateUpdatedAt || cloudState.stateUpdatedAt

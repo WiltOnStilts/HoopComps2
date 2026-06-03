@@ -21,7 +21,7 @@ import {
  formToCard,
  renderScoutResults,
  clearScoutResults,
- setAddToCollectionAvailable,
+ updateAddToCollectionState,
  setupResultTabs,
 } from "./scout-ui.js";
 import { initListingModal } from "./listings-ui.js";
@@ -30,11 +30,19 @@ import {
   initScoutWizard,
   fillScoutWizard,
   resetScoutWizard,
+  restoreWizardProgress,
+  captureScoutDraftSnapshot,
   cardFromScoutForm,
   validateScoutCard,
   getPendingScoutPhotoUrl,
   clearPendingScoutPhoto,
 } from "./scout-wizard.js";
+import {
+  getResumeScoutAction,
+  normalizeScoutDraft,
+  draftHasContent,
+} from "./scout-draft.js";
+import { findCollectionByFingerprint, scanFingerprint } from "./card-fingerprint.js";
 import {
  loadStoredSession,
  restoreSessionFromServer,
@@ -80,6 +88,82 @@ let cloudPushPromise = null;
 let scoutPageWasHidden = false;
 let collectionSearchQuery = "";
 let collectionSortMode = "recent";
+let scoutSessionAddFp = null;
+
+function persistScoutDraft(partial) {
+  if (!partial || !draftHasContent(partial)) return;
+  state.scoutDraft = normalizeScoutDraft({
+    ...state.scoutDraft,
+    ...partial,
+    card: partial.card || state.scoutDraft?.card || {},
+    complete: false,
+    updatedAt: new Date().toISOString(),
+  });
+  saveState(state);
+  updateScoutResumeUI();
+}
+
+function clearScoutDraft() {
+  if (!state.scoutDraft) return;
+  delete state.scoutDraft;
+  saveState(state);
+  updateScoutResumeUI();
+}
+
+function updateScoutResumeUI() {
+  const btn = $("resumeScoutBtn");
+  const hint = $("resumeScoutHint");
+  const action = getResumeScoutAction(state);
+  if (!btn) return;
+  if (!action) {
+    btn.classList.add("hidden");
+    hint?.classList.add("hidden");
+    return;
+  }
+  btn.textContent = action.label;
+  btn.classList.remove("hidden");
+  if (hint) {
+    hint.textContent = action.hint;
+    hint.classList.remove("hidden");
+  }
+}
+
+function resumeScoutSession() {
+  const action = getResumeScoutAction(state);
+  if (!action) return;
+
+  if (action.mode === "draft") {
+    const draft = normalizeScoutDraft(state.scoutDraft);
+    scoutSessionAddFp = null;
+    clearScoutResults();
+    restoreWizardProgress($("scoutForm"), draft);
+    lastScoutData = null;
+    lastScoutCard = null;
+    return;
+  }
+
+  if (state.lastScout?.data) {
+    scoutSessionAddFp = null;
+    lastScoutData = state.lastScout.data;
+    lastScoutCard = state.lastScout.card;
+    renderScoutResults(state.lastScout.data, {
+      ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
+    });
+    if (state.lastScout.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
+    refreshAddToCollectionUI();
+  }
+}
+
+function refreshAddToCollectionUI() {
+  if (!lastScoutCard) return;
+  const inCollection = findCollectionByFingerprint(state, lastScoutCard);
+  const fp = scanFingerprint(lastScoutCard);
+  const sessionUsed = scoutSessionAddFp === fp;
+  updateAddToCollectionState({
+    inCollection: Boolean(inCollection),
+    sessionUsed: sessionUsed && !inCollection,
+  });
+}
 
  function resetScoutSession() {
   resetScoutWizard($("scoutForm"));
@@ -87,6 +171,8 @@ let collectionSortMode = "recent";
   clearPendingScoutPhoto();
   lastScoutData = null;
   lastScoutCard = null;
+  scoutSessionAddFp = null;
+  updateScoutResumeUI();
 }
 
 function filterAndSortCollection(coll, { search, sort }) {
@@ -214,6 +300,7 @@ function navigate(view) {
  else disposeShopAvatarPreview();
  if (view === "avatar") renderAvatarStudioView();
  else disposeAvatarStudio();
+ if (view === "scout") updateScoutResumeUI();
  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -437,11 +524,13 @@ function applyCloudState(nextState) {
  state = replaceState(nextState);
  lastScoutData = state.lastScout?.data || null;
  lastScoutCard = state.lastScout?.card || null;
+ scoutSessionAddFp = null;
  updateHeaderStats();
  renderDashboard();
  renderCollection();
  renderProfile();
  renderAuthUI();
+ updateScoutResumeUI();
  $("profileNameInput").value = state.profile?.displayName || "";
  $("profileFavoritePlayer").value = state.profile?.favoritePlayer || "";
  $("profileFavoriteTeam").value = state.profile?.favoriteTeam || "";
@@ -793,6 +882,9 @@ async function performScout(card) {
       saveState(state);
     }
 
+    clearScoutDraft();
+    scoutSessionAddFp = null;
+
     const exactData = renderScoutResults(data, {
       ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
     });
@@ -808,7 +900,7 @@ async function performScout(card) {
     };
     saveState(state);
 
-    setAddToCollectionAvailable(true);
+    refreshAddToCollectionUI();
 
     const dupNotice = $("scoutDuplicateNotice");
     if (dupNotice) {
@@ -858,6 +950,15 @@ function handleAddToCollection() {
  alert("Scout a card first, then add it to your collection.");
  return;
  }
+
+ const fp = scanFingerprint(lastScoutCard);
+ if (scoutSessionAddFp === fp) return;
+
+ if (findCollectionByFingerprint(state, lastScoutCard)) {
+   refreshAddToCollectionUI();
+   return;
+ }
+
  const estimate = lastScoutData?.valuation?.estimate ?? null;
  const qty = Math.max(1, parseInt($("addCollectionQty")?.value, 10) || 1);
  const result = addToCollection(state, {
@@ -869,16 +970,9 @@ function handleAddToCollection() {
  });
  clearPendingScoutPhoto();
  state = loadState();
+ scoutSessionAddFp = fp;
  updateHeaderStats();
- const btn = $("addToCollectionBtn");
- if (result.merged) {
-   btn.textContent = `✓ Now ×${result.quantity} in collection`;
- } else {
-   btn.textContent = qty > 1 ? `✓ Added ×${qty} to collection` : "✓ Added to collection";
- }
- setTimeout(() => {
- btn.textContent = "+ Add to collection";
- }, 2000);
+ refreshAddToCollectionUI();
  renderDashboard();
  loadCardOfDay();
 }
@@ -996,17 +1090,11 @@ function initNavigation() {
  el.addEventListener("click", (e) => {
  e.preventDefault();
  const target = el.dataset.goto;
- if (target === "last-scout" && state.lastScout?.data) {
- navigate("scout");
- lastScoutData = state.lastScout.data;
- lastScoutCard = state.lastScout.card;
- renderScoutResults(state.lastScout.data, {
- ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
- });
- setAddToCollectionAvailable(state.lastScout.isNewScan !== false);
- if (state.lastScout.card) fillScoutWizard($("scoutForm"), state.lastScout.card);
+ if (target === "last-scout") {
+   navigate("scout");
+   resumeScoutSession();
  } else {
- navigate(target);
+   navigate(target);
  }
  });
  });
@@ -1295,6 +1383,10 @@ async function refreshSocialPanels() {
 
 function setupSessionPersistence() {
   const syncOnHide = () => {
+    const snap = captureScoutDraftSnapshot();
+    if (snap && draftHasContent(snap)) {
+      persistScoutDraft(snap);
+    }
     if (!isLoggedIn()) return;
     void flushCloudSync(state, { publicLeaderboard: Boolean(state.profile?.publicLeaderboard) });
   };
@@ -1307,13 +1399,12 @@ function setupSessionPersistence() {
     }
     if (document.visibilityState !== "visible") return;
 
-    if (scoutPageWasHidden) {
-      scoutPageWasHidden = false;
-      resetScoutSession();
-    }
+    scoutPageWasHidden = false;
+    state = loadState();
+    updateScoutResumeUI();
 
     const coinsBefore = getCoins(state);
-    state = loadState();
+    state = replaceState(state);
     const dailyChanged = getCoins(state) !== coinsBefore || peekPendingDailyEvents().length > 0;
 
     if (dailyChanged) {
@@ -1337,6 +1428,7 @@ function setupSessionPersistence() {
     renderCollection();
     renderProfile();
     renderAuthUI();
+    updateScoutResumeUI();
     if (e.persisted) {
       resetScoutSession();
     }
@@ -1385,7 +1477,10 @@ function init() {
      }
    },
  });
- initScoutWizard($("scoutForm"));
+ initScoutWizard($("scoutForm"), {
+   onDraftChange: (draft) => persistScoutDraft(draft),
+ });
+ $("resumeScoutBtn")?.addEventListener("click", () => resumeScoutSession());
  resetScoutSession();
  $("scoutForm").addEventListener("submit", handleScoutSubmit);
  $("addToCollectionBtn").addEventListener("click", handleAddToCollection);
@@ -1402,6 +1497,7 @@ function init() {
    loadLeaderboard();
    navigate("dashboard");
    await bootstrapSession();
+   updateScoutResumeUI();
    if (isStandaloneApp()) {
      void maybeShowPushPermissionPrompt({
        multiUserEnabled: Boolean(health?.multiUserEnabled && health?.pushEnabled),

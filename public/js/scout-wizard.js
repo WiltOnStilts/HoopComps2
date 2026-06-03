@@ -98,6 +98,16 @@ let formEl = null;
 let stepIndex = 0;
 let activeSteps = [...STEPS];
 let pendingScoutPhotoUrl = null;
+let onDraftChange = null;
+
+function notifyDraftChange() {
+  if (!onDraftChange || !formEl) return;
+  onDraftChange({
+    card: getValues(),
+    stepIndex,
+    photoUrl: pendingScoutPhotoUrl,
+  });
+}
 
 function readPhotoFile(file) {
   return new Promise((resolve, reject) => {
@@ -135,6 +145,18 @@ export function getPendingScoutPhotoUrl() {
   return pendingScoutPhotoUrl;
 }
 
+export function restoreScoutPhotoFromUrl(url) {
+  if (!url) {
+    clearPendingScoutPhoto();
+    return;
+  }
+  pendingScoutPhotoUrl = url;
+  const preview = document.getElementById("scoutPhotoPreview");
+  const clearBtn = document.getElementById("scoutPhotoClear");
+  if (preview) {
+    preview.src = url;
+    preview.classList.remove("hidden");
+  }
 export function clearPendingScoutPhoto() {
   pendingScoutPhotoUrl = null;
   const preview = document.getElementById("scoutPhotoPreview");
@@ -160,13 +182,7 @@ async function handleScoutPhotoSelected(file) {
   try {
     const raw = await readPhotoFile(file);
     pendingScoutPhotoUrl = await compressPhotoDataUrl(raw);
-    const preview = document.getElementById("scoutPhotoPreview");
-    const clearBtn = document.getElementById("scoutPhotoClear");
-    if (preview) {
-      preview.src = pendingScoutPhotoUrl;
-      preview.classList.remove("hidden");
-    }
-    clearBtn?.classList.remove("hidden");
+    restoreScoutPhotoFromUrl(pendingScoutPhotoUrl);
     keepScoutAtTop();
   } catch (err) {
     alert(err.message || "Could not use that photo");
@@ -188,6 +204,7 @@ function wireScoutPhotoControls() {
   });
   document.getElementById("scoutPhotoClear")?.addEventListener("click", () => {
     clearPendingScoutPhoto();
+    notifyDraftChange();
   });
 }
 
@@ -268,6 +285,7 @@ function showStep(index) {
 
   renderProgress();
   if (onReview) keepScoutAtTop();
+  notifyDraftChange();
 }
 
 function validateCurrentStep() {
@@ -353,9 +371,10 @@ function buildStepHtml(step) {
   `;
 }
 
-export function initScoutWizard(form) {
+export function initScoutWizard(form, options = {}) {
   if (!form) return;
   formEl = form;
+  onDraftChange = options.onDraftChange || null;
 
   const mount = document.getElementById("scoutWizardMount");
   if (!mount) return;
@@ -397,8 +416,12 @@ export function initScoutWizard(form) {
   clearPendingScoutPhoto();
 
   form.querySelectorAll(".scout-wizard-input, select[name]").forEach((el) => {
-    el.addEventListener("change", syncBuiltTitle);
-    el.addEventListener("input", syncBuiltTitle);
+    const onFieldChange = () => {
+      syncBuiltTitle();
+      notifyDraftChange();
+    };
+    el.addEventListener("change", onFieldChange);
+    el.addEventListener("input", onFieldChange);
   });
 
   const gradingSelect = form.elements.namedItem("gradingCompany");
@@ -440,6 +463,18 @@ export function resetScoutWizard(form) {
   syncBuiltTitle();
 }
 
+export function restoreWizardProgress(form, { card, stepIndex: savedStep = 0, photoUrl = null } = {}) {
+  if (!form || !formEl) return;
+  fillScoutWizard(form, card || {});
+  const values = getValues();
+  activeSteps = computeActiveSteps(values);
+  const maxStep = activeSteps.length;
+  const target = Math.min(Math.max(0, savedStep), maxStep);
+  showStep(target);
+  if (photoUrl) restoreScoutPhotoFromUrl(photoUrl);
+  notifyDraftChange();
+}
+
 export function fillScoutWizard(form, card) {
   if (!form || !card) return;
   for (const step of STEPS) {
@@ -458,6 +493,15 @@ export function fillScoutWizard(form, card) {
     showStep(0);
   }
   syncBuiltTitle();
+}
+
+export function captureScoutDraftSnapshot() {
+  if (!formEl) return null;
+  return {
+    card: getValues(),
+    stepIndex,
+    photoUrl: pendingScoutPhotoUrl,
+  };
 }
 
 export function cardFromScoutForm(form) {

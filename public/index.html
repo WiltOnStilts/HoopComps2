@@ -304,18 +304,22 @@ node server.mjs</code>
 
           <div class="scout-results-col">
             <section class="panel empty-state" id="scoutEmptyState">
-              <div class="empty-icon">🏟️</div>
-              <h2>Scout report appears here</h2>
-              <p class="muted-text">Submit a card to see comps, tiers, and listings — all in this app.</p>
+              <button type="button" class="btn-scout resume-scout-btn hidden" id="resumeScoutBtn">
+                Continue unfinished scout
+              </button>
+              <p class="resume-scout-hint muted-text hidden" id="resumeScoutHint"></p>
             </section>
 
             <section class="panel results-panel hidden" id="resultsPanel">
               <div class="results-header">
                 <h2>Scout Report</h2>
                 <p class="query-display" id="queryDisplay"></p>
-                <button type="button" class="btn-secondary" id="addToCollectionBtn" disabled>
-                  + Add to collection
-                </button>
+                <div class="add-to-collection-wrap">
+                  <button type="button" class="btn-secondary" id="addToCollectionBtn" disabled>
+                    + Add to collection
+                  </button>
+                  <p id="addToCollectionStatus" class="add-to-collection-status hidden" role="status"></p>
+                </div>
               </div>
               <label class="field add-qty-field">
                 <span>How many do you have?</span>
@@ -328,15 +332,11 @@ node server.mjs</code>
                 <button class="tab active" data-tab="all">All comps</button>
                 <button class="tab" data-tab="sold">Sold</button>
                 <button class="tab" data-tab="active">Active</button>
-                <button class="tab" data-tab="guide">Guide</button>
-                <button class="tab" data-tab="markets">Markets</button>
               </div>
               <div class="price-variation-panel" id="priceVariationPanel"></div>
               <div class="tab-content active" id="tab-all"></div>
               <div class="tab-content" id="tab-sold"></div>
               <div class="tab-content" id="tab-active"></div>
-              <div class="tab-content" id="tab-guide"></div>
-              <div class="tab-content" id="tab-markets"></div>
             </section>
           </div>
         </div>
@@ -551,8 +551,8 @@ node server.mjs</code>
             <h3>What it is</h3>
             <p>
               HoopComps is a basketball card value scout built for collectors, flippers, and investors.
-              Enter any card — raw, graded, parallel, or rookie — and pull market comps from eBay, Amazon,
-              and major hobby marketplaces. Track your collection, scout cards for comps, compete
+              Enter any card — raw, graded, parallel, or rookie — and pull in-app market comps from eBay.
+              Track your collection, scout cards for comps, compete
               on the scan leaderboard, and get AI-powered insights on what you own.
             </p>
           </section>
@@ -680,6 +680,6 @@ node server.mjs</code>
       </div>
     </div>
 
-    <script src="/js/app.js?v=55" type="module"></script>
+    <script src="/js/app.js?v=57" type="module"></script>
   </body>
 </html>

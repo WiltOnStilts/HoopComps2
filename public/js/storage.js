@@ -108,6 +108,7 @@ function normalizeState(data) {
     },
     collection: mergeCollectionByFingerprint(Array.isArray(data.collection) ? data.collection : []),
     lastScout: data.lastScout ?? null,
+    scoutDraft: data.scoutDraft ?? null,
     ...data,
     profile: {
       displayName: "Scout",
@@ -149,6 +150,7 @@ function defaultState() {
     },
     collection: [],
     lastScout: null,
+    scoutDraft: null,
   };
 }
 

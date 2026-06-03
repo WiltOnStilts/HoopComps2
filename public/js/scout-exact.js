@@ -53,7 +53,7 @@ function filterEbaySource(card, source) {
 function estimateFromSources(sold, active) {
   const candidates = [];
   if (sold?.stats?.median) candidates.push(sold.stats.median);
-  if (!candidates.length && active?.stats?.median) candidates.push(active.stats.median);
+  if (active?.stats?.median) candidates.push(active.stats.median);
   if (!candidates.length) return { estimate: null, confidence: "low", basis: [] };
 
   const sorted = [...candidates].sort((a, b) => a - b);
@@ -72,7 +72,8 @@ function estimateFromSources(sold, active) {
         `eBay sold median (${sold.exactCount} exact ${sold.exactCount === 1 ? "match" : "matches"})`
       );
     }
-  } else if (active?.stats?.median) {
+  }
+  if (active?.stats?.median) {
     if (active.broadFallback) {
       basis.push(
         `eBay active median (${active.broadCount || active.stats.count} similar listings)`

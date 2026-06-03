@@ -3,12 +3,7 @@ import { formatUsd, escapeHtml } from "./utils.js";
 let modalEl = null;
 
 const SOURCE_CREDITS = [
-  { name: "eBay", role: "Active listings & sold comps (when API allows)" },
-  { name: "Amazon", role: "Active collectibles marketplace reference" },
-  { name: "PriceCharting", role: "Basketball card price guide" },
-  { name: "130point", role: "Industry sold-comp reference" },
-  { name: "COMC", role: "Marketplace reference" },
-  { name: "ALT / Heritage / Goldin", role: "Auction reference" },
+  { name: "eBay", role: "Sold comps and active listings (Browse API + Marketplace Insights when approved)" },
 ];
 
 export function initListingModal() {
@@ -45,9 +40,9 @@ function listingCardHtml(item, index) {
   const typeLabel =
     item.listingType === "sold"
       ? "Sold comp"
-      : item.listingType === "guide"
-        ? "Price guide"
-        : "Active listing";
+      : item.listingType === "active"
+        ? "Active listing"
+        : "Listing";
 
   return `
     <button type="button" class="listing-card listing-card-btn" data-listing-index="${index}">
@@ -59,42 +54,31 @@ function listingCardHtml(item, index) {
         </div>
         <div class="title">${escapeHtml(item.title || item.name)}</div>
         ${item.condition ? `<p class="listing-meta">${escapeHtml(item.condition)}</p>` : ""}
-        ${item.set ? `<p class="listing-meta">${escapeHtml(item.set)}</p>` : ""}
       </div>
       <div class="listing-side">
-        <div class="price">${formatUsd(item.price ?? item.loose ?? item.psa10)}</div>
+        <div class="price">${formatUsd(item.price)}</div>
         <span class="view-hint">Details →</span>
       </div>
     </button>
   `;
 }
 
-function guideToListing(p) {
-  const prices = [p.psa10, p.graded9, p.loose, p.new].filter((v) => v != null);
-  return {
-    ...p,
-    title: p.name,
-    price: prices.length ? Math.max(...prices) : null,
-    listingType: "guide",
-  };
+export function getSoldListings(data) {
+  return (data.sources?.ebaySold?.items || []).map((i) => ({
+    ...i,
+    listingType: "sold",
+  }));
+}
+
+export function getActiveListings(data) {
+  return (data.sources?.ebayActive?.items || []).map((i) => ({
+    ...i,
+    listingType: "active",
+  }));
 }
 
 export function flattenScoutListings(data) {
-  const items = [];
-  const sold = data.sources?.ebaySold;
-  const active = data.sources?.ebayActive;
-  const pc = data.sources?.priceCharting;
-
-  if (sold?.items?.length) {
-    for (const i of sold.items) items.push({ ...i, listingType: "sold" });
-  }
-  if (active?.items?.length) {
-    for (const i of active.items) items.push({ ...i, listingType: "active" });
-  }
-  if (pc?.products?.length) {
-    for (const p of pc.products) items.push(guideToListing(p));
-  }
-  return items;
+  return [...getSoldListings(data), ...getActiveListings(data)];
 }
 
 function attachListingClicks(container, items) {
@@ -120,15 +104,15 @@ function soldSetupGuide(source) {
   return `
     <div class="alert-box info-box sold-setup">
       <p><strong>Sold comps — how to enable</strong></p>
-      <p>Your app already has a <strong>Sold</strong> tab. It fills automatically when eBay grants <strong>Marketplace Insights</strong> access (sold prices are restricted; active listings use a different API).</p>
+      <p>Your <strong>Sold</strong> tab shows eBay sold prices when Marketplace Insights is approved on your eBay developer account.</p>
       ${err}
       <ol class="setup-steps">
         <li>Confirm <code>EBAY_APP_ID</code> and <code>EBAY_CLIENT_SECRET</code> are in your <code>.env</code> (Production keys).</li>
-        <li>Apply for an <a href="https://developer.ebay.com/grow/application-growth-check" target="_blank" rel="noopener">Application Growth Check</a> — required for restricted Buy APIs.</li>
-        <li>Request <strong>Marketplace Insights API</strong> access. Say you’re building a basketball card value research tool.</li>
-        <li>If approved, restart the server — sold comps appear here like active listings.</li>
+        <li>Apply for an <a href="https://developer.ebay.com/grow/application-growth-check" target="_blank" rel="noopener">Application Growth Check</a>.</li>
+        <li>Request <strong>Marketplace Insights API</strong> access for your basketball card scout.</li>
+        <li>Restart the server after approval — sold comps appear here like active listings.</li>
       </ol>
-      <p class="muted-text"><strong>Until then:</strong> use <strong>Active</strong> as a proxy, add <code>PRICECHARTING_TOKEN</code> for guide values, or enter sold prices manually when adding to your collection.</p>
+      <p class="muted-text"><strong>Until then:</strong> use <strong>Active</strong> eBay listings as a proxy, or enter sold prices manually when adding to your collection.</p>
     </div>`;
 }
 
@@ -140,55 +124,96 @@ function sourceStatusBlock(source, { soldTab = false } = {}) {
     const setup = source.setup ? `<p class="muted-text">${escapeHtml(source.setup)}</p>` : "";
     return `<div class="alert-box">${escapeHtml(source.error)}${setup}</div>`;
   }
-  if (!source?.configured) {
-    return `<div class="alert-box">${escapeHtml(source.setup || "Source not configured.")}</div>`;
+  if (!source?.configured && source?.setup) {
+    return `<div class="alert-box">${escapeHtml(source.setup)}</div>`;
   }
   return "";
 }
 
-export function renderListingsInApp(container, source, options = {}) {
-  const status = sourceStatusBlock(source, options);
-  if (status && (!source?.items?.length || source?.error || source?.unavailable || !source?.configured)) {
+function exactMatchEmptyNote(source, sourceLabel = "marketplace") {
+  if (source?.totalFetched > 0) {
+    return `Found ${source.totalFetched} ${sourceLabel} result(s), but none matched your card details exactly. Add player, year, set, card #, parallel, grade, or serial for tighter comps.`;
+  }
+  return `No exact ${sourceLabel} matches. Fill in player, year, set, card #, and parallel for tighter comps.`;
+}
+
+function renderSourceStatusHtml(sources = []) {
+  return sources
+    .map((s) => sourceStatusBlock(s.source, s.options))
+    .filter(Boolean)
+    .join("");
+}
+
+export function renderSoldCompsInApp(container, data) {
+  const sold = data.sources?.ebaySold;
+  const items = getSoldListings(data);
+  const status = renderSourceStatusHtml([{ source: sold, options: { soldTab: true } }]);
+
+  if (status && !items.length) {
     container.innerHTML = status;
     return;
   }
-  if (!source?.items?.length) {
+
+  if (!items.length) {
     container.innerHTML =
-      status + `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(source))}</p>`;
+      status + `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(sold, "eBay sold"))}</p>`;
     return;
   }
+
   container.innerHTML = status;
   const intro = document.createElement("p");
   intro.className = "comps-intro muted-text";
-  intro.textContent = "Showing only listings that exactly match your card details.";
+  intro.textContent =
+    "eBay sold comps that exactly match your card.";
   container.appendChild(intro);
   const wrap = document.createElement("div");
   container.appendChild(wrap);
-  renderListingGrid(wrap, source.items, options);
+  renderListingGrid(wrap, items);
 }
 
-export function renderGuideInApp(container, pc) {
-  if (!pc?.configured) {
-    container.innerHTML = `<div class="alert-box">Add <code>PRICECHARTING_TOKEN</code> for in-app guide prices.</div>`;
+export function renderActiveCompsInApp(container, data) {
+  const ebay = data.sources?.ebayActive;
+  const items = getActiveListings(data);
+  const status = renderSourceStatusHtml([{ source: ebay }]);
+
+  if (status && !items.length) {
+    container.innerHTML = status;
     return;
   }
-  if (pc.error) {
-    container.innerHTML = `<div class="alert-box">${escapeHtml(pc.error)}</div>`;
+
+  if (!items.length) {
+    container.innerHTML =
+      status +
+      `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(ebay, "eBay"))}</p>`;
     return;
   }
-  if (!pc.products?.length) {
-    container.innerHTML = `<p class="muted-text">No PriceCharting matches for this card.</p>`;
+
+  container.innerHTML = status;
+  const intro = document.createElement("p");
+  intro.className = "comps-intro muted-text";
+  intro.textContent = "eBay active listings that exactly match your card.";
+  container.appendChild(intro);
+  const wrap = document.createElement("div");
+  container.appendChild(wrap);
+  renderListingGrid(wrap, items);
+}
+
+/** @deprecated use renderSoldCompsInApp or renderActiveCompsInApp */
+export function renderListingsInApp(container, source, options = {}) {
+  if (options.soldTab) {
+    renderSoldCompsInApp(container, { sources: { ebaySold: source } });
     return;
   }
-  const items = pc.products.map(guideToListing);
-  renderListingGrid(container, items);
+  renderActiveCompsInApp(container, {
+    sources: { ebayActive: source },
+  });
 }
 
 function creditsFooter() {
   return `
     <div class="sources-credit panel-inner">
-      <h4>Sources credited</h4>
-      <p class="muted-text">All comps below are loaded inside HoopComps. We don’t send you away unless you choose “View on original site” in a listing.</p>
+      <h4>Sources</h4>
+      <p class="muted-text">Comps load inside HoopComps from eBay. Tap a listing for details; open the original site only if you choose.</p>
       <ul class="credit-list">
         ${SOURCE_CREDITS.map(
           (s) =>
@@ -198,56 +223,39 @@ function creditsFooter() {
     </div>`;
 }
 
-function exactMatchEmptyNote(source) {
-  if (source?.totalFetched > 0) {
-    return `Found ${source.totalFetched} eBay result(s), but none matched your card details exactly. Add player, year, set, card #, parallel, grade, or serial for tighter comps.`;
-  }
-  return "No exact matches. Fill in player, year, set, card #, and parallel for tighter comps.";
-}
-
 export function renderAllComps(container, data) {
   const sold = data.sources?.ebaySold;
   const active = data.sources?.ebayActive;
-  const pc = data.sources?.priceCharting;
 
   const sections = [];
   const allItems = [];
+  let idx = 0;
 
-  if (sold?.items?.length) {
-    sections.push({
-      title: "eBay sold comps",
-      icon: "📊",
-      items: sold.items.map((i) => ({ ...i, listingType: "sold" })),
-    });
-  } else if (sold?.unavailable || sold?.error || !sold?.configured) {
+  const soldItems = getSoldListings(data);
+  if (soldItems.length) {
+    sections.push({ title: "eBay sold comps", icon: "📊", items: soldItems });
+  } else if (sold?.unavailable || sold?.error || sold?.setup) {
     sections.push({
       title: "eBay sold comps",
       icon: "📊",
       status: sourceStatusBlock(sold, { soldTab: true }),
     });
-  } else if (sold?.exactMatch) {
+  } else if (sold) {
     sections.push({
       title: "eBay sold comps",
       icon: "📊",
-      status: `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(sold))}</p>`,
+      status: `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(sold, "eBay sold"))}</p>`,
     });
   }
 
-  if (active?.items?.length) {
-    sections.push({ title: "eBay active listings", icon: "🛒", items: active.items });
-  } else if (active?.exactMatch) {
+  const ebayActiveItems = (active?.items || []).map((i) => ({ ...i, listingType: "active" }));
+  if (ebayActiveItems.length) {
+    sections.push({ title: "eBay active listings", icon: "🛒", items: ebayActiveItems });
+  } else if (active) {
     sections.push({
       title: "eBay active listings",
       icon: "🛒",
-      status: `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(active))}</p>`,
-    });
-  }
-
-  if (pc?.products?.length) {
-    sections.push({
-      title: "PriceCharting guide",
-      icon: "💰",
-      items: pc.products.map(guideToListing),
+      status: `<p class="muted-text">${escapeHtml(exactMatchEmptyNote(active, "eBay"))}</p>`,
     });
   }
 
@@ -256,8 +264,7 @@ export function renderAllComps(container, data) {
     return;
   }
 
-  let html = `<p class="comps-intro">Showing only listings that exactly match your card details. Tap any card for full details.</p>`;
-  let idx = 0;
+  let html = `<p class="comps-intro">Exact eBay matches for your card. Tap any listing for full details.</p>`;
 
   for (const sec of sections) {
     html += `<div class="comps-section"><h3 class="comps-section-title">${sec.icon} ${escapeHtml(sec.title)}</h3>`;
@@ -289,7 +296,8 @@ async function openListingModal(item) {
   body.innerHTML = `<p class="muted-text">Loading details…</p>`;
 
   let detail = { ...item };
-  if (item.id && item.source?.startsWith("ebay") && item.listingType !== "guide") {
+  const isEbay = item.source?.startsWith("ebay") && item.id;
+  if (isEbay) {
     try {
       const res = await fetch(`/api/listing/detail?id=${encodeURIComponent(item.id)}`);
       const extra = await res.json();
@@ -300,16 +308,7 @@ async function openListingModal(item) {
   }
 
   const title = detail.title || detail.name || "Listing";
-  const price = detail.price ?? detail.loose ?? detail.psa10;
-  const guideRows =
-    detail.listingType === "guide"
-      ? `
-      ${detail.loose != null ? `<div class="detail-row"><span>Raw</span><strong>${formatUsd(detail.loose)}</strong></div>` : ""}
-      ${detail.graded9 != null ? `<div class="detail-row"><span>Graded 9</span><strong>${formatUsd(detail.graded9)}</strong></div>` : ""}
-      ${detail.psa10 != null ? `<div class="detail-row"><span>PSA 10</span><strong>${formatUsd(detail.psa10)}</strong></div>` : ""}
-      ${detail.bgs10 != null ? `<div class="detail-row"><span>BGS 10</span><strong>${formatUsd(detail.bgs10)}</strong></div>` : ""}
-    `
-      : "";
+  const price = detail.price;
 
   body.innerHTML = `
     <div class="modal-listing">
@@ -325,8 +324,7 @@ async function openListingModal(item) {
         ${detail.endTime ? `<p class="detail-row"><span>Date</span> ${formatDate(detail.endTime)}</p>` : ""}
         ${detail.itemLocation ? `<p class="detail-row"><span>Location</span> ${escapeHtml(detail.itemLocation)}</p>` : ""}
         ${detail.description ? `<p class="modal-desc">${escapeHtml(detail.description)}</p>` : ""}
-        ${guideRows}
-        <p class="modal-attribution">Data provided by <strong>${escapeHtml(detail.sourceName || "market source")}</strong>. HoopComps aggregates comps for research — verify before buying or selling.</p>
+        <p class="modal-attribution">Listing from <strong>${escapeHtml(detail.sourceName || "market source")}</strong>. Verify on the original site before buying or selling.</p>
         ${
           detail.url
             ? `<button type="button" class="btn-ghost modal-external" data-external-url="${escapeHtml(detail.url)}">View on ${escapeHtml(detail.sourceName || "source")} (optional)</button>`

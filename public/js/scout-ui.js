@@ -1,5 +1,5 @@
 import { formatUsd, escapeHtml } from "./utils.js";
-import { renderListingsInApp, renderGuideInApp, renderAllComps } from "./listings-ui.js";
+import { renderSoldCompsInApp, renderActiveCompsInApp, renderAllComps } from "./listings-ui.js";
 import { applyExactMatchScout } from "./scout-exact.js";
 
 export { formatUsd, escapeHtml };
@@ -43,46 +43,28 @@ export function renderStatsRow(el, data, ebayTipHtml) {
   if (!sold && !active) {
     el.innerHTML = `
       <div class="alert-box" style="grid-column: 1/-1">
-        ${ebayTipHtml || "Configure eBay keys for live comps."} All results stay on this site once loaded.
+        ${ebayTipHtml || "Configure eBay keys for live comps."}
       </div>
     `;
     return;
   }
 
   const filteredOut =
-    (sold?.totalFetched ?? sold?.items?.length ?? 0) -
-      (sold?.exactCount ?? sold?.items?.length ?? 0) +
-    ((active?.totalFetched ?? active?.items?.length ?? 0) -
-      (active?.exactCount ?? active?.items?.length ?? 0));
+    (sold?.totalFetched ?? 0) - (sold?.exactCount ?? sold?.items?.length ?? 0) +
+    (active?.totalFetched ?? 0) - (active?.exactCount ?? active?.items?.length ?? 0);
+
+  const exactTotal =
+    (sold?.exactCount ?? sold?.count ?? 0) + (active?.exactCount ?? active?.count ?? 0);
 
   el.innerHTML = `
-    ${filteredOut > 0 ? `<div class="alert-box info-box" style="grid-column: 1/-1">Filtered out ${filteredOut} non-matching eBay listing${filteredOut === 1 ? "" : "s"}. Only exact matches to your card details are shown.</div>` : ""}
+    ${filteredOut > 0 ? `<div class="alert-box info-box" style="grid-column: 1/-1">Filtered out ${filteredOut} non-matching listing${filteredOut === 1 ? "" : "s"}. Only exact matches to your card are shown.</div>` : ""}
     <div class="mini-stat"><span class="label">Sold median</span><span class="val">${formatUsd(sold?.median)}</span></div>
     <div class="mini-stat"><span class="label">Active median</span><span class="val">${formatUsd(active?.median)}</span></div>
     <div class="mini-stat"><span class="label">High</span><span class="val">${formatUsd(sold?.high ?? active?.high)}</span></div>
-    <div class="mini-stat"><span class="label">Exact comps</span><span class="val">${(sold?.exactCount ?? sold?.count ?? 0) + (active?.exactCount ?? active?.count ?? 0)}</span></div>
+    <div class="mini-stat"><span class="label">Exact comps</span><span class="val">${exactTotal}</span></div>
   `;
 }
 
-export function renderMarketLinks(container, links) {
-  if (!links?.length) {
-    container.innerHTML = `<p class="muted-text">No marketplace links available.</p>`;
-    return;
-  }
-  container.innerHTML = `
-    <p class="comps-intro">Compare prices across eBay, Amazon, and specialty marketplaces. Links open in a new tab.</p>
-    <div class="market-grid">${links
-      .map(
-        (l) => `
-      <a class="market-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">
-        <span class="icon">${l.icon}</span>
-        <span class="name">${escapeHtml(l.name)}</span>
-        <span class="desc">${escapeHtml(l.description)}</span>
-      </a>`
-      )
-      .join("")}</div>
-  `;
-}
 
 export function renderPriceVariationPanel(el, pv) {
   if (!el) return;
@@ -136,12 +118,8 @@ export function renderScoutResults(data, { ebayTipBanner }) {
   renderValuationHero(document.getElementById("valuationHero"), exactData);
   renderStatsRow(document.getElementById("statsRow"), exactData, ebayTipBanner);
 
-  renderListingsInApp(document.getElementById("tab-sold"), exactData.sources.ebaySold, {
-    soldTab: true,
-  });
-  renderListingsInApp(document.getElementById("tab-active"), exactData.sources.ebayActive);
-  renderGuideInApp(document.getElementById("tab-guide"), exactData.sources.priceCharting);
-  renderMarketLinks(document.getElementById("tab-markets"), exactData.marketLinks);
+  renderSoldCompsInApp(document.getElementById("tab-sold"), exactData);
+  renderActiveCompsInApp(document.getElementById("tab-active"), exactData);
   renderAllComps(document.getElementById("tab-all"), exactData);
   renderPriceVariationPanel(
     document.getElementById("priceVariationPanel"),
@@ -153,8 +131,12 @@ export function renderScoutResults(data, { ebayTipBanner }) {
     addBtn.disabled = true;
     delete addBtn.dataset.ready;
     addBtn.classList.add("hidden");
+    addBtn.classList.remove("btn-collection-locked");
   }
   document.querySelector(".add-qty-field")?.classList.add("hidden");
+  const statusEl = document.getElementById("addToCollectionStatus");
+  statusEl?.classList.add("hidden");
+  if (statusEl) statusEl.textContent = "";
 
   return exactData;
 }
@@ -164,9 +146,11 @@ export function setAddToCollectionAvailable(available) {
   const qtyField = document.querySelector(".add-qty-field");
   if (addBtn) {
     if (available) {
-      addBtn.disabled = false;
-      addBtn.dataset.ready = "1";
       addBtn.classList.remove("hidden");
+      if (!addBtn.classList.contains("btn-collection-locked")) {
+        addBtn.disabled = false;
+        addBtn.dataset.ready = "1";
+      }
     } else {
       addBtn.disabled = true;
       delete addBtn.dataset.ready;
@@ -175,6 +159,39 @@ export function setAddToCollectionAvailable(available) {
   }
   if (qtyField) {
     qtyField.classList.toggle("hidden", !available);
+  }
+}
+
+export function updateAddToCollectionState({ inCollection, sessionUsed }) {
+  const addBtn = document.getElementById("addToCollectionBtn");
+  const qtyField = document.querySelector(".add-qty-field");
+  const statusEl = document.getElementById("addToCollectionStatus");
+
+  if (!addBtn) return;
+
+  addBtn.classList.remove("hidden");
+  addBtn.textContent = "+ Add to collection";
+  addBtn.classList.toggle("btn-collection-locked", Boolean(inCollection || sessionUsed));
+  addBtn.disabled = Boolean(inCollection || sessionUsed);
+  delete addBtn.dataset.ready;
+
+  if (qtyField) {
+    qtyField.classList.toggle("hidden", Boolean(inCollection || sessionUsed));
+  }
+
+  if (statusEl) {
+    if (inCollection) {
+      statusEl.textContent = "already in collection";
+      statusEl.classList.remove("hidden");
+    } else if (sessionUsed) {
+      statusEl.textContent = "";
+      statusEl.classList.add("hidden");
+      statusEl.classList.remove("add-to-collection-status--ok");
+    } else {
+      statusEl.textContent = "";
+      statusEl.classList.add("hidden");
+      statusEl.classList.remove("add-to-collection-status--ok");
+    }
   }
 }
 
@@ -193,6 +210,9 @@ export function clearScoutResults() {
   const dupNotice = document.getElementById("scoutDuplicateNotice");
   dupNotice?.classList.add("hidden");
   if (dupNotice) dupNotice.textContent = "";
+  const statusEl = document.getElementById("addToCollectionStatus");
+  statusEl?.classList.add("hidden");
+  if (statusEl) statusEl.textContent = "";
 }
 
 export function setupResultTabs() {

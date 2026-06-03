@@ -63,7 +63,6 @@ function ebayConfig() {
   return {
     ebayClientId: process.env.EBAY_APP_ID,
     ebayClientSecret: process.env.EBAY_CLIENT_SECRET,
-    priceChartingToken: process.env.PRICECHARTING_TOKEN,
   };
 }
 
@@ -239,7 +238,6 @@ const server = http.createServer(async (req, res) => {
       ebayAppIdSet: hasId,
       ebayClientSecretSet: hasSecret,
       ebayApi: "browse",
-      priceChartingConfigured: Boolean(process.env.PRICECHARTING_TOKEN),
       pushEnabled: isDbReady() && isPushConfigured(),
       vapidPublicKey: isPushConfigured() ? getVapidPublicKey() : null,
       pushInitError: getPushInitError(),

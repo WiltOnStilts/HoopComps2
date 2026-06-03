@@ -1,5 +1,6 @@
 import {
   listingMatchesCardExactly,
+  listingMatchesCardBroadly,
   normalizeScoutCard,
 } from "./card-image.js";
 
@@ -28,14 +29,24 @@ function filterEbaySource(card, source) {
   const exactItems = rawItems.filter((item) =>
     listingMatchesCardExactly(card, item, { requireImage: false })
   );
+  const broadItems = rawItems.filter((item) => listingMatchesCardBroadly(card, item));
+
+  const compItems = exactItems.length
+    ? exactItems
+    : broadItems.length
+      ? broadItems
+      : rawItems;
+  const usedBroadFallback = !exactItems.length && broadItems.length > 0;
 
   return {
     ...source,
-    items: exactItems,
-    stats: listingStats(exactItems),
-    exactMatch: true,
+    items: compItems,
+    stats: listingStats(compItems),
+    exactMatch: exactItems.length > 0,
+    broadFallback: usedBroadFallback,
     totalFetched,
     exactCount: exactItems.length,
+    broadCount: broadItems.length,
   };
 }
 
@@ -52,13 +63,25 @@ function estimateFromSources(sold, active) {
 
   const basis = [];
   if (sold?.stats?.median) {
-    basis.push(
-      `eBay sold median (${sold.exactCount} exact ${sold.exactCount === 1 ? "match" : "matches"})`
-    );
+    if (sold.broadFallback) {
+      basis.push(
+        `eBay sold median (${sold.broadCount || sold.stats.count} similar listings)`
+      );
+    } else {
+      basis.push(
+        `eBay sold median (${sold.exactCount} exact ${sold.exactCount === 1 ? "match" : "matches"})`
+      );
+    }
   } else if (active?.stats?.median) {
-    basis.push(
-      `eBay active median (${active.exactCount} exact ${active.exactCount === 1 ? "match" : "matches"})`
-    );
+    if (active.broadFallback) {
+      basis.push(
+        `eBay active median (${active.broadCount || active.stats.count} similar listings)`
+      );
+    } else {
+      basis.push(
+        `eBay active median (${active.exactCount} exact ${active.exactCount === 1 ? "match" : "matches"})`
+      );
+    }
   }
 
   let confidence = "low";

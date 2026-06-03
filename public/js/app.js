@@ -47,11 +47,14 @@ import {
  refreshCloudState,
  fetchCloudState,
  scheduleCloudSync,
+ flushCloudSync,
  fetchLeaderboard,
  setAuthChangeHandler,
  pushCloudState,
 } from "./auth.js";
 import { mergeLocalAndCloud } from "./state-merge.js";
+import { normalizeScoutCard } from "./card-image.js";
+import { getCachedScoutResult, setCachedScoutResult } from "./scout-cache.js";
 import { renderProfileSocial, renderCommunityChat, initSocialUI, openFriendModal } from "./social-ui.js";
 import { renderCommunityFriends, initCommunityFriendsUI } from "./community-friends-ui.js";
 import { renderCodDayEngagement, initCodDayUI } from "./cod-day-ui.js";
@@ -776,14 +779,27 @@ async function performScout(card) {
   btnLoading.classList.remove("hidden");
 
   try {
-    const data = await runScout(card);
+    const normalizedCard = normalizeScoutCard(card);
+    const cached = getCachedScoutResult(state, normalizedCard);
+    let data;
+    let fromCache = false;
+
+    if (cached?.data) {
+      data = cached.data;
+      fromCache = true;
+    } else {
+      data = await runScout(normalizedCard);
+      setCachedScoutResult(state, normalizedCard, data);
+      saveState(state);
+    }
+
     const exactData = renderScoutResults(data, {
       ebayTipBanner: health.ebayConfigured ? null : ebayTipHtml(),
     });
     lastScoutData = exactData;
-    lastScoutCard = exactData.card || card;
+    lastScoutCard = exactData.card || normalizedCard;
 
-    const registeredNew = registerUniqueScan(state, card);
+    const registeredNew = registerUniqueScan(state, normalizedCard);
     state.lastScout = {
       card: lastScoutCard,
       data: exactData,
@@ -792,11 +808,15 @@ async function performScout(card) {
     };
     saveState(state);
 
-    setAddToCollectionAvailable(registeredNew);
+    setAddToCollectionAvailable(true);
 
     const dupNotice = $("scoutDuplicateNotice");
     if (dupNotice) {
-      if (registeredNew) {
+      if (fromCache && !registeredNew) {
+        dupNotice.textContent =
+          "Same card as before — showing your saved comp results. Only unique scans earn coins and leaderboard credit.";
+        dupNotice.classList.remove("hidden");
+      } else if (registeredNew) {
         dupNotice.textContent = `+${COINS_PER_UNIQUE_SCAN} coins for a unique scan!`;
         dupNotice.classList.remove("hidden");
       } else {
@@ -1274,9 +1294,15 @@ async function refreshSocialPanels() {
 }
 
 function setupSessionPersistence() {
+  const syncOnHide = () => {
+    if (!isLoggedIn()) return;
+    void flushCloudSync(state, { publicLeaderboard: Boolean(state.profile?.publicLeaderboard) });
+  };
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       scoutPageWasHidden = true;
+      syncOnHide();
       return;
     }
     if (document.visibilityState !== "visible") return;
@@ -1287,34 +1313,45 @@ function setupSessionPersistence() {
     }
 
     const coinsBefore = getCoins(state);
-    state = replaceState(state);
+    state = loadState();
     const dailyChanged = getCoins(state) !== coinsBefore || peekPendingDailyEvents().length > 0;
 
     if (dailyChanged) {
       updateHeaderStats();
       renderProfile();
       void maybeShowDailyLoginNotifications();
-      if (isLoggedIn()) void pushLocalToCloud();
+    }
+
+    if (isLoggedIn()) {
+      void reconcileCloudState();
     }
   });
+
+  window.addEventListener("pagehide", syncOnHide);
 
   window.addEventListener("pageshow", (e) => {
     loadStoredSession();
     state = loadState();
     updateHeaderStats();
     renderDashboard();
+    renderCollection();
     renderProfile();
     renderAuthUI();
     if (e.persisted) {
       resetScoutSession();
     }
     if (!isLoggedIn()) return;
-    bootstrapSession();
+    void bootstrapSession();
   });
 
   window.addEventListener("online", () => {
     if (!isLoggedIn()) return;
     reconcileCloudState();
+  });
+
+  window.addEventListener("focus", () => {
+    if (!isLoggedIn()) return;
+    void reconcileCloudState();
   });
 }
 

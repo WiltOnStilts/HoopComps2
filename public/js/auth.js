@@ -277,7 +277,18 @@ export function scheduleCloudSync(state, { publicLeaderboard } = {}) {
     } catch {
       /* local copy stays saved; will retry later */
     }
-  }, 800);
+  }, 400);
+}
+
+export async function flushCloudSync(state, { publicLeaderboard } = {}) {
+  if (!isLoggedIn()) return null;
+  clearTimeout(syncTimer);
+  syncTimer = null;
+  try {
+    return await pushCloudState(state, { publicLeaderboard });
+  } catch {
+    return null;
+  }
 }
 
 export async function pushCloudState(state, { publicLeaderboard } = {}) {

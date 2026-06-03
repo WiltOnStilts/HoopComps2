@@ -159,6 +159,7 @@ export function replaceState(next) {
 export function saveState(state) {
   syncScoutCount(state);
   normalizeEconomy(state);
+  state.stateUpdatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   notifyChange(state);
 }

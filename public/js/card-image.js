@@ -172,6 +172,27 @@ export function normalizeScoutCard(card = {}) {
   return normalized;
 }
 
+export function listingMatchesCardBroadly(card, listing) {
+  card = normalizeScoutCard(card);
+  const title = norm(listing?.title);
+  if (!title || isBulkListing(title)) return false;
+
+  const player = norm(card?.player);
+  if (player) {
+    const parts = player.split(/\s+/).filter(Boolean);
+    if (!parts.every((part) => title.includes(part))) return false;
+  } else {
+    return false;
+  }
+
+  const set = norm(card?.set);
+  if (set && !setMatches(title, set)) return false;
+
+  if (card?.year && !yearMatches(title, card.year)) return false;
+
+  return true;
+}
+
 export function listingMatchesCardExactly(card, listing, { requireImage = true } = {}) {
   card = normalizeScoutCard(card);
   const title = norm(listing?.title);

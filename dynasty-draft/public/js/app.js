@@ -19,7 +19,19 @@ function openAuthModal(mode = "login") {
   document.body.classList.add("modal-open");
   $("authModalTitle").textContent = mode === "register" ? "Create account" : "Sign in";
   $("authSubmitBtn").dataset.mode = mode;
-  $("authUsernameField")?.classList.toggle("hidden", mode !== "register");
+  $("authSubmitBtn").textContent = mode === "register" ? "Create account" : "Sign in";
+  $("authSubmitBtn").disabled = false;
+
+  const usernameField = $("authUsernameField");
+  const usernameInput = $("authUsername");
+  const isRegister = mode === "register";
+  usernameField?.classList.toggle("hidden", !isRegister);
+  if (usernameInput) {
+    usernameInput.required = isRegister;
+    usernameInput.disabled = !isRegister;
+    if (!isRegister) usernameInput.value = "";
+  }
+
   $("authSwitchText").innerHTML =
     mode === "register"
       ? `<button type="button" class="btn-secondary auth-switch-btn" data-auth-switch="login">Already have an account? Sign in</button>`
@@ -85,7 +97,25 @@ async function init() {
     const email = $("authEmail").value.trim();
     const password = $("authPassword").value;
     const username = $("authUsername")?.value.trim();
+    const submitBtn = $("authSubmitBtn");
     $("authError").textContent = "";
+
+    if (!email) {
+      $("authError").textContent = "Email is required";
+      return;
+    }
+    if (!password || password.length < 6) {
+      $("authError").textContent = "Password must be at least 6 characters";
+      return;
+    }
+    if (mode === "register" && !username) {
+      $("authError").textContent = "Username is required";
+      return;
+    }
+
+    const prevLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = mode === "register" ? "Creating account…" : "Signing in…";
     try {
       if (mode === "register") {
         await register({ email, password, username });
@@ -95,6 +125,9 @@ async function init() {
       closeAuthModal();
     } catch (err) {
       $("authError").textContent = err.message || "Auth failed";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = prevLabel;
     }
   });
 

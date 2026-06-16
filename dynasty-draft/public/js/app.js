@@ -19,7 +19,6 @@ function openAuthModal(mode = "login") {
   document.body.classList.add("modal-open");
   $("authModalTitle").textContent = mode === "register" ? "Create account" : "Sign in";
   $("authSubmitBtn").dataset.mode = mode;
-  $("authNameField")?.classList.toggle("hidden", mode !== "register");
   $("authUsernameField")?.classList.toggle("hidden", mode !== "register");
   $("authSwitchText").innerHTML =
     mode === "register"
@@ -54,7 +53,7 @@ function renderAuthUI() {
 }
 
 async function refreshGame() {
-  await mountGame({ onAuthRequired: () => openAuthModal("login") });
+  await mountGame({ onAuthRequired: (mode) => openAuthModal(mode || "login") });
   syncTopBar();
 }
 
@@ -85,12 +84,11 @@ async function init() {
     const mode = $("authSubmitBtn").dataset.mode || "login";
     const email = $("authEmail").value.trim();
     const password = $("authPassword").value;
-    const displayName = $("authDisplayName")?.value.trim();
     const username = $("authUsername")?.value.trim();
     $("authError").textContent = "";
     try {
       if (mode === "register") {
-        await register({ email, password, displayName, username });
+        await register({ email, password, username });
       } else {
         await login({ email, password });
       }

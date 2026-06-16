@@ -1,7 +1,16 @@
 import { authFetch, isLoggedIn } from "./auth.js";
 
+async function dynastyFetch(path, options = {}) {
+  if (isLoggedIn()) return authFetch(path, options);
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  const res = await fetch(path, { ...options, headers, credentials: "include" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
 export async function fetchDynastyToday() {
-  return authFetch("/api/dynasty/today");
+  return dynastyFetch("/api/dynasty/today");
 }
 
 export async function fetchDynastyMeta() {
@@ -20,11 +29,11 @@ export async function fetchDynastyPlayers({ teamId, year, modifierIds, slot = "a
     slot,
     showStats: showStats ? "true" : "false",
   });
-  return authFetch(`/api/dynasty/players?${params}`);
+  return dynastyFetch(`/api/dynasty/players?${params}`);
 }
 
 export async function submitDynastyLineup(lineup) {
-  return authFetch("/api/dynasty/submit", {
+  return dynastyFetch("/api/dynasty/submit", {
     method: "POST",
     body: JSON.stringify({ lineup }),
   });

@@ -79,24 +79,23 @@ export function searchUsersByUsername(query, { excludeUserId, limit = 12 } = {})
   return results;
 }
 
-export function createUser({ email, passwordHash, displayName, username }) {
+export function createUser({ email, passwordHash, username }) {
   const store = readStore();
   const normalizedEmail = email.toLowerCase().trim();
   if (store.emailIndex[normalizedEmail]) {
     throw new Error("Email already registered");
   }
   const handle = normalizeUsername(username).toLowerCase();
-  if (handle) {
-    for (const u of Object.values(store.users)) {
-      if ((u.username || "").toLowerCase() === handle) throw new Error("Username taken");
-    }
+  if (!handle) throw new Error("Username required");
+  for (const u of Object.values(store.users)) {
+    if ((u.username || "").toLowerCase() === handle) throw new Error("Username taken");
   }
   const id = crypto.randomUUID();
   store.users[id] = {
     email: normalizedEmail,
     passwordHash,
-    displayName: displayName || normalizedEmail.split("@")[0],
-    username: handle || null,
+    displayName: handle,
+    username: handle,
     createdAt: new Date().toISOString(),
   };
   store.emailIndex[normalizedEmail] = id;

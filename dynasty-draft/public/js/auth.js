@@ -84,13 +84,12 @@ function normalizeEmail(email) {
     .toLowerCase();
 }
 
-export async function register({ email, password, displayName, username }) {
+export async function register({ email, password, username }) {
   const data = await authFetch("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
       email: normalizeEmail(email),
       password: String(password ?? ""),
-      displayName: String(displayName || "").trim(),
       username: String(username || "").trim(),
     }),
   });

@@ -12,7 +12,6 @@ import { getDayKey } from "../lib/day-key.mjs";
 const reg = await registerUser({
   email: `smoke-${crypto.randomUUID()}@test.local`,
   password: "secret12",
-  displayName: "Smoke Test",
   username: `smoke${Date.now()}`,
 });
 

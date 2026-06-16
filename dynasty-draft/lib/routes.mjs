@@ -30,6 +30,66 @@ function parseUrl(url) {
   return new URL(url, "http://localhost");
 }
 
+const DEFAULT_SETTINGS = { showStats: true, soundEnabled: true };
+
+function computeLineupSubmission(store, { lineupInput, dayKey, userId }) {
+  const challenge = getOrCreateDailyChallenge(store, dayKey);
+  const settings = userId ? getUserSettings(store, userId) : DEFAULT_SETTINGS;
+  const usedPlayerIds = new Set();
+  const usedRoundIndexes = new Set();
+  const lineup = [];
+
+  for (const slot of LINEUP_SLOTS) {
+    const pick = lineupInput[slot];
+    if (!pick?.playerId) return { error: `Missing pick for ${slot}` };
+
+    const roundIndex = pick.roundIndex;
+    if (typeof roundIndex !== "number" || roundIndex < 0 || roundIndex >= challenge.rounds.length) {
+      return { error: `Invalid round for ${slot}` };
+    }
+    if (usedRoundIndexes.has(roundIndex)) {
+      return { error: "Each spin round can only be used once" };
+    }
+    if (usedPlayerIds.has(pick.playerId)) {
+      return { error: "Each player can only be used once" };
+    }
+
+    const round = getRoundConfig(challenge, roundIndex);
+    const pool = getRosterPlayers({
+      teamId: round.teamId,
+      year: round.year,
+      modifierIds: [round.modifierId],
+    });
+    const player = pool.find((p) => p.id === pick.playerId);
+    if (!player) return { error: `Invalid player for ${slot}` };
+    if (!canPlayPosition(player, slot)) return { error: `${player.name} cannot play ${slot}` };
+
+    usedPlayerIds.add(pick.playerId);
+    usedRoundIndexes.add(roundIndex);
+    lineup.push({ slot, player, roundIndex, round });
+  }
+
+  const simulation = simulateSeason({ lineup, challenge, dayKey, userId: userId || "guest" });
+  const score = calculateScore(simulation);
+  const gradeInfo = letterGrade(simulation, score);
+  const breakdown = scoreBreakdown(simulation);
+  const shareText = buildShareText({ grade: gradeInfo, score, simulation, dayKey });
+
+  const submission = {
+    id: crypto.randomUUID(),
+    userId: userId || null,
+    dayKey,
+    lineup,
+    simulation,
+    score,
+    grade: gradeInfo.grade,
+    shareText,
+    createdAt: new Date().toISOString(),
+  };
+
+  return { submission, grade: gradeInfo, breakdown, settings };
+}
+
 export async function handleDynastyRoute(req, url, ctx) {
   const { readBody, send, requireUser } = ctx;
   const u = parseUrl(url);
@@ -46,14 +106,19 @@ export async function handleDynastyRoute(req, url, ctx) {
 
   if (req.method === "GET" && path === "/api/dynasty/today") {
     const user = await requireUser(req);
-    if (!user) {
-      send(401, { error: "Sign in to play DynastyDraft" });
-      return true;
-    }
-
     const dayKey = getDayKey();
     const data = await withDynastyStore((store) => {
       const challenge = getOrCreateDailyChallenge(store, dayKey);
+      if (!user) {
+        return {
+          challenge,
+          settings: DEFAULT_SETTINGS,
+          submission: null,
+          streak: { current: 0, best: 0 },
+          best: { score: 0, grade: "F" },
+          guest: true,
+        };
+      }
       const settings = getUserSettings(store, user.id);
       const submission = getUserSubmission(store, user.id, dayKey);
       const streak = store.streaks[user.id] || { current: 0, best: 0 };
@@ -66,12 +131,6 @@ export async function handleDynastyRoute(req, url, ctx) {
   }
 
   if (req.method === "GET" && path === "/api/dynasty/players") {
-    const user = await requireUser(req);
-    if (!user) {
-      send(401, { error: "Sign in required" });
-      return true;
-    }
-
     const teamId = u.searchParams.get("teamId");
     const year = Number(u.searchParams.get("year"));
     const modifierIdsParam = u.searchParams.get("modifierIds") || u.searchParams.get("modifierId") || "standard";
@@ -112,85 +171,29 @@ export async function handleDynastyRoute(req, url, ctx) {
 
   if (req.method === "POST" && path === "/api/dynasty/submit") {
     const user = await requireUser(req);
-    if (!user) {
-      send(401, { error: "Sign in required" });
-      return true;
-    }
-
     const body = await readBody(req);
     const dayKey = getDayKey();
     const lineupInput = body.lineup || {};
 
     const result = await withDynastyStore((store) => {
-      const existing = getUserSubmission(store, user.id, dayKey);
-      if (existing) {
-        return { error: "Already submitted today", submission: existing };
+      if (user) {
+        const existing = getUserSubmission(store, user.id, dayKey);
+        if (existing) {
+          return { error: "Already submitted today", submission: existing };
+        }
       }
 
-      const challenge = getOrCreateDailyChallenge(store, dayKey);
-      const settings = getUserSettings(store, user.id);
-      const usedPlayerIds = new Set();
-      const usedRoundIndexes = new Set();
-      const lineup = [];
+      const computed = computeLineupSubmission(store, { lineupInput, dayKey, userId: user?.id });
+      if (computed.error) return computed;
 
-      for (const slot of LINEUP_SLOTS) {
-        const pick = lineupInput[slot];
-        if (!pick?.playerId) return { error: `Missing pick for ${slot}` };
-
-        const roundIndex = pick.roundIndex;
-        if (typeof roundIndex !== "number" || roundIndex < 0 || roundIndex >= challenge.rounds.length) {
-          return { error: `Invalid round for ${slot}` };
-        }
-        if (usedRoundIndexes.has(roundIndex)) {
-          return { error: "Each spin round can only be used once" };
-        }
-        if (usedPlayerIds.has(pick.playerId)) {
-          return { error: "Each player can only be used once" };
-        }
-
-        const round = getRoundConfig(challenge, roundIndex);
-        const pool = getRosterPlayers({
-          teamId: round.teamId,
-          year: round.year,
-          modifierIds: [round.modifierId],
-        });
-        const player = pool.find((p) => p.id === pick.playerId);
-        if (!player) return { error: `Invalid player for ${slot}` };
-        if (!canPlayPosition(player, slot)) return { error: `${player.name} cannot play ${slot}` };
-
-        usedPlayerIds.add(pick.playerId);
-        usedRoundIndexes.add(roundIndex);
-        lineup.push({ slot, player, roundIndex, round });
+      if (user) {
+        saveSubmission(store, computed.submission);
+        updateStreak(store, user.id, dayKey);
+        updateBestScore(store, user.id, computed.submission.score, computed.grade.grade);
+        return computed;
       }
 
-      const simulation = simulateSeason({ lineup, challenge, dayKey, userId: user.id });
-      const score = calculateScore(simulation);
-      const gradeInfo = letterGrade(simulation, score);
-      const breakdown = scoreBreakdown(simulation);
-      const shareText = buildShareText({ grade: gradeInfo, score, simulation, dayKey });
-
-      const submission = {
-        id: crypto.randomUUID(),
-        userId: user.id,
-        dayKey,
-        lineup,
-        simulation,
-        score,
-        grade: gradeInfo.grade,
-        shareText,
-        createdAt: new Date().toISOString(),
-      };
-
-      saveSubmission(store, submission);
-      updateStreak(store, user.id, dayKey);
-      updateBestScore(store, user.id, score, gradeInfo.grade);
-
-      return {
-        submission,
-        grade: gradeInfo,
-        breakdown,
-        settings,
-      };
+      return { ...computed, guest: true };
     });
 
     if (result.error && !result.submission) {

@@ -494,6 +494,35 @@
   color: var(--dyn-orange-bright);
 }
 
+/* Guest play notice */
+.dyn-guest-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--dyn-orange);
+}
+
+.dyn-guest-banner p {
+  margin: 0;
+  color: var(--dyn-muted);
+  font-size: 0.9rem;
+}
+
+.dyn-guest-lb-note {
+  margin: 1rem 0 0;
+  padding: 0.65rem 0.85rem;
+  background: #1a1208;
+  border: 1px solid var(--dyn-orange-dim);
+  border-radius: 8px;
+  color: var(--dyn-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 /* Dashboard entry */
 .dyn-dashboard {
   text-align: center;

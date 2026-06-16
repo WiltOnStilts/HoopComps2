@@ -197,9 +197,20 @@ function spinReelHtml(label, value, spinning) {
   `;
 }
 
-function renderDashboard() {
+function renderGuestBanner(onAuthRequired) {
+  if (isLoggedIn()) return "";
+  return `
+    <div class="dyn-guest-banner panel">
+      <p>You're playing as a guest — your score won't appear on the leaderboard.</p>
+      <button type="button" class="btn-secondary btn-sm" id="dynGuestSignUp">Create account to compete</button>
+    </div>
+  `;
+}
+
+function renderDashboard({ onAuthRequired } = {}) {
   const err = dynastyState.playError;
   return `
+    ${renderGuestBanner(onAuthRequired)}
     <div class="dyn-dashboard panel">
       <h1 class="dyn-dashboard-title">Draft your daily dynasty!</h1>
       <p class="dyn-dashboard-sub">Six spins. Six picks. Build your starting five + 6th man from real NBA rosters.</p>
@@ -487,6 +498,7 @@ function renderResults(submission, grade, breakdown) {
         <button type="button" class="btn-primary" id="dynShareBtn">Share Results</button>
         <button type="button" class="btn-secondary" id="dynCopyBtn">Copy Text</button>
       </div>
+      ${!isLoggedIn() ? `<p class="dyn-guest-lb-note">Guest score — not saved to the leaderboard. Create an account to compete tomorrow.</p>` : ""}
     </div>
   `;
 }
@@ -495,10 +507,14 @@ async function renderLeaderboard(container) {
   try {
     const data = await fetchDynastyLeaderboard();
     const rows = (data.leaderboard || []).slice(0, 15);
+    const guestNote = isLoggedIn()
+      ? ""
+      : `<p class="dyn-guest-lb-note">Sign in to save your score and appear on the leaderboard.</p>`;
     container.innerHTML = `
       <div class="panel dyn-leaderboard">
         <h3>Today's Leaderboard</h3>
         <p class="hint">Resets every 24 hours (UTC) · ${escapeHtml(data.dayKey || "")}</p>
+        ${guestNote}
         ${
           rows.length
             ? `
@@ -579,18 +595,6 @@ export async function mountGame({ onAuthRequired } = {}) {
   const root = document.getElementById("gameRoot");
   if (!root) return;
 
-  if (!isLoggedIn()) {
-    root.innerHTML = `
-      <div class="dynasty-gate panel">
-        <h2>DynastyDraft</h2>
-        <p>Sign in to play today's daily basketball challenge.</p>
-        <button type="button" class="btn-primary" id="dynastySignIn">Sign in to play</button>
-      </div>
-    `;
-    root.querySelector("#dynastySignIn")?.addEventListener("click", () => onAuthRequired?.());
-    return;
-  }
-
   root.innerHTML = `<div class="dynasty-loading panel"><p>Loading today's challenge…</p></div>`;
 
   try {
@@ -624,7 +628,7 @@ async function paintGame(root, { onAuthRequired } = {}) {
   let mainContent = "";
 
   if (dynastyState.phase === "dashboard") {
-    mainContent = renderDashboard();
+    mainContent = renderDashboard({ onAuthRequired });
   } else if (dynastyState.phase === "spin") {
     mainContent = renderSpinPhase();
   } else if (dynastyState.phase === "pick") {
@@ -639,7 +643,7 @@ async function paintGame(root, { onAuthRequired } = {}) {
     ${dynastyState.phase === "dashboard" || dynastyState.phase === "results" ? renderSettings() : ""}
     ${mainContent}
     <div id="dynLeaderboardMount"></div>
-    ${dynastyState.phase === "dashboard" || dynastyState.phase === "results" ? renderFriendsSearch() : ""}
+    ${isLoggedIn() && (dynastyState.phase === "dashboard" || dynastyState.phase === "results") ? renderFriendsSearch() : ""}
   `;
 
   syncTopBar();
@@ -846,10 +850,14 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
     }
   });
 
+  root.querySelector("#dynGuestSignUp")?.addEventListener("click", () => onAuthRequired?.("register"));
+
   root.querySelector("#dynShowStats")?.addEventListener("change", async (e) => {
     dynastyState.settings.showStats = e.target.checked;
     dynastyState.players = {};
-    await updateDynastySettings({ showStats: e.target.checked });
+    if (isLoggedIn()) {
+      await updateDynastySettings({ showStats: e.target.checked });
+    }
     if (dynastyState.phase === "pick") {
       dynastyState.playersCache = await loadRosterForRound(dynastyState.currentRound);
       await paintGame(root, { onAuthRequired });
@@ -858,7 +866,9 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
 
   root.querySelector("#dynSound")?.addEventListener("change", async (e) => {
     dynastyState.settings.soundEnabled = e.target.checked;
-    await updateDynastySettings({ soundEnabled: e.target.checked });
+    if (isLoggedIn()) {
+      await updateDynastySettings({ soundEnabled: e.target.checked });
+    }
   });
 
   root.querySelector("#dynShareBtn")?.addEventListener("click", () => {

@@ -118,17 +118,21 @@ function publicUser(user) {
   };
 }
 
-export async function registerUser({ email, password, displayName, username }) {
+export async function registerUser({ email, password, username }) {
   const normalizedEmail = String(email || "")
     .trim()
     .toLowerCase();
   if (!normalizedEmail.includes("@")) throw new Error("Valid email required");
   if (!password || String(password).length < 6) throw new Error("Password must be at least 6 characters");
+  const handle = String(username || "")
+    .trim()
+    .replace(/^@+/, "")
+    .slice(0, 24);
+  if (!handle) throw new Error("Username required");
   const user = createUser({
     email: normalizedEmail,
     passwordHash: hashPassword(String(password)),
-    displayName,
-    username,
+    username: handle,
   });
   const token = signToken({ sub: user.id, email: user.email });
   return { user: publicUser(user), token };

@@ -40,17 +40,13 @@
         <button type="button" class="modal-close" id="authModalClose" aria-label="Close">×</button>
         <h2 id="authModalTitle">Sign in</h2>
         <form id="authForm" class="auth-form">
+          <label id="authUsernameField" class="hidden">
+            Username
+            <input type="text" id="authUsername" required autocomplete="username" placeholder="your handle" />
+          </label>
           <label>
             Email
             <input type="email" id="authEmail" required autocomplete="email" />
-          </label>
-          <label id="authNameField" class="hidden">
-            Display name
-            <input type="text" id="authDisplayName" autocomplete="name" />
-          </label>
-          <label id="authUsernameField" class="hidden">
-            Username
-            <input type="text" id="authUsername" autocomplete="username" placeholder="for friend search" />
           </label>
           <label>
             Password

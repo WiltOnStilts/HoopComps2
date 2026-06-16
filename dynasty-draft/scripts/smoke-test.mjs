@@ -24,6 +24,7 @@ if (!challenge.rounds || challenge.rounds.length !== 6) {
 }
 
 const picks = [];
+const slotsNeeded = [...LINEUP_SLOTS];
 for (let roundIndex = 0; roundIndex < 6; roundIndex++) {
   const round = challenge.rounds[roundIndex];
   const pool = getRosterPlayers({
@@ -32,17 +33,26 @@ for (let roundIndex = 0; roundIndex < 6; roundIndex++) {
     modifierIds: [round.modifierId],
   });
   const used = new Set(picks.map((p) => p.player.id));
-  const player = pool.find((p) => !used.has(p.id));
+  const player =
+    pool.find(
+      (p) =>
+        !used.has(p.id) &&
+        slotsNeeded.some((slot) => canPlayPosition(p, slot))
+    ) || pool.find((p) => !used.has(p.id));
   if (!player) throw new Error(`No players for round ${roundIndex + 1}`);
+  const slotIdx = slotsNeeded.findIndex((slot) => canPlayPosition(player, slot));
+  if (slotIdx >= 0) slotsNeeded.splice(slotIdx, 1);
   picks.push({ roundIndex, player });
 }
 
 const lineup = {};
-const openSlots = [...LINEUP_SLOTS];
-for (const pick of picks) {
-  const slotIdx = openSlots.findIndex((slot) => canPlayPosition(pick.player, slot));
-  const slot = slotIdx >= 0 ? openSlots.splice(slotIdx, 1)[0] : openSlots.shift();
-  if (!slot) throw new Error("Could not assign lineup slots");
+const remaining = [...picks];
+for (const slot of LINEUP_SLOTS) {
+  const idx = remaining.findIndex((p) => canPlayPosition(p.player, slot));
+  if (idx < 0) {
+    throw new Error(`No player can fill ${slot} — check positions in roster data`);
+  }
+  const pick = remaining.splice(idx, 1)[0];
   lineup[slot] = { playerId: pick.player.id, roundIndex: pick.roundIndex };
 }
 

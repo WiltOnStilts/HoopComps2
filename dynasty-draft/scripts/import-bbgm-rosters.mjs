@@ -13,6 +13,7 @@ import { fileURLToPath } from "url";
 import {
   extractSnapshotRoster,
   extractStatsRoster,
+  extractRatingsHistory,
   mergeImportedPlayers,
   parseBBGMJson,
 } from "../lib/bbgm-import.mjs";
@@ -42,8 +43,15 @@ const SNAPSHOT_FILES = [
   "NBA Legacy 1985 23 teams.json",
 ];
 
-/** Mega files — career stat rows fill gaps between snapshots */
-const STATS_FILES = ["2022-23.NBA.Roster.json", "2024-25.NBA.Roster.json"];
+/** Mega files — career stats + ratings history */
+const MEGA_FILES = [
+  "2019-20.NBA.Roster.json",
+  "2020-21.NBA.Roster.json",
+  "2021-22.NBA.Roster.json",
+  "2022-23.NBA.Roster.json",
+  "2023-24.NBA.Roster.json",
+  "2024-25.NBA.Roster.json",
+];
 
 const skipDownload = process.argv.includes("--skip-download");
 
@@ -87,18 +95,21 @@ async function main() {
     }
   }
 
-  for (const name of STATS_FILES) {
+  for (const name of MEGA_FILES) {
     try {
       const filePath = await downloadFile(name);
       const league = loadLeague(filePath);
       const before = merged.size;
-      const rows = extractStatsRoster(league, 5);
-      mergeImportedPlayers(merged, rows);
-      meta.statsFiles.push({ file: name, added: merged.size - before, rows: rows.length });
-      console.log(`  ✓ stats ${name} → +${merged.size - before} new (${rows.length} stat rows scanned)`);
+      mergeImportedPlayers(merged, extractStatsRoster(league, 1));
+      mergeImportedPlayers(merged, extractRatingsHistory(league));
+      meta.statsFiles.push({
+        file: name,
+        added: merged.size - before,
+      });
+      console.log(`  ✓ mega ${name} → +${merged.size - before} new`);
     } catch (err) {
       meta.errors.push({ file: name, error: err.message });
-      console.warn(`  ✗ stats ${name}: ${err.message}`);
+      console.warn(`  ✗ mega ${name}: ${err.message}`);
     }
   }
 

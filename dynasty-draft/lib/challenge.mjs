@@ -11,7 +11,7 @@ function getDraftableTeamYears() {
   const teams = loadTeams();
   const pairs = [];
   for (const team of teams) {
-    for (let year = 1976; year <= 2024; year++) {
+    for (let year = 1970; year <= 2024; year++) {
       const pool = getRosterPlayers({ teamId: team.id, year, modifierIds: ["standard"] });
       if (pool.length >= 6) {
         pairs.push({ teamId: team.id, teamName: team.name, teamAbbr: team.abbr, year });

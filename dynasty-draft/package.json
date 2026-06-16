@@ -8,7 +8,8 @@
     "dev": "node server.mjs",
     "test": "node scripts/smoke-test.mjs",
     "import:rosters": "node scripts/import-bbgm-rosters.mjs",
-    "build:rosters": "node scripts/import-bbgm-rosters.mjs && node scripts/generate-rosters.mjs"
+    "build:rosters": "node scripts/import-bbgm-rosters.mjs && node scripts/generate-rosters.mjs",
+    "build:rosters:full": "node scripts/import-bbgm-rosters.mjs && .venv/bin/python scripts/fetch-nba-rosters.py && node scripts/generate-rosters.mjs"
   },
   "engines": {
     "node": ">=18"

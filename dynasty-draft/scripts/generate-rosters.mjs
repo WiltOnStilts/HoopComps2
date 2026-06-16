@@ -202,7 +202,7 @@ function resolveTeamId(teamId) {
 }
 
 const TEAMS = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "dynasty", "teams.json"), "utf8"));
-const MIN_YEAR = 1960;
+const MIN_YEAR = 1970;
 const MAX_YEAR = 2026;
 
 function findCareerByName(name) {

@@ -3,6 +3,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { ratingsFromStatRow } from "./ratings-from-stats.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ALIASES = JSON.parse(
@@ -146,9 +147,9 @@ export function playerSeasonFromStat(player, teamByTid, stat) {
   if (!teamId || !player?.name || stat.gp < 1) return null;
 
   const year = stat.season;
-  const rating = ratingForSeason(player, stat.season);
-  const ratings = bbgmToDynastyRatings(rating);
+  const bbgmRating = ratingForSeason(player, stat.season);
   const positions = parsePositions(player.pos);
+  const ratings = bbgmRating ? bbgmToDynastyRatings(bbgmRating) : ratingsFromStatRow(stat, positions);
   const age = player.born?.year ? year - player.born.year : 25;
 
   return {
@@ -190,6 +191,53 @@ export function extractStatsRoster(league, minGp = 1) {
       if (stat.playoffs || stat.gp < minGp) continue;
       const row = playerSeasonFromStat(p, teamByTid, stat);
       if (row) players.push(row);
+    }
+  }
+
+  return players;
+}
+
+/** BBGM ratings tied to team via stats/transactions — fills gaps stats-only misses */
+export function extractRatingsHistory(league) {
+  const teamByTid = new Map((league.teams || []).map((t) => [t.tid, t]));
+  const players = [];
+
+  for (const p of league.players || []) {
+    if (!p.name) continue;
+    const teamBySeason = new Map();
+    for (const s of p.stats || []) {
+      if (!s.playoffs && s.gp >= 1) teamBySeason.set(s.season, s.tid);
+    }
+    for (const t of p.transactions || []) {
+      if (t.tid >= 0) teamBySeason.set(t.season, t.tid);
+    }
+
+    for (const r of p.ratings || []) {
+      const tid = teamBySeason.get(r.season);
+      if (tid == null) continue;
+      const team = teamByTid.get(tid);
+      const teamId = mapBBGMTeamId(team);
+      if (!teamId) continue;
+
+      const year = r.season;
+      const stat = (p.stats || []).find((s) => !s.playoffs && s.season === year && s.tid === tid);
+      const positions = parsePositions(p.pos);
+      const ratings = r ? bbgmToDynastyRatings(r) : ratingsFromStatRow(stat, positions);
+      const age = p.born?.year ? year - p.born.year : 25;
+
+      players.push({
+        id: `${slug(p.name)}-${teamId}-${year}`,
+        name: p.name,
+        teamId,
+        year,
+        age,
+        experience: experienceFor(p, year),
+        positions,
+        primaryPosition: positions[0],
+        allStar: isAllStar(p, year),
+        ratings,
+        source: "bbgm-ratings",
+      });
     }
   }
 

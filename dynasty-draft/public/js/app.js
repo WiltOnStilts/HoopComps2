@@ -23,8 +23,10 @@ function openAuthModal(mode = "login") {
   $("authUsernameField")?.classList.toggle("hidden", mode !== "register");
   $("authSwitchText").innerHTML =
     mode === "register"
-      ? `Already have an account? <a href="#" data-auth-switch="login">Sign in</a>`
-      : `New here? <a href="#" data-auth-switch="register">Create account</a>`;
+      ? `<button type="button" class="btn-secondary auth-switch-btn" data-auth-switch="login">Already have an account? Sign in</button>`
+      : `<button type="button" class="btn-secondary auth-switch-btn" data-auth-switch="register">New here? Create account</button>`;
+  const pw = $("authPassword");
+  if (pw) pw.autocomplete = mode === "register" ? "new-password" : "current-password";
   $("authError").textContent = "";
 }
 
@@ -99,10 +101,18 @@ async function init() {
   });
 
   document.body.addEventListener("click", (e) => {
-    const link = e.target.closest("[data-auth-switch]");
-    if (link) {
+    const switcher = e.target.closest("[data-auth-switch]");
+    if (switcher) {
       e.preventDefault();
-      openAuthModal(link.dataset.authSwitch);
+      openAuthModal(switcher.dataset.authSwitch);
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      void restoreSessionFromServer().then((user) => {
+        if (user) renderAuthUI();
+      });
     }
   });
 }

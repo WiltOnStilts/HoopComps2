@@ -40,7 +40,8 @@ function b64urlDecode(str) {
   return Buffer.from(str, "base64url").toString("utf8");
 }
 
-export function signToken(payload, expiresInDays = 365) {
+/** Long-lived session — cleared only on explicit sign out */
+export function signToken(payload, expiresInDays = 3650) {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const exp = Math.floor(Date.now() / 1000) + expiresInDays * 86400;
   const body = b64url(JSON.stringify({ ...payload, exp }));
@@ -92,7 +93,7 @@ export function getRequestToken(req) {
 }
 
 export function sessionCookieHeader(token) {
-  const maxAge = 365 * 24 * 60 * 60;
+  const maxAge = 3650 * 24 * 60 * 60;
   const secure =
     process.env.NODE_ENV === "production" || process.env.RENDER === "true" ? "; Secure" : "";
   if (!token) {
@@ -118,11 +119,14 @@ function publicUser(user) {
 }
 
 export async function registerUser({ email, password, displayName, username }) {
-  if (!email?.includes("@")) throw new Error("Valid email required");
-  if (!password || password.length < 6) throw new Error("Password must be at least 6 characters");
+  const normalizedEmail = String(email || "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedEmail.includes("@")) throw new Error("Valid email required");
+  if (!password || String(password).length < 6) throw new Error("Password must be at least 6 characters");
   const user = createUser({
-    email,
-    passwordHash: hashPassword(password),
+    email: normalizedEmail,
+    passwordHash: hashPassword(String(password)),
     displayName,
     username,
   });
@@ -131,10 +135,13 @@ export async function registerUser({ email, password, displayName, username }) {
 }
 
 export async function loginUser({ email, password }) {
-  const row = findUserByEmail(email);
+  const normalizedEmail = String(email || "")
+    .trim()
+    .toLowerCase();
+  const row = findUserByEmail(normalizedEmail);
   if (!row) throw new Error("Invalid email or password");
   const hash = getUserPasswordHash(row.id);
-  if (!verifyPassword(password, hash)) throw new Error("Invalid email or password");
+  if (!verifyPassword(String(password ?? ""), hash)) throw new Error("Invalid email or password");
   const token = signToken({ sub: row.id, email: row.email });
   return { user: publicUser(row), token };
 }

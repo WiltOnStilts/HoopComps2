@@ -1,5 +1,6 @@
 const TOKEN_KEY = "dynasty_token";
 const USER_KEY = "dynasty_user";
+const GUEST_SEED_KEY = "dynasty_guest_seed";
 
 let currentUser = null;
 let authToken = null;
@@ -64,6 +65,16 @@ export function setAuthChangeHandler(fn) {
   onAuthChange = fn;
 }
 
+export function getChallengeSeed() {
+  if (currentUser?.id) return currentUser.id;
+  let seed = localStorage.getItem(GUEST_SEED_KEY);
+  if (!seed) {
+    seed = crypto.randomUUID();
+    localStorage.setItem(GUEST_SEED_KEY, seed);
+  }
+  return seed;
+}
+
 export async function authFetch(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
@@ -71,6 +82,7 @@ export async function authFetch(path, options = {}) {
   };
   const isAuthAction = path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register");
   if (authToken && !isAuthAction) headers.Authorization = `Bearer ${authToken}`;
+  if (path.startsWith("/api/dynasty/")) headers["X-Dynasty-Seed"] = getChallengeSeed();
 
   const res = await fetch(path, { ...options, headers, credentials: "include" });
   const data = await res.json().catch(() => ({}));

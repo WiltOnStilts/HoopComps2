@@ -44,7 +44,7 @@ let dynastyState = {
   spinning: false,
   spinDisplay: null,
   pendingPlayer: null,
-  reassignSlot: null,
+  selectedLineupSlot: null,
   playError: null,
 };
 
@@ -86,33 +86,160 @@ function getPickByPlayerId(playerId) {
   return dynastyState.picks.find((p) => p.player.id === playerId);
 }
 
+function canPlayPosition(player, position) {
+  if (position === "sixth") return true;
+  const positions = player.positions || [];
+  if (positions.includes(position)) return true;
+  const adjacency = {
+    PG: ["SG"],
+    SG: ["PG", "SF"],
+    SF: ["SG", "PF"],
+    PF: ["SF", "C"],
+    C: ["PF"],
+  };
+  return adjacency[position]?.includes(player.primaryPosition) || false;
+}
+
 function playerEligibleSlots(player) {
-  const positions = new Set(player.positions || []);
-  if (player.primaryPosition) positions.add(player.primaryPosition);
-  return SLOTS.filter((slot) => slot === "sixth" || positions.has(slot));
+  return SLOTS.filter((slot) => canPlayPosition(player, slot));
+}
+
+function findPlayerSlot(playerId) {
+  for (const slot of SLOTS) {
+    if (dynastyState.assignments[slot] === playerId) return slot;
+  }
+  return null;
+}
+
+function canMutualSwap(playerA, slotA, playerB, slotB) {
+  return canPlayPosition(playerA, slotB) && canPlayPosition(playerB, slotA);
+}
+
+function tryMutualSwap(slotA, slotB) {
+  const idA = dynastyState.assignments[slotA];
+  const idB = dynastyState.assignments[slotB];
+  if (!idA || !idB || slotA === slotB) return false;
+  const pickA = getPickByPlayerId(idA);
+  const pickB = getPickByPlayerId(idB);
+  if (!pickA || !pickB) return false;
+  if (!canMutualSwap(pickA.player, slotA, pickB.player, slotB)) return false;
+  dynastyState.assignments[slotA] = idB;
+  dynastyState.assignments[slotB] = idA;
+  return true;
+}
+
+function tryMoveToSlot(fromSlot, toSlot) {
+  const playerId = dynastyState.assignments[fromSlot];
+  if (!playerId || dynastyState.assignments[toSlot] || fromSlot === toSlot) return false;
+  const pick = getPickByPlayerId(playerId);
+  if (!pick || !canPlayPosition(pick.player, toSlot)) return false;
+  delete dynastyState.assignments[fromSlot];
+  dynastyState.assignments[toSlot] = playerId;
+  return true;
+}
+
+function canMoveToEmptyPreview(fromSlot, toSlot) {
+  if (dynastyState.assignments[toSlot]) return false;
+  const playerId = dynastyState.assignments[fromSlot];
+  const pick = getPickByPlayerId(playerId);
+  return Boolean(pick && canPlayPosition(pick.player, toSlot));
+}
+
+function handleLineupSlotClick(slot) {
+  const playerId = dynastyState.assignments[slot];
+  const selected = dynastyState.selectedLineupSlot;
+
+  if (!playerId) {
+    if (!selected || selected === slot) return;
+    if (tryMoveToSlot(selected, slot)) playSound("pick");
+    dynastyState.selectedLineupSlot = null;
+    return;
+  }
+
+  if (!selected) {
+    dynastyState.selectedLineupSlot = slot;
+    return;
+  }
+  if (selected === slot) {
+    dynastyState.selectedLineupSlot = null;
+    return;
+  }
+  if (tryMutualSwap(selected, slot)) playSound("pick");
+  dynastyState.selectedLineupSlot = null;
+}
+
+function renderLineupSlot(slot, { interactive = false } = {}) {
+  const playerId = dynastyState.assignments[slot];
+  const pick = playerId ? getPickByPlayerId(playerId) : null;
+  const posLabel = slot === "sixth" ? "6th" : slot;
+  const inner = `
+    <span class="dyn-lineup-pos">${posLabel}</span>
+    <span class="dyn-lineup-pick">${pick ? escapeHtml(pick.player.name) : "—"}</span>
+  `;
+
+  if (!interactive) {
+    return `<div class="dyn-lineup-slot${pick ? " filled" : ""}">${inner}</div>`;
+  }
+
+  const selected = dynastyState.selectedLineupSlot;
+
+  if (!playerId) {
+    const canMoveHere = selected && canMoveToEmptyPreview(selected, slot);
+    if (canMoveHere) {
+      return `
+        <button type="button" class="dyn-lineup-slot move-target" data-lineup-slot="${slot}">
+          ${inner}
+        </button>
+      `;
+    }
+    return `<div class="dyn-lineup-slot">${inner}</div>`;
+  }
+
+  const isSelected = selected === slot;
+  const canSwapTarget =
+    selected && selected !== slot && tryMutualSwapPreview(selected, slot);
+
+  return `
+    <button type="button" class="dyn-lineup-slot filled${isSelected ? " active" : ""}${canSwapTarget ? " swap-target" : ""}" data-lineup-slot="${slot}">
+      ${inner}
+    </button>
+  `;
+}
+
+function tryMutualSwapPreview(slotA, slotB) {
+  const idA = dynastyState.assignments[slotA];
+  const idB = dynastyState.assignments[slotB];
+  if (!idA || !idB) return false;
+  const pickA = getPickByPlayerId(idA);
+  const pickB = getPickByPlayerId(idB);
+  if (!pickA || !pickB) return false;
+  return canMutualSwap(pickA.player, slotA, pickB.player, slotB);
+}
+
+function assignPlayerToSlot(slot, playerId) {
+  const existingId = dynastyState.assignments[slot];
+  const sourceSlot = findPlayerSlot(playerId);
+
+  if (!existingId) {
+    if (sourceSlot) delete dynastyState.assignments[sourceSlot];
+    dynastyState.assignments[slot] = playerId;
+    return true;
+  }
+  if (existingId === playerId) return true;
+  if (!sourceSlot) return false;
+
+  const incoming = getPickByPlayerId(playerId)?.player;
+  const outgoing = getPickByPlayerId(existingId)?.player;
+  if (!incoming || !outgoing) return false;
+  if (!canMutualSwap(incoming, slot, outgoing, sourceSlot)) return false;
+
+  dynastyState.assignments[slot] = playerId;
+  dynastyState.assignments[sourceSlot] = existingId;
+  return true;
 }
 
 function usedPlayerIds() {
   return new Set(dynastyState.picks.map((p) => p.player.id));
-}
-
-function assignPlayerToSlot(slot, playerId) {
-  const displacedId = dynastyState.assignments[slot];
-  let sourceSlot = null;
-  for (const s of SLOTS) {
-    if (dynastyState.assignments[s] === playerId) sourceSlot = s;
-  }
-
-  if (sourceSlot) delete dynastyState.assignments[sourceSlot];
-  dynastyState.assignments[slot] = playerId;
-
-  // Swap: displaced player takes the slot the incoming player vacated
-  if (displacedId && displacedId !== playerId && sourceSlot && sourceSlot !== slot) {
-    const displaced = getPickByPlayerId(displacedId)?.player;
-    if (displaced && playerEligibleSlots(displaced).includes(sourceSlot)) {
-      dynastyState.assignments[sourceSlot] = displacedId;
-    }
-  }
 }
 
 function allSlotsFilled() {
@@ -266,22 +393,7 @@ function renderPickPhase() {
 
   const canReassign = dynastyState.picks.length > 0;
 
-  const lineupSummary = SLOTS.map((s) => {
-    const playerId = dynastyState.assignments[s];
-    const pick = playerId ? getPickByPlayerId(playerId) : null;
-    const inner = `
-        <span class="dyn-lineup-pos">${s === "sixth" ? "6th" : s}</span>
-        <span class="dyn-lineup-pick">${pick ? escapeHtml(pick.player.name) : "—"}</span>
-    `;
-    if (canReassign) {
-      return `
-      <button type="button" class="dyn-lineup-slot${playerId ? " filled" : ""}${dynastyState.reassignSlot === s ? " active" : ""}" data-reassign-slot="${s}">
-        ${inner}
-      </button>
-    `;
-    }
-    return `<div class="dyn-lineup-slot${playerId ? " filled" : ""}">${inner}</div>`;
-  }).join("");
+  const lineupSummary = SLOTS.map((s) => renderLineupSlot(s, { interactive: canReassign })).join("");
 
   return `
     <div class="dyn-draft-layout">
@@ -290,7 +402,10 @@ function renderPickPhase() {
         <h3>${escapeHtml(round?.teamName || "")} · ${escapeHtml(round?.yearsLabel || "")}</h3>
         <p class="hint">${dynastyState.rosterSize || players.length} players · ${escapeHtml(round?.modifierLabel || "")}</p>
       </div>
-      <div class="dyn-lineup-bar${canReassign ? "" : " dyn-lineup-readonly"}">${lineupSummary}</div>
+      <div class="dyn-lineup-bar${canReassign ? "" : " dyn-lineup-readonly"}">
+        ${canReassign ? `<p class="hint dyn-lineup-hint">Tap a player, then tap an open spot or another player to move or swap.</p>` : ""}
+        ${lineupSummary}
+      </div>
       <div class="dyn-player-pool" id="dynPlayerPool">
         ${players.length
           ? players.map((p) =>
@@ -305,7 +420,6 @@ function renderPickPhase() {
       </div>
     </div>
     ${renderPositionModal()}
-    ${renderReassignModal()}
   `;
 }
 
@@ -314,58 +428,37 @@ function renderPositionModal() {
   if (!player) return "";
 
   const slots = playerEligibleSlots(player);
+  const sourceSlot = findPlayerSlot(player.id);
   const buttons = slots
     .map((slot) => {
       const occupied = dynastyState.assignments[slot];
-      const occupant = occupied ? getPickByPlayerId(occupied) : null;
-      let note = "";
-      if (occupant && occupant.player.id !== player.id) {
-        note = ` ↔ swap with ${escapeHtml(occupant.player.name)}`;
+      if (!occupied) {
+        return `
+        <button type="button" class="btn-secondary dyn-pos-btn" data-assign-slot="${slot}">
+          ${SLOT_LABELS[slot]}
+        </button>
+      `;
       }
+      if (!sourceSlot) return "";
+      const occupant = getPickByPlayerId(occupied);
+      if (!occupant || occupant.player.id === player.id) return "";
+      if (!canMutualSwap(player, slot, occupant.player, sourceSlot)) return "";
       return `
         <button type="button" class="btn-secondary dyn-pos-btn" data-assign-slot="${slot}">
-          ${SLOT_LABELS[slot]}${note}
+          ${SLOT_LABELS[slot]} ↔ swap with ${escapeHtml(occupant.player.name)}
         </button>
       `;
     })
+    .filter(Boolean)
     .join("");
 
   return `
     <div class="dyn-modal-backdrop" id="dynPositionModal">
       <div class="dyn-modal panel">
         <h3>Where does ${escapeHtml(player.name)} play?</h3>
-        <p class="hint">NBA positions: ${escapeHtml((player.positions || []).join(", "))}. Occupied slots swap when both players can play each other's spot.</p>
-        <div class="dyn-pos-grid">${buttons}</div>
+        <p class="hint">NBA positions: ${escapeHtml((player.positions || []).join(", "))}. Occupied spots only if both players can swap positions.</p>
+        <div class="dyn-pos-grid">${buttons || `<p class="hint">No open spots available</p>`}</div>
         <button type="button" class="btn-text" id="dynCancelPos">Cancel</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderReassignModal() {
-  const slot = dynastyState.reassignSlot;
-  if (!slot) return "";
-
-  const options = dynastyState.picks
-    .filter((p) => playerEligibleSlots(p.player).includes(slot))
-    .map((p) => {
-      const currentSlot = Object.entries(dynastyState.assignments).find(([, id]) => id === p.player.id)?.[0];
-      const cur = currentSlot ? ` · now at ${currentSlot === "sixth" ? "6th" : currentSlot}` : "";
-      return `
-        <button type="button" class="btn-secondary dyn-pos-btn" data-reassign-player="${escapeHtml(p.player.id)}">
-          ${escapeHtml(p.player.name)}${cur}
-        </button>
-      `;
-    })
-    .join("");
-
-  return `
-    <div class="dyn-modal-backdrop" id="dynReassignModal">
-      <div class="dyn-modal panel">
-        <h3>Assign ${SLOT_LABELS[slot]}</h3>
-        <p class="hint">Pick a player for this spot. If the slot is taken and both players qualify at each other's position, they'll swap.</p>
-        <div class="dyn-pos-grid">${options || `<p class="hint">No eligible players</p>`}</div>
-        <button type="button" class="btn-text" id="dynCancelReassign">Cancel</button>
       </div>
     </div>
   `;
@@ -387,28 +480,18 @@ function renderReviewPhase() {
     })
     .join("");
 
-  const lineupSummary = SLOTS.map((s) => {
-    const playerId = dynastyState.assignments[s];
-    const pick = playerId ? getPickByPlayerId(playerId) : null;
-    return `
-      <button type="button" class="dyn-lineup-slot${pick ? " filled" : ""}${dynastyState.reassignSlot === s ? " active" : ""}" data-reassign-slot="${s}">
-        <span class="dyn-lineup-pos">${s === "sixth" ? "6th" : s}</span>
-        <span class="dyn-lineup-pick">${pick ? escapeHtml(pick.player.name) : "Tap to assign"}</span>
-      </button>
-    `;
-  }).join("");
+  const lineupSummary = SLOTS.map((s) => renderLineupSlot(s, { interactive: true })).join("");
 
   return `
     <div class="dyn-review panel">
       <h3>Your dynasty</h3>
-      <p class="hint">Tap a lineup spot to assign or swap — e.g. put Luka at PG and Tyler at SG.</p>
+      <p class="hint">Tap a player, then tap an open spot or another player to move or swap.</p>
       <div class="dyn-lineup-bar">${lineupSummary}</div>
       <ul class="dyn-picks-list">${picksHtml}</ul>
       <button type="button" class="btn-primary${allSlotsFilled() ? "" : " btn-disabled"}" id="dynSubmitLineup" ${allSlotsFilled() ? "" : "disabled"}>
         Simulate Season →
       </button>
     </div>
-    ${renderReassignModal()}
   `;
 }
 
@@ -606,6 +689,7 @@ export async function mountGame({ onAuthRequired } = {}) {
     dynastyState.best = data.best || { score: 0, grade: "F" };
     dynastyState.picks = [];
     dynastyState.assignments = {};
+    dynastyState.selectedLineupSlot = null;
     dynastyState.currentRound = 0;
     dynastyState.phase = data.submission ? "results" : "dashboard";
     dynastyState.playError = null;
@@ -724,6 +808,7 @@ async function handlePlayClick(root, { onAuthRequired } = {}) {
     dynastyState.currentRound = 0;
     dynastyState.picks = [];
     dynastyState.assignments = {};
+    dynastyState.selectedLineupSlot = null;
     await enterSpinPhase(root, { onAuthRequired });
   } catch (e) {
     dynastyState.playError = e.message || "Something went wrong starting the draft.";
@@ -772,8 +857,8 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
       const slot = btn.dataset.assignSlot;
       const player = dynastyState.pendingPlayer;
       if (!player || !slot) return;
+      if (!assignPlayerToSlot(slot, player.id)) return;
 
-      assignPlayerToSlot(slot, player.id);
       dynastyState.picks.push({
         roundIndex: dynastyState.currentRound,
         round: getRoundConfig(dynastyState.currentRound),
@@ -801,28 +886,11 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
     paintGame(root, { onAuthRequired });
   });
 
-  root.querySelectorAll("[data-reassign-slot]").forEach((btn) => {
+  root.querySelectorAll("[data-lineup-slot]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      dynastyState.reassignSlot = btn.dataset.reassignSlot;
+      handleLineupSlotClick(btn.dataset.lineupSlot);
       paintGame(root, { onAuthRequired });
     });
-  });
-
-  root.querySelectorAll("[data-reassign-player]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const slot = dynastyState.reassignSlot;
-      const playerId = btn.dataset.reassignPlayer;
-      if (!slot || !playerId) return;
-      assignPlayerToSlot(slot, playerId);
-      dynastyState.reassignSlot = null;
-      playSound("pick");
-      paintGame(root, { onAuthRequired });
-    });
-  });
-
-  root.querySelector("#dynCancelReassign")?.addEventListener("click", () => {
-    dynastyState.reassignSlot = null;
-    paintGame(root, { onAuthRequired });
   });
 
   root.querySelector("#dynSubmitLineup")?.addEventListener("click", async () => {

@@ -1,8 +1,12 @@
-import { authFetch, isLoggedIn } from "./auth.js";
+import { authFetch, isLoggedIn, getChallengeSeed } from "./auth.js";
 
 async function dynastyFetch(path, options = {}) {
-  if (isLoggedIn()) return authFetch(path, options);
-  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Dynasty-Seed": getChallengeSeed(),
+    ...(options.headers || {}),
+  };
+  if (isLoggedIn()) return authFetch(path, { ...options, headers });
   const res = await fetch(path, { ...options, headers, credentials: "include" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
@@ -35,7 +39,7 @@ export async function fetchDynastyPlayers({ teamId, year, modifierIds, slot = "a
 export async function submitDynastyLineup(lineup) {
   return dynastyFetch("/api/dynasty/submit", {
     method: "POST",
-    body: JSON.stringify({ lineup }),
+    body: JSON.stringify({ lineup, challengeSeed: getChallengeSeed() }),
   });
 }
 

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { getDayKey } from "./day-key.mjs";
-import { getOrCreateDailyChallenge, getRoundConfig } from "./challenge.mjs";
+import { getOrCreateUserChallenge, getRoundConfig } from "./challenge.mjs";
 import {
   getRosterPlayers,
   buildFullRoster,
@@ -32,8 +32,17 @@ function parseUrl(url) {
 
 const DEFAULT_SETTINGS = { showStats: true, soundEnabled: true };
 
-function computeLineupSubmission(store, { lineupInput, dayKey, userId }) {
-  const challenge = getOrCreateDailyChallenge(store, dayKey);
+function resolveChallengeSeed(req, user) {
+  if (user?.id) return user.id;
+  const header = req.headers["x-dynasty-seed"] || req.headers["X-Dynasty-Seed"];
+  if (typeof header === "string" && /^[a-zA-Z0-9-]{8,64}$/.test(header.trim())) {
+    return header.trim();
+  }
+  return null;
+}
+
+function computeLineupSubmission(store, { lineupInput, dayKey, userId, challengeSeed }) {
+  const challenge = getOrCreateUserChallenge(store, dayKey, challengeSeed);
   const settings = userId ? getUserSettings(store, userId) : DEFAULT_SETTINGS;
   const usedPlayerIds = new Set();
   const usedRoundIndexes = new Set();
@@ -107,8 +116,13 @@ export async function handleDynastyRoute(req, url, ctx) {
   if (req.method === "GET" && path === "/api/dynasty/today") {
     const user = await requireUser(req);
     const dayKey = getDayKey();
+    const challengeSeed = resolveChallengeSeed(req, user);
+    if (!challengeSeed) {
+      send(400, { error: "Missing challenge seed" });
+      return true;
+    }
     const data = await withDynastyStore((store) => {
-      const challenge = getOrCreateDailyChallenge(store, dayKey);
+      const challenge = getOrCreateUserChallenge(store, dayKey, challengeSeed);
       if (!user) {
         return {
           challenge,
@@ -174,6 +188,11 @@ export async function handleDynastyRoute(req, url, ctx) {
     const body = await readBody(req);
     const dayKey = getDayKey();
     const lineupInput = body.lineup || {};
+    const challengeSeed = resolveChallengeSeed(req, user) || body.challengeSeed;
+    if (!challengeSeed) {
+      send(400, { error: "Missing challenge seed" });
+      return true;
+    }
 
     const result = await withDynastyStore((store) => {
       if (user) {
@@ -183,7 +202,12 @@ export async function handleDynastyRoute(req, url, ctx) {
         }
       }
 
-      const computed = computeLineupSubmission(store, { lineupInput, dayKey, userId: user?.id });
+      const computed = computeLineupSubmission(store, {
+        lineupInput,
+        dayKey,
+        userId: user?.id,
+        challengeSeed,
+      });
       if (computed.error) return computed;
 
       if (user) {

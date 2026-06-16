@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { registerUser } from "../lib/auth.mjs";
 import { handleDynastyRoute } from "../lib/routes.mjs";
 import { getRosterPlayers, canPlayPosition, LINEUP_SLOTS } from "../lib/players.mjs";
-import { getOrCreateDailyChallenge } from "../lib/challenge.mjs";
+import { getOrCreateUserChallenge } from "../lib/challenge.mjs";
 import { withDynastyStore } from "../lib/store.mjs";
 import { getDayKey } from "../lib/day-key.mjs";
 
@@ -16,7 +16,7 @@ const reg = await registerUser({
 });
 
 const user = { id: reg.user.id };
-const challenge = await withDynastyStore((s) => getOrCreateDailyChallenge(s, getDayKey()));
+const challenge = await withDynastyStore((s) => getOrCreateUserChallenge(s, getDayKey(), reg.user.id));
 
 if (!challenge.rounds || challenge.rounds.length !== 6) {
   throw new Error(`Expected 6 rounds, got ${challenge.rounds?.length}`);
@@ -56,13 +56,17 @@ for (const slot of LINEUP_SLOTS) {
 }
 
 let result = null;
-await handleDynastyRoute({ method: "POST", headers: {} }, "/api/dynasty/submit", {
-  readBody: async () => ({ lineup }),
-  send: (status, data) => {
-    result = { status, data };
-  },
-  requireUser: async () => user,
-});
+await handleDynastyRoute(
+  { method: "POST", headers: { "x-dynasty-seed": user.id } },
+  "/api/dynasty/submit",
+  {
+    readBody: async () => ({ lineup, challengeSeed: user.id }),
+    send: (status, data) => {
+      result = { status, data };
+    },
+    requireUser: async () => user,
+  }
+);
 
 if (result.status !== 200) {
   console.error("FAIL submit:", result);

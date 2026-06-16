@@ -1,7 +1,7 @@
 import { getDayKey } from "./day-key.mjs";
 import { loadTeams, loadModifiers, getRosterPlayers } from "./players.mjs";
 
-export const CHALLENGE_VERSION = 5;
+export const CHALLENGE_VERSION = 6;
 export const PICK_COUNT = 6;
 
 let draftablePairsCache = null;
@@ -72,14 +72,14 @@ function pickDraftableRound(teams, rng) {
   return { team, year: pick.year };
 }
 
-export function buildDailyChallenge(dayKey = getDayKey()) {
+export function buildDailyChallenge(dayKey = getDayKey(), seed = "shared") {
   const teams = loadTeams();
   const modifiers = loadModifiers();
   let modPool = modifiers.filter((m) => m.id === "standard" || m.type === "simBonus" || m.type === "simPenalty");
   if (!modPool.length) modPool = [modifiers.find((m) => m.id === "standard") || modifiers[0]];
 
   for (let attempt = 0; attempt < 50; attempt++) {
-    const rng = seededRng(hashString(`dynasty-v4-${dayKey}-${attempt}`));
+    const rng = seededRng(hashString(`dynasty-v6-${dayKey}-${seed}-${attempt}`));
     const rounds = [];
 
     for (let i = 0; i < PICK_COUNT; i++) {
@@ -102,16 +102,17 @@ export function buildDailyChallenge(dayKey = getDayKey()) {
       return {
         challengeVersion: CHALLENGE_VERSION,
         dayKey,
+        seed,
         rounds,
         createdAt: new Date().toISOString(),
       };
     }
   }
 
-  return buildDailyChallengeFallback(dayKey);
+  return buildDailyChallengeFallback(dayKey, seed);
 }
 
-function buildDailyChallengeFallback(dayKey) {
+function buildDailyChallengeFallback(dayKey, seed = "shared") {
   const teams = loadTeams();
   const mod = loadModifiers().find((m) => m.id === "standard");
   const mavericks = teams.find((t) => t.id === "mavericks") || teams[0];
@@ -141,20 +142,22 @@ function buildDailyChallengeFallback(dayKey) {
   return {
     challengeVersion: CHALLENGE_VERSION,
     dayKey,
+    seed,
     rounds,
     createdAt: new Date().toISOString(),
   };
 }
 
-export function getOrCreateDailyChallenge(store, dayKey = getDayKey()) {
-  const idx = store.dailyChallenges?.findIndex((c) => c.dayKey === dayKey) ?? -1;
-  if (idx >= 0 && store.dailyChallenges[idx].challengeVersion === CHALLENGE_VERSION) {
-    return store.dailyChallenges[idx];
-  }
-
-  const challenge = buildDailyChallenge(dayKey);
+export function getOrCreateUserChallenge(store, dayKey = getDayKey(), seed = "shared") {
   store.dailyChallenges = store.dailyChallenges || [];
-  if (idx >= 0) store.dailyChallenges[idx] = challenge;
+  const idx = store.dailyChallenges.findIndex(
+    (c) => c.dayKey === dayKey && c.seed === seed && c.challengeVersion === CHALLENGE_VERSION
+  );
+  if (idx >= 0) return store.dailyChallenges[idx];
+
+  const challenge = buildDailyChallenge(dayKey, seed);
+  const staleIdx = store.dailyChallenges.findIndex((c) => c.dayKey === dayKey && c.seed === seed);
+  if (staleIdx >= 0) store.dailyChallenges[staleIdx] = challenge;
   else store.dailyChallenges.push(challenge);
 
   store.dailyChallenges = store.dailyChallenges.filter((c) => {
@@ -162,6 +165,11 @@ export function getOrCreateDailyChallenge(store, dayKey = getDayKey()) {
     return age < 14 * 24 * 60 * 60 * 1000;
   });
   return challenge;
+}
+
+/** @deprecated use getOrCreateUserChallenge */
+export function getOrCreateDailyChallenge(store, dayKey = getDayKey()) {
+  return getOrCreateUserChallenge(store, dayKey, "shared");
 }
 
 export function getRoundConfig(challenge, roundIndex) {

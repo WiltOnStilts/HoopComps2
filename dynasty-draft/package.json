@@ -1,0 +1,16 @@
+{
+  "name": "dynasty-draft",
+  "version": "1.0.0",
+  "description": "DynastyDraft — daily basketball team-building game",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "test": "node scripts/smoke-test.mjs",
+    "import:rosters": "node scripts/import-bbgm-rosters.mjs",
+    "build:rosters": "node scripts/import-bbgm-rosters.mjs && node scripts/generate-rosters.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

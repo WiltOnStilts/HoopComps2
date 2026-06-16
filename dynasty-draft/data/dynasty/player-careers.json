@@ -1,0 +1,6412 @@
+[
+  {
+    "id": "michael-jordan",
+    "name": "Michael Jordan",
+    "birthYear": 1963,
+    "debut": 1984,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 98,
+      "shooting": 88,
+      "defense": 92,
+      "playmaking": 85,
+      "rebounding": 75,
+      "health": 95,
+      "impact": 99
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 1984,
+        "to": 1993
+      },
+      {
+        "teamId": "bulls",
+        "from": 1995,
+        "to": 1998
+      }
+    ],
+    "allStarYears": [
+      1987,
+      1988,
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1996,
+      1997,
+      1998
+    ],
+    "allStar": true
+  },
+  {
+    "id": "scottie-pippen",
+    "name": "Scottie Pippen",
+    "birthYear": 1965,
+    "debut": 1987,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 94,
+      "playmaking": 82,
+      "rebounding": 80,
+      "health": 90,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 1987,
+        "to": 1998
+      }
+    ],
+    "allStarYears": [
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1997
+    ],
+    "allStar": true
+  },
+  {
+    "id": "dennis-rodman",
+    "name": "Dennis Rodman",
+    "birthYear": 1961,
+    "debut": 1986,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 55,
+      "shooting": 50,
+      "defense": 90,
+      "playmaking": 55,
+      "rebounding": 99,
+      "health": 88,
+      "impact": 85
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pistons",
+        "from": 1986,
+        "to": 1993
+      },
+      {
+        "teamId": "spurs",
+        "from": 1993,
+        "to": 1995
+      },
+      {
+        "teamId": "bulls",
+        "from": 1995,
+        "to": 1998
+      }
+    ],
+    "allStarYears": [
+      1990,
+      1991,
+      1992,
+      1993,
+      1996
+    ],
+    "allStar": true
+  },
+  {
+    "id": "toni-kukoc",
+    "name": "Toni Kukoc",
+    "birthYear": 1968,
+    "debut": 1993,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 84,
+      "defense": 72,
+      "playmaking": 80,
+      "rebounding": 68,
+      "health": 92,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 1993,
+        "to": 2000
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "luc-longley",
+    "name": "Luc Longley",
+    "birthYear": 1969,
+    "debut": 1991,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 68,
+      "shooting": 62,
+      "defense": 75,
+      "playmaking": 58,
+      "rebounding": 78,
+      "health": 85,
+      "impact": 70
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 1991,
+        "to": 1994
+      },
+      {
+        "teamId": "bulls",
+        "from": 1994,
+        "to": 1998
+      },
+      {
+        "teamId": "suns",
+        "from": 1998,
+        "to": 2001
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "steve-kerr",
+    "name": "Steve Kerr",
+    "birthYear": 1965,
+    "debut": 1988,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 88,
+      "defense": 68,
+      "playmaking": 78,
+      "rebounding": 42,
+      "health": 88,
+      "impact": 74
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "suns",
+        "from": 1988,
+        "to": 1989
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 1989,
+        "to": 1992
+      },
+      {
+        "teamId": "magic",
+        "from": 1992,
+        "to": 1993
+      },
+      {
+        "teamId": "bulls",
+        "from": 1993,
+        "to": 1998
+      },
+      {
+        "teamId": "spurs",
+        "from": 1999,
+        "to": 2001
+      },
+      {
+        "teamId": "blazers",
+        "from": 2001,
+        "to": 2002
+      },
+      {
+        "teamId": "spurs",
+        "from": 2002,
+        "to": 2003
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "ron-harper",
+    "name": "Ron Harper",
+    "birthYear": 1964,
+    "debut": 1986,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 72,
+      "rebounding": 65,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 1986,
+        "to": 1989
+      },
+      {
+        "teamId": "clippers",
+        "from": 1989,
+        "to": 1994
+      },
+      {
+        "teamId": "bulls",
+        "from": 1995,
+        "to": 1999
+      },
+      {
+        "teamId": "lakers",
+        "from": 1999,
+        "to": 2001
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "bill-wennington",
+    "name": "Bill Wennington",
+    "birthYear": 1963,
+    "debut": 1985,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 62,
+      "shooting": 58,
+      "defense": 68,
+      "playmaking": 55,
+      "rebounding": 72,
+      "health": 82,
+      "impact": 65
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 1985,
+        "to": 1990
+      },
+      {
+        "teamId": "kings",
+        "from": 1990,
+        "to": 1993
+      },
+      {
+        "teamId": "bulls",
+        "from": 1993,
+        "to": 1999
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "stephen-curry",
+    "name": "Stephen Curry",
+    "birthYear": 1988,
+    "debut": 2009,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 99,
+      "defense": 68,
+      "playmaking": 88,
+      "rebounding": 55,
+      "health": 88,
+      "impact": 97
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 2009,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2021,
+      2022,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "klay-thompson",
+    "name": "Klay Thompson",
+    "birthYear": 1990,
+    "debut": 2011,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 92,
+      "defense": 78,
+      "playmaking": 65,
+      "rebounding": 58,
+      "health": 82,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 2011,
+        "to": 2024
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2022
+    ],
+    "allStar": true
+  },
+  {
+    "id": "draymond-green",
+    "name": "Draymond Green",
+    "birthYear": 1990,
+    "debut": 2012,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 68,
+      "defense": 92,
+      "playmaking": 85,
+      "rebounding": 82,
+      "health": 86,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 2012,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2016,
+      2017,
+      2018,
+      2020,
+      2022
+    ],
+    "allStar": true
+  },
+  {
+    "id": "andrew-wiggins",
+    "name": "Andrew Wiggins",
+    "birthYear": 1995,
+    "debut": 2014,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 65,
+      "rebounding": 68,
+      "health": 90,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 2014,
+        "to": 2022
+      },
+      {
+        "teamId": "warriors",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kevon-looney",
+    "name": "Kevon Looney",
+    "birthYear": 1996,
+    "debut": 2015,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 62,
+      "shooting": 55,
+      "defense": 78,
+      "playmaking": 58,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 72
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 2015,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "lebron-james",
+    "name": "LeBron James",
+    "birthYear": 1984,
+    "debut": 2003,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 82,
+      "defense": 85,
+      "playmaking": 94,
+      "rebounding": 82,
+      "health": 92,
+      "impact": 98
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 2003,
+        "to": 2010
+      },
+      {
+        "teamId": "heat",
+        "from": 2010,
+        "to": 2014
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2014,
+        "to": 2018
+      },
+      {
+        "teamId": "lakers",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kyrie-irving",
+    "name": "Kyrie Irving",
+    "birthYear": 1992,
+    "debut": 2011,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 88,
+      "defense": 68,
+      "playmaking": 85,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 2011,
+        "to": 2017
+      },
+      {
+        "teamId": "celtics",
+        "from": 2017,
+        "to": 2019
+      },
+      {
+        "teamId": "nets",
+        "from": 2019,
+        "to": 2023
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2013,
+      2014,
+      2015,
+      2021,
+      2023
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kevin-love",
+    "name": "Kevin Love",
+    "birthYear": 1988,
+    "debut": 2008,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 84,
+      "defense": 68,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 82,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 2008,
+        "to": 2014
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2014,
+        "to": 2023
+      },
+      {
+        "teamId": "heat",
+        "from": 2023,
+        "to": 2024
+      },
+      {
+        "teamId": "lakers",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2011,
+      2012,
+      2014,
+      2017,
+      2018
+    ],
+    "allStar": true
+  },
+  {
+    "id": "luka-doncic",
+    "name": "Luka Doncic",
+    "birthYear": 1999,
+    "debut": 2018,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 95,
+      "shooting": 85,
+      "defense": 68,
+      "playmaking": 95,
+      "rebounding": 78,
+      "health": 88,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kobe-bryant",
+    "name": "Kobe Bryant",
+    "birthYear": 1978,
+    "debut": 1996,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 86,
+      "defense": 85,
+      "playmaking": 78,
+      "rebounding": 65,
+      "health": 90,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 1996,
+        "to": 2016
+      }
+    ],
+    "allStarYears": [
+      1998,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2016
+    ],
+    "allStar": true
+  },
+  {
+    "id": "pau-gasol",
+    "name": "Pau Gasol",
+    "birthYear": 1980,
+    "debut": 2001,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 86,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 78,
+      "rebounding": 88,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2001,
+        "to": 2008
+      },
+      {
+        "teamId": "lakers",
+        "from": 2008,
+        "to": 2014
+      },
+      {
+        "teamId": "bulls",
+        "from": 2014,
+        "to": 2016
+      },
+      {
+        "teamId": "spurs",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "bucks",
+        "from": 2019,
+        "to": 2021
+      }
+    ],
+    "allStarYears": [
+      2006,
+      2009,
+      2010,
+      2011,
+      2015,
+      2016
+    ],
+    "allStar": true
+  },
+  {
+    "id": "shaquille-o-neal",
+    "name": "Shaquille O'Neal",
+    "birthYear": 1972,
+    "debut": 1992,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 95,
+      "shooting": 58,
+      "defense": 82,
+      "playmaking": 62,
+      "rebounding": 95,
+      "health": 88,
+      "impact": 97
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "magic",
+        "from": 1992,
+        "to": 1996
+      },
+      {
+        "teamId": "lakers",
+        "from": 1996,
+        "to": 2004
+      },
+      {
+        "teamId": "heat",
+        "from": 2004,
+        "to": 2008
+      },
+      {
+        "teamId": "suns",
+        "from": 2008,
+        "to": 2009
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2009,
+        "to": 2010
+      },
+      {
+        "teamId": "celtics",
+        "from": 2010,
+        "to": 2011
+      }
+    ],
+    "allStarYears": [
+      1995,
+      1996,
+      1997,
+      1998,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2009
+    ],
+    "allStar": true
+  },
+  {
+    "id": "magic-johnson",
+    "name": "Magic Johnson",
+    "birthYear": 1959,
+    "debut": 1979,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 99,
+      "rebounding": 82,
+      "health": 92,
+      "impact": 98
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 1979,
+        "to": 1991
+      },
+      {
+        "teamId": "lakers",
+        "from": 1996,
+        "to": 1996
+      }
+    ],
+    "allStarYears": [
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985,
+      1986,
+      1987,
+      1988,
+      1989,
+      1990,
+      1991
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kareem-abdul-jabbar",
+    "name": "Kareem Abdul-Jabbar",
+    "birthYear": 1947,
+    "debut": 1969,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 85,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 80,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bucks",
+        "from": 1969,
+        "to": 1975
+      },
+      {
+        "teamId": "lakers",
+        "from": 1975,
+        "to": 1989
+      }
+    ],
+    "allStarYears": [
+      1970,
+      1971,
+      1972,
+      1973,
+      1974,
+      1975,
+      1976,
+      1977,
+      1979,
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985,
+      1986,
+      1987
+    ],
+    "allStar": true
+  },
+  {
+    "id": "larry-bird",
+    "name": "Larry Bird",
+    "birthYear": 1956,
+    "debut": 1979,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 92,
+      "defense": 78,
+      "playmaking": 88,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 1979,
+        "to": 1992
+      }
+    ],
+    "allStarYears": [
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985,
+      1986,
+      1987,
+      1988,
+      1990,
+      1991
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tim-duncan",
+    "name": "Tim Duncan",
+    "birthYear": 1976,
+    "debut": 1997,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 72,
+      "defense": 95,
+      "playmaking": 72,
+      "rebounding": 92,
+      "health": 92,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 1997,
+        "to": 2016
+      }
+    ],
+    "allStarYears": [
+      1998,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2007,
+      2013,
+      2015
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tony-parker",
+    "name": "Tony Parker",
+    "birthYear": 1982,
+    "debut": 2001,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 68,
+      "playmaking": 82,
+      "rebounding": 42,
+      "health": 88,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 2001,
+        "to": 2018
+      },
+      {
+        "teamId": "hornets",
+        "from": 2018,
+        "to": 2019
+      }
+    ],
+    "allStarYears": [
+      2006,
+      2007,
+      2012,
+      2013,
+      2014
+    ],
+    "allStar": true
+  },
+  {
+    "id": "manu-ginobili",
+    "name": "Manu Ginobili",
+    "birthYear": 1977,
+    "debut": 2002,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 75,
+      "playmaking": 78,
+      "rebounding": 55,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 2002,
+        "to": 2018
+      }
+    ],
+    "allStarYears": [
+      2005,
+      2011
+    ],
+    "allStar": true
+  },
+  {
+    "id": "dirk-nowitzki",
+    "name": "Dirk Nowitzki",
+    "birthYear": 1978,
+    "debut": 1998,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 92,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 1998,
+        "to": 2019
+      }
+    ],
+    "allStarYears": [
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2015,
+      2016,
+      2019
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jason-kidd",
+    "name": "Jason Kidd",
+    "birthYear": 1973,
+    "debut": 1994,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 92,
+      "rebounding": 78,
+      "health": 85,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 1994,
+        "to": 1996
+      },
+      {
+        "teamId": "suns",
+        "from": 1996,
+        "to": 2001
+      },
+      {
+        "teamId": "nets",
+        "from": 2001,
+        "to": 2008
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2008,
+        "to": 2012
+      },
+      {
+        "teamId": "knicks",
+        "from": 2012,
+        "to": 2013
+      }
+    ],
+    "allStarYears": [
+      1996,
+      1998,
+      2001,
+      2002,
+      2004,
+      2008,
+      2010,
+      2011,
+      2013
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kevin-durant",
+    "name": "Kevin Durant",
+    "birthYear": 1988,
+    "debut": 2007,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 90,
+      "defense": 78,
+      "playmaking": 78,
+      "rebounding": 78,
+      "health": 88,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2007,
+        "to": 2016
+      },
+      {
+        "teamId": "warriors",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "nets",
+        "from": 2019,
+        "to": 2023
+      },
+      {
+        "teamId": "suns",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2021,
+      2022,
+      2023,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "russell-westbrook",
+    "name": "Russell Westbrook",
+    "birthYear": 1988,
+    "debut": 2008,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 72,
+      "defense": 72,
+      "playmaking": 92,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2008,
+        "to": 2019
+      },
+      {
+        "teamId": "rockets",
+        "from": 2019,
+        "to": 2020
+      },
+      {
+        "teamId": "wizards",
+        "from": 2020,
+        "to": 2021
+      },
+      {
+        "teamId": "lakers",
+        "from": 2021,
+        "to": 2023
+      },
+      {
+        "teamId": "clippers",
+        "from": 2023,
+        "to": 2025
+      },
+      {
+        "teamId": "nuggets",
+        "from": 2025,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2011,
+      2012,
+      2013,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2023
+    ],
+    "allStar": true
+  },
+  {
+    "id": "shai-gilgeous-alexander",
+    "name": "Shai Gilgeous-Alexander",
+    "birthYear": 1998,
+    "debut": 2018,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 94,
+      "shooting": 85,
+      "defense": 78,
+      "playmaking": 85,
+      "rebounding": 58,
+      "health": 90,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "clippers",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "thunder",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "joel-embiid",
+    "name": "Joel Embiid",
+    "birthYear": 1994,
+    "debut": 2016,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 95,
+      "shooting": 82,
+      "defense": 88,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 78,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "76ers",
+        "from": 2016,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2018,
+      2019,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "nikola-jokic",
+    "name": "Nikola Jokic",
+    "birthYear": 1995,
+    "debut": 2015,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 85,
+      "defense": 72,
+      "playmaking": 98,
+      "rebounding": 92,
+      "health": 90,
+      "impact": 98
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nuggets",
+        "from": 2015,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "giannis-antetokounmpo",
+    "name": "Giannis Antetokounmpo",
+    "birthYear": 1994,
+    "debut": 2013,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 72,
+      "defense": 90,
+      "playmaking": 78,
+      "rebounding": 88,
+      "health": 92,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bucks",
+        "from": 2013,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jayson-tatum",
+    "name": "Jayson Tatum",
+    "birthYear": 1998,
+    "debut": 2017,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 85,
+      "defense": 82,
+      "playmaking": 78,
+      "rebounding": 78,
+      "health": 90,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 2017,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jaylen-brown",
+    "name": "Jaylen Brown",
+    "birthYear": 1996,
+    "debut": 2016,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 72,
+      "rebounding": 68,
+      "health": 90,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 2016,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "anthony-edwards",
+    "name": "Anthony Edwards",
+    "birthYear": 2001,
+    "debut": 2020,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 82,
+      "defense": 78,
+      "playmaking": 72,
+      "rebounding": 62,
+      "health": 90,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "victor-wembanyama",
+    "name": "Victor Wembanyama",
+    "birthYear": 2004,
+    "debut": 2023,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 72,
+      "defense": 95,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 85,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tyler-herro",
+    "name": "Tyler Herro",
+    "birthYear": 2000,
+    "debut": 2019,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 86,
+      "defense": 65,
+      "playmaking": 75,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "heat",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jimmy-butler",
+    "name": "Jimmy Butler",
+    "birthYear": 1989,
+    "debut": 2011,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 88,
+      "playmaking": 78,
+      "rebounding": 68,
+      "health": 85,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 2011,
+        "to": 2017
+      },
+      {
+        "teamId": "timberwolves",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "76ers",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "heat",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2015,
+      2020,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "bam-adebayo",
+    "name": "Bam Adebayo",
+    "birthYear": 1997,
+    "debut": 2017,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 68,
+      "defense": 88,
+      "playmaking": 72,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "heat",
+        "from": 2017,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "james-harden",
+    "name": "James Harden",
+    "birthYear": 1989,
+    "debut": 2009,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 88,
+      "defense": 62,
+      "playmaking": 92,
+      "rebounding": 68,
+      "health": 90,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2009,
+        "to": 2012
+      },
+      {
+        "teamId": "rockets",
+        "from": 2012,
+        "to": 2021
+      },
+      {
+        "teamId": "nets",
+        "from": 2021,
+        "to": 2022
+      },
+      {
+        "teamId": "76ers",
+        "from": 2022,
+        "to": 2023
+      },
+      {
+        "teamId": "clippers",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "chris-paul",
+    "name": "Chris Paul",
+    "birthYear": 1985,
+    "debut": 2005,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 85,
+      "playmaking": 95,
+      "rebounding": 55,
+      "health": 82,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hornets",
+        "from": 2005,
+        "to": 2011
+      },
+      {
+        "teamId": "clippers",
+        "from": 2011,
+        "to": 2017
+      },
+      {
+        "teamId": "rockets",
+        "from": 2017,
+        "to": 2019
+      },
+      {
+        "teamId": "thunder",
+        "from": 2019,
+        "to": 2020
+      },
+      {
+        "teamId": "suns",
+        "from": 2020,
+        "to": 2023
+      },
+      {
+        "teamId": "warriors",
+        "from": 2023,
+        "to": 2024
+      },
+      {
+        "teamId": "spurs",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2021,
+      2022
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kawhi-leonard",
+    "name": "Kawhi Leonard",
+    "birthYear": 1991,
+    "debut": 2011,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 96,
+      "playmaking": 72,
+      "rebounding": 78,
+      "health": 82,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 2011,
+        "to": 2018
+      },
+      {
+        "teamId": "raptors",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "clippers",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2012,
+      2013,
+      2014,
+      2016,
+      2017,
+      2019,
+      2020,
+      2021
+    ],
+    "allStar": true
+  },
+  {
+    "id": "damian-lillard",
+    "name": "Damian Lillard",
+    "birthYear": 1990,
+    "debut": 2012,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 90,
+      "defense": 68,
+      "playmaking": 88,
+      "rebounding": 48,
+      "health": 88,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "blazers",
+        "from": 2012,
+        "to": 2023
+      },
+      {
+        "teamId": "bucks",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2014,
+      2015,
+      2016,
+      2018,
+      2019,
+      2021,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "devin-booker",
+    "name": "Devin Booker",
+    "birthYear": 1996,
+    "debut": 2015,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 90,
+      "defense": 68,
+      "playmaking": 78,
+      "rebounding": 52,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "suns",
+        "from": 2015,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "allen-iverson",
+    "name": "Allen Iverson",
+    "birthYear": 1975,
+    "debut": 1996,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 96,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 85,
+      "rebounding": 48,
+      "health": 88,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "76ers",
+        "from": 1996,
+        "to": 2006
+      },
+      {
+        "teamId": "nuggets",
+        "from": 2006,
+        "to": 2008
+      },
+      {
+        "teamId": "pistons",
+        "from": 2008,
+        "to": 2009
+      },
+      {
+        "teamId": "grizzlies",
+        "from": 2009,
+        "to": 2009
+      },
+      {
+        "teamId": "76ers",
+        "from": 2009,
+        "to": 2010
+      }
+    ],
+    "allStarYears": [
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010
+    ],
+    "allStar": true
+  },
+  {
+    "id": "karl-malone",
+    "name": "Karl Malone",
+    "birthYear": 1963,
+    "debut": 1985,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 92,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "jazz",
+        "from": 1985,
+        "to": 2003
+      },
+      {
+        "teamId": "lakers",
+        "from": 2003,
+        "to": 2004
+      }
+    ],
+    "allStarYears": [
+      1988,
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1997,
+      1998,
+      1999,
+      2000,
+      2001,
+      2002
+    ],
+    "allStar": true
+  },
+  {
+    "id": "john-stockton",
+    "name": "John Stockton",
+    "birthYear": 1962,
+    "debut": 1984,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 82,
+      "defense": 78,
+      "playmaking": 98,
+      "rebounding": 48,
+      "health": 92,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "jazz",
+        "from": 1984,
+        "to": 2003
+      }
+    ],
+    "allStarYears": [
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1997,
+      2000
+    ],
+    "allStar": true
+  },
+  {
+    "id": "patrick-ewing",
+    "name": "Patrick Ewing",
+    "birthYear": 1962,
+    "debut": 1985,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 72,
+      "defense": 88,
+      "playmaking": 62,
+      "rebounding": 88,
+      "health": 85,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "knicks",
+        "from": 1985,
+        "to": 2000
+      },
+      {
+        "teamId": "thunder",
+        "from": 2000,
+        "to": 2000
+      },
+      {
+        "teamId": "magic",
+        "from": 2001,
+        "to": 2002
+      }
+    ],
+    "allStarYears": [
+      1986,
+      1988,
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1997
+    ],
+    "allStar": true
+  },
+  {
+    "id": "isiah-thomas",
+    "name": "Isiah Thomas",
+    "birthYear": 1961,
+    "debut": 1981,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 92,
+      "rebounding": 48,
+      "health": 88,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pistons",
+        "from": 1981,
+        "to": 1994
+      }
+    ],
+    "allStarYears": [
+      1982,
+      1984,
+      1985,
+      1986,
+      1987,
+      1988,
+      1990,
+      1991,
+      1993
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tracy-mcgrady",
+    "name": "Tracy McGrady",
+    "birthYear": 1979,
+    "debut": 1997,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 95,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 68,
+      "health": 85,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 1997,
+        "to": 2000
+      },
+      {
+        "teamId": "magic",
+        "from": 2000,
+        "to": 2004
+      },
+      {
+        "teamId": "rockets",
+        "from": 2004,
+        "to": 2010
+      },
+      {
+        "teamId": "knicks",
+        "from": 2010,
+        "to": 2011
+      },
+      {
+        "teamId": "hawks",
+        "from": 2011,
+        "to": 2012
+      },
+      {
+        "teamId": "spurs",
+        "from": 2012,
+        "to": 2013
+      }
+    ],
+    "allStarYears": [
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008
+    ],
+    "allStar": true
+  },
+  {
+    "id": "reggie-miller",
+    "name": "Reggie Miller",
+    "birthYear": 1965,
+    "debut": 1987,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 94,
+      "defense": 72,
+      "playmaking": 72,
+      "rebounding": 48,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pacers",
+        "from": 1987,
+        "to": 2005
+      }
+    ],
+    "allStarYears": [
+      1990,
+      1991,
+      1995,
+      1996,
+      1998,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004
+    ],
+    "allStar": true
+  },
+  {
+    "id": "dwyane-wade",
+    "name": "Dwyane Wade",
+    "birthYear": 1982,
+    "debut": 2003,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 82,
+      "rebounding": 58,
+      "health": 85,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "heat",
+        "from": 2003,
+        "to": 2016
+      },
+      {
+        "teamId": "bulls",
+        "from": 2016,
+        "to": 2017
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "heat",
+        "from": 2018,
+        "to": 2019
+      }
+    ],
+    "allStarYears": [
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2016
+    ],
+    "allStar": true
+  },
+  {
+    "id": "chris-bosh",
+    "name": "Chris Bosh",
+    "birthYear": 1984,
+    "debut": 2003,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 75,
+      "playmaking": 68,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 2003,
+        "to": 2010
+      },
+      {
+        "teamId": "heat",
+        "from": 2010,
+        "to": 2016
+      }
+    ],
+    "allStarYears": [
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2016
+    ],
+    "allStar": true
+  },
+  {
+    "id": "anthony-davis",
+    "name": "Anthony Davis",
+    "birthYear": 1993,
+    "debut": 2012,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 92,
+      "playmaking": 68,
+      "rebounding": 88,
+      "health": 82,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hornets",
+        "from": 2012,
+        "to": 2019
+      },
+      {
+        "teamId": "pelicans",
+        "from": 2019,
+        "to": 2019
+      },
+      {
+        "teamId": "lakers",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2020,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "carmelo-anthony",
+    "name": "Carmelo Anthony",
+    "birthYear": 1984,
+    "debut": 2003,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 82,
+      "defense": 62,
+      "playmaking": 68,
+      "rebounding": 72,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nuggets",
+        "from": 2003,
+        "to": 2011
+      },
+      {
+        "teamId": "knicks",
+        "from": 2011,
+        "to": 2017
+      },
+      {
+        "teamId": "thunder",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "rockets",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "blazers",
+        "from": 2019,
+        "to": 2021
+      },
+      {
+        "teamId": "lakers",
+        "from": 2021,
+        "to": 2022
+      }
+    ],
+    "allStarYears": [
+      2007,
+      2008,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2017,
+      2021,
+      2022
+    ],
+    "allStar": true
+  },
+  {
+    "id": "derrick-rose",
+    "name": "Derrick Rose",
+    "birthYear": 1988,
+    "debut": 2008,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 72,
+      "defense": 72,
+      "playmaking": 85,
+      "rebounding": 48,
+      "health": 78,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 2008,
+        "to": 2016
+      },
+      {
+        "teamId": "knicks",
+        "from": 2016,
+        "to": 2018
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2018,
+        "to": 2018
+      },
+      {
+        "teamId": "timberwolves",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "pistons",
+        "from": 2019,
+        "to": 2021
+      },
+      {
+        "teamId": "knicks",
+        "from": 2021,
+        "to": 2022
+      },
+      {
+        "teamId": "grizzlies",
+        "from": 2023,
+        "to": 2024
+      }
+    ],
+    "allStarYears": [
+      2010,
+      2011,
+      2012,
+      2019
+    ],
+    "allStar": true
+  },
+  {
+    "id": "donovan-mitchell",
+    "name": "Donovan Mitchell",
+    "birthYear": 1996,
+    "debut": 2017,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 85,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 52,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "jazz",
+        "from": 2017,
+        "to": 2022
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "darius-garland",
+    "name": "Darius Garland",
+    "birthYear": 2000,
+    "debut": 2019,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 86,
+      "defense": 65,
+      "playmaking": 88,
+      "rebounding": 42,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "trae-young",
+    "name": "Trae Young",
+    "birthYear": 1998,
+    "debut": 2018,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 86,
+      "defense": 58,
+      "playmaking": 92,
+      "rebounding": 42,
+      "health": 85,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hawks",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jalen-brunson",
+    "name": "Jalen Brunson",
+    "birthYear": 1996,
+    "debut": 2018,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 86,
+      "defense": 72,
+      "playmaking": 88,
+      "rebounding": 42,
+      "health": 90,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 2018,
+        "to": 2022
+      },
+      {
+        "teamId": "knicks",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tyrese-haliburton",
+    "name": "Tyrese Haliburton",
+    "birthYear": 2000,
+    "debut": 2020,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 84,
+      "defense": 68,
+      "playmaking": 92,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "kings",
+        "from": 2020,
+        "to": 2022
+      },
+      {
+        "teamId": "pacers",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "de-aaron-fox",
+    "name": "De'Aaron Fox",
+    "birthYear": 1997,
+    "debut": 2017,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 82,
+      "rebounding": 48,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "kings",
+        "from": 2017,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "domantas-sabonis",
+    "name": "Domantas Sabonis",
+    "birthYear": 1996,
+    "debut": 2016,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 72,
+      "defense": 68,
+      "playmaking": 82,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2016,
+        "to": 2017
+      },
+      {
+        "teamId": "pacers",
+        "from": 2017,
+        "to": 2022
+      },
+      {
+        "teamId": "kings",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "zion-williamson",
+    "name": "Zion Williamson",
+    "birthYear": 2000,
+    "debut": 2019,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 62,
+      "defense": 65,
+      "playmaking": 72,
+      "rebounding": 78,
+      "health": 72,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pelicans",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kevin-mchale",
+    "name": "Kevin McHale",
+    "birthYear": 1957,
+    "debut": 1980,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 85,
+      "playmaking": 68,
+      "rebounding": 85,
+      "health": 88,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 1980,
+        "to": 1993
+      }
+    ],
+    "allStarYears": [
+      1984,
+      1986,
+      1987,
+      1988,
+      1989,
+      1990,
+      1991
+    ],
+    "allStar": true
+  },
+  {
+    "id": "robert-parish",
+    "name": "Robert Parish",
+    "birthYear": 1953,
+    "debut": 1976,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 58,
+      "rebounding": 88,
+      "health": 90,
+      "impact": 85
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 1976,
+        "to": 1980
+      },
+      {
+        "teamId": "celtics",
+        "from": 1980,
+        "to": 1994
+      },
+      {
+        "teamId": "hornets",
+        "from": 1994,
+        "to": 1997
+      }
+    ],
+    "allStarYears": [
+      1981,
+      1982,
+      1985,
+      1986,
+      1987,
+      1990,
+      1991,
+      1992,
+      1993,
+      1997
+    ],
+    "allStar": true
+  },
+  {
+    "id": "dennis-johnson",
+    "name": "Dennis Johnson",
+    "birthYear": 1954,
+    "debut": 1976,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 90,
+      "playmaking": 78,
+      "rebounding": 62,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 1976,
+        "to": 1980
+      },
+      {
+        "teamId": "suns",
+        "from": 1980,
+        "to": 1980
+      },
+      {
+        "teamId": "celtics",
+        "from": 1980,
+        "to": 1990
+      }
+    ],
+    "allStarYears": [
+      1979,
+      1980,
+      1981,
+      1982,
+      1985,
+      1986,
+      1987
+    ],
+    "allStar": true
+  },
+  {
+    "id": "david-robinson",
+    "name": "David Robinson",
+    "birthYear": 1965,
+    "debut": 1989,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 75,
+      "defense": 92,
+      "playmaking": 72,
+      "rebounding": 90,
+      "health": 88,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 1989,
+        "to": 2003
+      }
+    ],
+    "allStarYears": [
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1998,
+      2000,
+      2001
+    ],
+    "allStar": true
+  },
+  {
+    "id": "james-worthy",
+    "name": "James Worthy",
+    "birthYear": 1961,
+    "debut": 1982,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 72,
+      "rebounding": 72,
+      "health": 90,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 1982,
+        "to": 1994
+      }
+    ],
+    "allStarYears": [
+      1986,
+      1987,
+      1988,
+      1990,
+      1991,
+      1992,
+      1993
+    ],
+    "allStar": true
+  },
+  {
+    "id": "derek-fisher",
+    "name": "Derek Fisher",
+    "birthYear": 1974,
+    "debut": 1996,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 68,
+      "shooting": 72,
+      "defense": 72,
+      "playmaking": 75,
+      "rebounding": 42,
+      "health": 88,
+      "impact": 72
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 1996,
+        "to": 2004
+      },
+      {
+        "teamId": "warriors",
+        "from": 2004,
+        "to": 2004
+      },
+      {
+        "teamId": "jazz",
+        "from": 2004,
+        "to": 2007
+      },
+      {
+        "teamId": "lakers",
+        "from": 2007,
+        "to": 2012
+      },
+      {
+        "teamId": "thunder",
+        "from": 2012,
+        "to": 2013
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2013,
+        "to": 2014
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "lamar-odom",
+    "name": "Lamar Odom",
+    "birthYear": 1979,
+    "debut": 1999,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 75,
+      "playmaking": 78,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "clippers",
+        "from": 1999,
+        "to": 2004
+      },
+      {
+        "teamId": "heat",
+        "from": 2004,
+        "to": 2004
+      },
+      {
+        "teamId": "lakers",
+        "from": 2004,
+        "to": 2011
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2011,
+        "to": 2012
+      },
+      {
+        "teamId": "clippers",
+        "from": 2012,
+        "to": 2013
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "andrew-bynum",
+    "name": "Andrew Bynum",
+    "birthYear": 1987,
+    "debut": 2005,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 62,
+      "defense": 82,
+      "playmaking": 55,
+      "rebounding": 85,
+      "health": 75,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 2005,
+        "to": 2012
+      },
+      {
+        "teamId": "76ers",
+        "from": 2012,
+        "to": 2013
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2013,
+        "to": 2014
+      }
+    ],
+    "allStarYears": [
+      2012
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kyle-lowry",
+    "name": "Kyle Lowry",
+    "birthYear": 1986,
+    "debut": 2006,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 85,
+      "rebounding": 62,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2006,
+        "to": 2009
+      },
+      {
+        "teamId": "rockets",
+        "from": 2009,
+        "to": 2012
+      },
+      {
+        "teamId": "raptors",
+        "from": 2012,
+        "to": 2021
+      },
+      {
+        "teamId": "heat",
+        "from": 2021,
+        "to": 2023
+      },
+      {
+        "teamId": "76ers",
+        "from": 2023,
+        "to": 2024
+      }
+    ],
+    "allStarYears": [
+      2015,
+      2016,
+      2017,
+      2019,
+      2020,
+      2021
+    ],
+    "allStar": true
+  },
+  {
+    "id": "pascal-siakam",
+    "name": "Pascal Siakam",
+    "birthYear": 1994,
+    "debut": 2016,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 72,
+      "defense": 78,
+      "playmaking": 72,
+      "rebounding": 75,
+      "health": 90,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 2016,
+        "to": 2023
+      },
+      {
+        "teamId": "pacers",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2023
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tyson-chandler",
+    "name": "Tyson Chandler",
+    "birthYear": 1982,
+    "debut": 2001,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 65,
+      "shooting": 55,
+      "defense": 88,
+      "playmaking": 55,
+      "rebounding": 85,
+      "health": 88,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 2001,
+        "to": 2006
+      },
+      {
+        "teamId": "hornets",
+        "from": 2006,
+        "to": 2010
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2010,
+        "to": 2011
+      },
+      {
+        "teamId": "knicks",
+        "from": 2011,
+        "to": 2014
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2014,
+        "to": 2015
+      },
+      {
+        "teamId": "suns",
+        "from": 2015,
+        "to": 2016
+      },
+      {
+        "teamId": "kings",
+        "from": 2016,
+        "to": 2017
+      },
+      {
+        "teamId": "nets",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "lakers",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "rockets",
+        "from": 2019,
+        "to": 2020
+      }
+    ],
+    "allStarYears": [
+      2012
+    ],
+    "allStar": true
+  },
+  {
+    "id": "chris-webber",
+    "name": "Chris Webber",
+    "birthYear": 1973,
+    "debut": 1993,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 75,
+      "playmaking": 82,
+      "rebounding": 85,
+      "health": 82,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 1993,
+        "to": 1994
+      },
+      {
+        "teamId": "wizards",
+        "from": 1994,
+        "to": 1998
+      },
+      {
+        "teamId": "kings",
+        "from": 1998,
+        "to": 2005
+      },
+      {
+        "teamId": "76ers",
+        "from": 2005,
+        "to": 2007
+      },
+      {
+        "teamId": "pistons",
+        "from": 2007,
+        "to": 2008
+      }
+    ],
+    "allStarYears": [
+      1997,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004
+    ],
+    "allStar": true
+  },
+  {
+    "id": "mike-bibby",
+    "name": "Mike Bibby",
+    "birthYear": 1978,
+    "debut": 1998,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 82,
+      "defense": 68,
+      "playmaking": 82,
+      "rebounding": 42,
+      "health": 88,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 1998,
+        "to": 2001
+      },
+      {
+        "teamId": "kings",
+        "from": 2001,
+        "to": 2008
+      },
+      {
+        "teamId": "hawks",
+        "from": 2008,
+        "to": 2011
+      },
+      {
+        "teamId": "wizards",
+        "from": 2011,
+        "to": 2012
+      },
+      {
+        "teamId": "knicks",
+        "from": 2012,
+        "to": 2012
+      }
+    ],
+    "allStarYears": [
+      2002
+    ],
+    "allStar": true
+  },
+  {
+    "id": "joe-dumars",
+    "name": "Joe Dumars",
+    "birthYear": 1963,
+    "debut": 1985,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 82,
+      "defense": 88,
+      "playmaking": 78,
+      "rebounding": 48,
+      "health": 90,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pistons",
+        "from": 1985,
+        "to": 1999
+      }
+    ],
+    "allStarYears": [
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1997,
+      2000
+    ],
+    "allStar": true
+  },
+  {
+    "id": "bill-laimbeer",
+    "name": "Bill Laimbeer",
+    "birthYear": 1957,
+    "debut": 1980,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 65,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 1980,
+        "to": 1982
+      },
+      {
+        "teamId": "pistons",
+        "from": 1982,
+        "to": 1994
+      }
+    ],
+    "allStarYears": [
+      1983,
+      1984,
+      1985,
+      1987,
+      1988,
+      1989,
+      1990,
+      1991,
+      1993
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jamal-murray",
+    "name": "Jamal Murray",
+    "birthYear": 1997,
+    "debut": 2016,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 86,
+      "defense": 72,
+      "playmaking": 82,
+      "rebounding": 48,
+      "health": 82,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nuggets",
+        "from": 2016,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "gary-payton",
+    "name": "Gary Payton",
+    "birthYear": 1968,
+    "debut": 1990,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 92,
+      "playmaking": 82,
+      "rebounding": 55,
+      "health": 90,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 1990,
+        "to": 2003
+      },
+      {
+        "teamId": "bucks",
+        "from": 2003,
+        "to": 2003
+      },
+      {
+        "teamId": "lakers",
+        "from": 2003,
+        "to": 2004
+      },
+      {
+        "teamId": "celtics",
+        "from": 2004,
+        "to": 2005
+      },
+      {
+        "teamId": "heat",
+        "from": 2005,
+        "to": 2007
+      }
+    ],
+    "allStarYears": [
+      1995,
+      1996,
+      1997,
+      1998,
+      2000,
+      2002,
+      2003
+    ],
+    "allStar": true
+  },
+  {
+    "id": "shawn-kemp",
+    "name": "Shawn Kemp",
+    "birthYear": 1969,
+    "debut": 1989,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 68,
+      "defense": 72,
+      "playmaking": 65,
+      "rebounding": 85,
+      "health": 85,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 1989,
+        "to": 1997
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 1997,
+        "to": 2000
+      },
+      {
+        "teamId": "blazers",
+        "from": 2000,
+        "to": 2002
+      },
+      {
+        "teamId": "magic",
+        "from": 2002,
+        "to": 2003
+      }
+    ],
+    "allStarYears": [
+      1993,
+      1994,
+      1995,
+      1996,
+      1998
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kevin-garnett",
+    "name": "Kevin Garnett",
+    "birthYear": 1976,
+    "debut": 1995,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 72,
+      "defense": 92,
+      "playmaking": 78,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 1995,
+        "to": 2007
+      },
+      {
+        "teamId": "celtics",
+        "from": 2007,
+        "to": 2013
+      },
+      {
+        "teamId": "nets",
+        "from": 2013,
+        "to": 2015
+      },
+      {
+        "teamId": "timberwolves",
+        "from": 2015,
+        "to": 2016
+      }
+    ],
+    "allStarYears": [
+      1997,
+      1998,
+      1999,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2016
+    ],
+    "allStar": true
+  },
+  {
+    "id": "paul-pierce",
+    "name": "Paul Pierce",
+    "birthYear": 1977,
+    "debut": 1998,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 78,
+      "playmaking": 78,
+      "rebounding": 68,
+      "health": 88,
+      "impact": 90
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 1998,
+        "to": 2013
+      },
+      {
+        "teamId": "nets",
+        "from": 2013,
+        "to": 2014
+      },
+      {
+        "teamId": "wizards",
+        "from": 2014,
+        "to": 2015
+      },
+      {
+        "teamId": "clippers",
+        "from": 2015,
+        "to": 2017
+      }
+    ],
+    "allStarYears": [
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012
+    ],
+    "allStar": true
+  },
+  {
+    "id": "ray-allen",
+    "name": "Ray Allen",
+    "birthYear": 1975,
+    "debut": 1996,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 94,
+      "defense": 72,
+      "playmaking": 75,
+      "rebounding": 52,
+      "health": 88,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bucks",
+        "from": 1996,
+        "to": 2003
+      },
+      {
+        "teamId": "thunder",
+        "from": 2003,
+        "to": 2007
+      },
+      {
+        "teamId": "celtics",
+        "from": 2007,
+        "to": 2012
+      },
+      {
+        "teamId": "heat",
+        "from": 2012,
+        "to": 2014
+      }
+    ],
+    "allStarYears": [
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013
+    ],
+    "allStar": true
+  },
+  {
+    "id": "rajon-rondo",
+    "name": "Rajon Rondo",
+    "birthYear": 1986,
+    "debut": 2006,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 92,
+      "rebounding": 55,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 2006,
+        "to": 2014
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2014,
+        "to": 2015
+      },
+      {
+        "teamId": "kings",
+        "from": 2015,
+        "to": 2016
+      },
+      {
+        "teamId": "bulls",
+        "from": 2016,
+        "to": 2017
+      },
+      {
+        "teamId": "pelicans",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "lakers",
+        "from": 2018,
+        "to": 2020
+      },
+      {
+        "teamId": "hawks",
+        "from": 2020,
+        "to": 2021
+      },
+      {
+        "teamId": "clippers",
+        "from": 2021,
+        "to": 2022
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2022,
+        "to": 2023
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "paul-george",
+    "name": "Paul George",
+    "birthYear": 1990,
+    "debut": 2010,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 85,
+      "defense": 82,
+      "playmaking": 78,
+      "rebounding": 68,
+      "health": 82,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pacers",
+        "from": 2010,
+        "to": 2017
+      },
+      {
+        "teamId": "thunder",
+        "from": 2017,
+        "to": 2019
+      },
+      {
+        "teamId": "clippers",
+        "from": 2019,
+        "to": 2024
+      },
+      {
+        "teamId": "76ers",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2013,
+      2014,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "blake-griffin",
+    "name": "Blake Griffin",
+    "birthYear": 1989,
+    "debut": 2010,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 72,
+      "defense": 68,
+      "playmaking": 78,
+      "rebounding": 82,
+      "health": 75,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "clippers",
+        "from": 2010,
+        "to": 2018
+      },
+      {
+        "teamId": "pistons",
+        "from": 2018,
+        "to": 2021
+      },
+      {
+        "teamId": "nets",
+        "from": 2021,
+        "to": 2022
+      },
+      {
+        "teamId": "celtics",
+        "from": 2022,
+        "to": 2023
+      }
+    ],
+    "allStarYears": [
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2019
+    ],
+    "allStar": true
+  },
+  {
+    "id": "lamarcus-aldridge",
+    "name": "LaMarcus Aldridge",
+    "birthYear": 1985,
+    "debut": 2006,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 68,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "blazers",
+        "from": 2006,
+        "to": 2015
+      },
+      {
+        "teamId": "spurs",
+        "from": 2015,
+        "to": 2021
+      },
+      {
+        "teamId": "nets",
+        "from": 2021,
+        "to": 2022
+      }
+    ],
+    "allStarYears": [
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2018,
+      2019
+    ],
+    "allStar": true
+  },
+  {
+    "id": "al-horford",
+    "name": "Al Horford",
+    "birthYear": 1986,
+    "debut": 2007,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 72,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hawks",
+        "from": 2007,
+        "to": 2016
+      },
+      {
+        "teamId": "celtics",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "76ers",
+        "from": 2019,
+        "to": 2020
+      },
+      {
+        "teamId": "thunder",
+        "from": 2020,
+        "to": 2020
+      },
+      {
+        "teamId": "celtics",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2010,
+      2011,
+      2015,
+      2016,
+      2018,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "marc-gasol",
+    "name": "Marc Gasol",
+    "birthYear": 1985,
+    "debut": 2008,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 88,
+      "playmaking": 78,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2008,
+        "to": 2019
+      },
+      {
+        "teamId": "raptors",
+        "from": 2019,
+        "to": 2020
+      },
+      {
+        "teamId": "lakers",
+        "from": 2020,
+        "to": 2021
+      }
+    ],
+    "allStarYears": [
+      2012,
+      2015,
+      2017,
+      2021
+    ],
+    "allStar": true
+  },
+  {
+    "id": "ja-morant",
+    "name": "Ja Morant",
+    "birthYear": 1999,
+    "debut": 2019,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 78,
+      "defense": 68,
+      "playmaking": 88,
+      "rebounding": 52,
+      "health": 82,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jaren-jackson-jr",
+    "name": "Jaren Jackson Jr.",
+    "birthYear": 1999,
+    "debut": 2018,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 92,
+      "playmaking": 65,
+      "rebounding": 78,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "chet-holmgren",
+    "name": "Chet Holmgren",
+    "birthYear": 2002,
+    "debut": 2022,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 78,
+      "defense": 88,
+      "playmaking": 65,
+      "rebounding": 82,
+      "health": 82,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "jalen-williams",
+    "name": "Jalen Williams",
+    "birthYear": 2001,
+    "debut": 2022,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 78,
+      "playmaking": 72,
+      "rebounding": 62,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "thunder",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "pj-washington",
+    "name": "PJ Washington",
+    "birthYear": 1998,
+    "debut": 2019,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 75,
+      "playmaking": 65,
+      "rebounding": 72,
+      "health": 85,
+      "impact": 76
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hornets",
+        "from": 2019,
+        "to": 2023
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "daniel-gafford",
+    "name": "Daniel Gafford",
+    "birthYear": 1998,
+    "debut": 2019,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 58,
+      "defense": 78,
+      "playmaking": 55,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 74
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 2019,
+        "to": 2021
+      },
+      {
+        "teamId": "wizards",
+        "from": 2021,
+        "to": 2024
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "dereck-lively-ii",
+    "name": "Dereck Lively II",
+    "birthYear": 2004,
+    "debut": 2023,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 58,
+      "defense": 82,
+      "playmaking": 58,
+      "rebounding": 78,
+      "health": 85,
+      "impact": 76
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "josh-green",
+    "name": "Josh Green",
+    "birthYear": 2000,
+    "debut": 2020,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 65,
+      "rebounding": 55,
+      "health": 85,
+      "impact": 72
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "mavericks",
+        "from": 2020,
+        "to": 2024
+      },
+      {
+        "teamId": "hornets",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "derrick-jones-jr",
+    "name": "Derrick Jones Jr.",
+    "birthYear": 1997,
+    "debut": 2016,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 75,
+      "shooting": 72,
+      "defense": 78,
+      "playmaking": 62,
+      "rebounding": 65,
+      "health": 85,
+      "impact": 74
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "suns",
+        "from": 2016,
+        "to": 2018
+      },
+      {
+        "teamId": "heat",
+        "from": 2018,
+        "to": 2020
+      },
+      {
+        "teamId": "blazers",
+        "from": 2020,
+        "to": 2022
+      },
+      {
+        "teamId": "bulls",
+        "from": 2022,
+        "to": 2023
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [],
+    "allStar": false
+  },
+  {
+    "id": "tim-hardaway-jr",
+    "name": "Tim Hardaway Jr.",
+    "birthYear": 1992,
+    "debut": 2013,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 65,
+      "playmaking": 68,
+      "rebounding": 48,
+      "health": 82,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "knicks",
+        "from": 2013,
+        "to": 2015
+      },
+      {
+        "teamId": "hawks",
+        "from": 2015,
+        "to": 2016
+      },
+      {
+        "teamId": "knicks",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "mavericks",
+        "from": 2019,
+        "to": 2024
+      },
+      {
+        "teamId": "pistons",
+        "from": 2024,
+        "to": 2025
+      },
+      {
+        "teamId": "nuggets",
+        "from": 2025,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2018
+    ],
+    "allStar": true
+  },
+  {
+    "id": "wilt-chamberlain",
+    "name": "Wilt Chamberlain",
+    "birthYear": 1936,
+    "debut": 1959,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 99,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 72,
+      "rebounding": 99,
+      "health": 88,
+      "impact": 99
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 1959,
+        "to": 1965
+      },
+      {
+        "teamId": "76ers",
+        "from": 1965,
+        "to": 1968
+      },
+      {
+        "teamId": "lakers",
+        "from": 1968,
+        "to": 1973
+      }
+    ],
+    "allStarYears": [
+      1960,
+      1961,
+      1962,
+      1963,
+      1964,
+      1965,
+      1966,
+      1967,
+      1968,
+      1969,
+      1970,
+      1971,
+      1972,
+      1973
+    ],
+    "allStar": true
+  },
+  {
+    "id": "bill-russell",
+    "name": "Bill Russell",
+    "birthYear": 1934,
+    "debut": 1956,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 58,
+      "defense": 99,
+      "playmaking": 72,
+      "rebounding": 95,
+      "health": 90,
+      "impact": 98
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "celtics",
+        "from": 1956,
+        "to": 1969
+      }
+    ],
+    "allStarYears": [
+      1958,
+      1959,
+      1960,
+      1961,
+      1962,
+      1963,
+      1964,
+      1965,
+      1966,
+      1967,
+      1968,
+      1969
+    ],
+    "allStar": true
+  },
+  {
+    "id": "oscar-robertson",
+    "name": "Oscar Robertson",
+    "birthYear": 1938,
+    "debut": 1960,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 78,
+      "playmaking": 95,
+      "rebounding": 72,
+      "health": 88,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "kings",
+        "from": 1960,
+        "to": 1970
+      },
+      {
+        "teamId": "bucks",
+        "from": 1970,
+        "to": 1974
+      }
+    ],
+    "allStarYears": [
+      1961,
+      1962,
+      1963,
+      1964,
+      1965,
+      1966,
+      1967,
+      1968,
+      1969,
+      1970,
+      1971,
+      1972,
+      1973,
+      1974
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jerry-west",
+    "name": "Jerry West",
+    "birthYear": 1938,
+    "debut": 1960,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 88,
+      "defense": 82,
+      "playmaking": 85,
+      "rebounding": 62,
+      "health": 88,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 1960,
+        "to": 1974
+      }
+    ],
+    "allStarYears": [
+      1961,
+      1962,
+      1963,
+      1964,
+      1965,
+      1966,
+      1967,
+      1968,
+      1969,
+      1970,
+      1971,
+      1972,
+      1973,
+      1974
+    ],
+    "allStar": true
+  },
+  {
+    "id": "julius-erving",
+    "name": "Julius Erving",
+    "birthYear": 1950,
+    "debut": 1971,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 90,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 78,
+      "rebounding": 78,
+      "health": 88,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nets",
+        "from": 1971,
+        "to": 1976
+      },
+      {
+        "teamId": "76ers",
+        "from": 1976,
+        "to": 1987
+      }
+    ],
+    "allStarYears": [
+      1972,
+      1973,
+      1974,
+      1975,
+      1976,
+      1977,
+      1978,
+      1979,
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985,
+      1986
+    ],
+    "allStar": true
+  },
+  {
+    "id": "moses-malone",
+    "name": "Moses Malone",
+    "birthYear": 1955,
+    "debut": 1974,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 72,
+      "defense": 82,
+      "playmaking": 65,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 92
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "rockets",
+        "from": 1976,
+        "to": 1982
+      },
+      {
+        "teamId": "76ers",
+        "from": 1982,
+        "to": 1986
+      },
+      {
+        "teamId": "wizards",
+        "from": 1986,
+        "to": 1988
+      },
+      {
+        "teamId": "hawks",
+        "from": 1988,
+        "to": 1991
+      },
+      {
+        "teamId": "bucks",
+        "from": 1991,
+        "to": 1993
+      },
+      {
+        "teamId": "76ers",
+        "from": 1993,
+        "to": 1994
+      },
+      {
+        "teamId": "spurs",
+        "from": 1994,
+        "to": 1995
+      }
+    ],
+    "allStarYears": [
+      1978,
+      1979,
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985,
+      1986,
+      1987,
+      1988,
+      1989,
+      1991,
+      1993,
+      1995
+    ],
+    "allStar": true
+  },
+  {
+    "id": "hakeem-olajuwon",
+    "name": "Hakeem Olajuwon",
+    "birthYear": 1963,
+    "debut": 1984,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 68,
+      "defense": 92,
+      "playmaking": 72,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 96
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "rockets",
+        "from": 1984,
+        "to": 2001
+      },
+      {
+        "teamId": "raptors",
+        "from": 2001,
+        "to": 2002
+      }
+    ],
+    "allStarYears": [
+      1985,
+      1986,
+      1987,
+      1988,
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1997,
+      1998,
+      1999,
+      2000,
+      2001
+    ],
+    "allStar": true
+  },
+  {
+    "id": "demar-derozan",
+    "name": "DeMar DeRozan",
+    "birthYear": 1989,
+    "debut": 2009,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 78,
+      "defense": 68,
+      "playmaking": 78,
+      "rebounding": 55,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 2009,
+        "to": 2018
+      },
+      {
+        "teamId": "spurs",
+        "from": 2018,
+        "to": 2019
+      },
+      {
+        "teamId": "bulls",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2014,
+      2016,
+      2017,
+      2018,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "zach-lavine",
+    "name": "Zach LaVine",
+    "birthYear": 1995,
+    "debut": 2014,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 86,
+      "defense": 65,
+      "playmaking": 72,
+      "rebounding": 52,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 2014,
+        "to": 2017
+      },
+      {
+        "teamId": "bulls",
+        "from": 2017,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "karl-anthony-towns",
+    "name": "Karl-Anthony Towns",
+    "birthYear": 1995,
+    "debut": 2015,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 68,
+      "playmaking": 72,
+      "rebounding": 88,
+      "health": 85,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "timberwolves",
+        "from": 2015,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2018,
+      2019,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "paolo-banchero",
+    "name": "Paolo Banchero",
+    "birthYear": 2002,
+    "debut": 2022,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 72,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "magic",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "tyrese-maxey",
+    "name": "Tyrese Maxey",
+    "birthYear": 2000,
+    "debut": 2020,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 68,
+      "playmaking": 82,
+      "rebounding": 42,
+      "health": 88,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "76ers",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "bradley-beal",
+    "name": "Bradley Beal",
+    "birthYear": 1993,
+    "debut": 2012,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 85,
+      "defense": 65,
+      "playmaking": 78,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "wizards",
+        "from": 2012,
+        "to": 2023
+      },
+      {
+        "teamId": "suns",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2018,
+      2019,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "scottie-barnes",
+    "name": "Scottie Barnes",
+    "birthYear": 2001,
+    "debut": 2021,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 72,
+      "defense": 78,
+      "playmaking": 78,
+      "rebounding": 72,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "cade-cunningham",
+    "name": "Cade Cunningham",
+    "birthYear": 2001,
+    "debut": 2021,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 68,
+      "playmaking": 82,
+      "rebounding": 55,
+      "health": 82,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pistons",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "alperen-sengun",
+    "name": "Alperen Sengun",
+    "birthYear": 2002,
+    "debut": 2021,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 68,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "rockets",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jalen-green",
+    "name": "Jalen Green",
+    "birthYear": 2002,
+    "debut": 2021,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 80,
+      "defense": 62,
+      "playmaking": 68,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "rockets",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "fred-vanvleet",
+    "name": "Fred VanVleet",
+    "birthYear": 1994,
+    "debut": 2016,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 78,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "raptors",
+        "from": 2016,
+        "to": 2020
+      },
+      {
+        "teamId": "rockets",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "lamelo-ball",
+    "name": "LaMelo Ball",
+    "birthYear": 2001,
+    "debut": 2020,
+    "primaryPosition": "PG",
+    "positions": [
+      "PG",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 88,
+      "shooting": 82,
+      "defense": 62,
+      "playmaking": 85,
+      "rebounding": 55,
+      "health": 78,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hornets",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "miles-bridges",
+    "name": "Miles Bridges",
+    "birthYear": 1998,
+    "debut": 2018,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 68,
+      "rebounding": 68,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "hornets",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "evan-mobley",
+    "name": "Evan Mobley",
+    "birthYear": 2001,
+    "debut": 2021,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 68,
+      "defense": 88,
+      "playmaking": 68,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "cavaliers",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jarrett-allen",
+    "name": "Jarrett Allen",
+    "birthYear": 1998,
+    "debut": 2017,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 62,
+      "defense": 82,
+      "playmaking": 58,
+      "rebounding": 82,
+      "health": 88,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nets",
+        "from": 2017,
+        "to": 2021
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "franz-wagner",
+    "name": "Franz Wagner",
+    "birthYear": 2001,
+    "debut": 2021,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 72,
+      "rebounding": 62,
+      "health": 88,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "magic",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "desmond-bane",
+    "name": "Desmond Bane",
+    "birthYear": 1998,
+    "debut": 2020,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 72,
+      "rebounding": 55,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "grizzlies",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "julius-randle",
+    "name": "Julius Randle",
+    "birthYear": 1994,
+    "debut": 2014,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 68,
+      "playmaking": 72,
+      "rebounding": 82,
+      "health": 85,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 2014,
+        "to": 2016
+      },
+      {
+        "teamId": "pelicans",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "knicks",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "khris-middleton",
+    "name": "Khris Middleton",
+    "birthYear": 1991,
+    "debut": 2012,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 72,
+      "rebounding": 55,
+      "health": 82,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "pistons",
+        "from": 2012,
+        "to": 2013
+      },
+      {
+        "teamId": "bucks",
+        "from": 2013,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2015,
+      2019,
+      2020,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "brook-lopez",
+    "name": "Brook Lopez",
+    "birthYear": 1988,
+    "debut": 2008,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 58,
+      "rebounding": 72,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nets",
+        "from": 2008,
+        "to": 2017
+      },
+      {
+        "teamId": "lakers",
+        "from": 2017,
+        "to": 2018
+      },
+      {
+        "teamId": "bucks",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2013,
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "rudy-gobert",
+    "name": "Rudy Gobert",
+    "birthYear": 1992,
+    "debut": 2013,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 55,
+      "defense": 92,
+      "playmaking": 58,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "jazz",
+        "from": 2013,
+        "to": 2022
+      },
+      {
+        "teamId": "timberwolves",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2017,
+      2019,
+      2021,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "brandon-ingram",
+    "name": "Brandon Ingram",
+    "birthYear": 1997,
+    "debut": 2016,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 72,
+      "rebounding": 62,
+      "health": 82,
+      "impact": 84
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 2016,
+        "to": 2019
+      },
+      {
+        "teamId": "pelicans",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2020,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "cj-mccollum",
+    "name": "CJ McCollum",
+    "birthYear": 1991,
+    "debut": 2013,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 82,
+      "defense": 65,
+      "playmaking": 72,
+      "rebounding": 48,
+      "health": 85,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "blazers",
+        "from": 2013,
+        "to": 2022
+      },
+      {
+        "teamId": "pelicans",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2018,
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "lauri-markkanen",
+    "name": "Lauri Markkanen",
+    "birthYear": 1997,
+    "debut": 2017,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 85,
+      "defense": 68,
+      "playmaking": 65,
+      "rebounding": 72,
+      "health": 85,
+      "impact": 82
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "bulls",
+        "from": 2017,
+        "to": 2021
+      },
+      {
+        "teamId": "cavaliers",
+        "from": 2021,
+        "to": 2022
+      },
+      {
+        "teamId": "jazz",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2023,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "deandre-ayton",
+    "name": "Deandre Ayton",
+    "birthYear": 1998,
+    "debut": 2018,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 72,
+      "defense": 72,
+      "playmaking": 58,
+      "rebounding": 85,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "suns",
+        "from": 2018,
+        "to": 2024
+      },
+      {
+        "teamId": "blazers",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "anfernee-simons",
+    "name": "Anfernee Simons",
+    "birthYear": 1999,
+    "debut": 2018,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 86,
+      "defense": 62,
+      "playmaking": 75,
+      "rebounding": 42,
+      "health": 85,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "blazers",
+        "from": 2018,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "keegan-murray",
+    "name": "Keegan Murray",
+    "birthYear": 2000,
+    "debut": 2022,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 75,
+      "shooting": 78,
+      "defense": 72,
+      "playmaking": 62,
+      "rebounding": 68,
+      "health": 85,
+      "impact": 74
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "kings",
+        "from": 2022,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "devin-vassell",
+    "name": "Devin Vassell",
+    "birthYear": 2000,
+    "debut": 2020,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 72,
+      "playmaking": 68,
+      "rebounding": 52,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "spurs",
+        "from": 2020,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "kyle-kuzma",
+    "name": "Kyle Kuzma",
+    "birthYear": 1995,
+    "debut": 2017,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 78,
+      "defense": 65,
+      "playmaking": 68,
+      "rebounding": 68,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "lakers",
+        "from": 2017,
+        "to": 2021
+      },
+      {
+        "teamId": "wizards",
+        "from": 2021,
+        "to": 2024
+      },
+      {
+        "teamId": "bucks",
+        "from": 2024,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2021,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "jordan-poole",
+    "name": "Jordan Poole",
+    "birthYear": 1999,
+    "debut": 2019,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG",
+      "PG"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 82,
+      "defense": 62,
+      "playmaking": 72,
+      "rebounding": 42,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "warriors",
+        "from": 2019,
+        "to": 2023
+      },
+      {
+        "teamId": "wizards",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "michael-porter-jr",
+    "name": "Michael Porter Jr.",
+    "birthYear": 1998,
+    "debut": 2019,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 82,
+      "shooting": 88,
+      "defense": 68,
+      "playmaking": 65,
+      "rebounding": 72,
+      "health": 78,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nuggets",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "aaron-gordon",
+    "name": "Aaron Gordon",
+    "birthYear": 1995,
+    "debut": 2014,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 72,
+      "defense": 78,
+      "playmaking": 68,
+      "rebounding": 72,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "magic",
+        "from": 2014,
+        "to": 2021
+      },
+      {
+        "teamId": "nuggets",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "mikal-bridges",
+    "name": "Mikal Bridges",
+    "birthYear": 1996,
+    "debut": 2018,
+    "primaryPosition": "SF",
+    "positions": [
+      "SF",
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 78,
+      "shooting": 78,
+      "defense": 82,
+      "playmaking": 68,
+      "rebounding": 55,
+      "health": 88,
+      "impact": 80
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "suns",
+        "from": 2018,
+        "to": 2023
+      },
+      {
+        "teamId": "nets",
+        "from": 2023,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2022,
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "cam-thomas",
+    "name": "Cam Thomas",
+    "birthYear": 2001,
+    "debut": 2021,
+    "primaryPosition": "SG",
+    "positions": [
+      "SG"
+    ],
+    "peakRatings": {
+      "scoring": 85,
+      "shooting": 85,
+      "defense": 58,
+      "playmaking": 68,
+      "rebounding": 42,
+      "health": 85,
+      "impact": 78
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nets",
+        "from": 2021,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  },
+  {
+    "id": "nic-claxton",
+    "name": "Nic Claxton",
+    "birthYear": 1999,
+    "debut": 2019,
+    "primaryPosition": "C",
+    "positions": [
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 55,
+      "defense": 85,
+      "playmaking": 58,
+      "rebounding": 78,
+      "health": 85,
+      "impact": 76
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "nets",
+        "from": 2019,
+        "to": 2026
+      }
+    ],
+    "allStarYears": [
+      2024,
+      2025
+    ],
+    "allStar": true
+  }
+]

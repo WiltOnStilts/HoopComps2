@@ -1,0 +1,24 @@
+# Render blueprint (use when repo root is hoops-card-hunter, not dynasty-draft alone)
+# Dashboard: New → Blueprint → connect GitHub repo
+# Docs: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: dynasty-draft
+    runtime: node
+    rootDir: dynasty-draft
+    buildCommand: ""
+    startCommand: node server.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: JWT_SECRET
+        generateValue: true
+    # Accounts/data persist only on paid plans (Starter $7/mo+). Free tier = ephemeral disk.
+    # disk:
+    #   name: dynasty-data
+    #   mountPath: /opt/render/project/src/dynasty-draft/data
+    #   sizeGB: 1

@@ -1,0 +1,84 @@
+[
+  {
+    "id": "standard",
+    "label": "Standard Rules",
+    "description": "No special restrictions — build freely from the pool.",
+    "type": "neutral"
+  },
+  {
+    "id": "no-pg",
+    "label": "No Point Guards",
+    "description": "Primary point guards are ineligible for this slot.",
+    "type": "restriction",
+    "filter": "noPrimaryPosition:PG"
+  },
+  {
+    "id": "no-centers",
+    "label": "No Centers",
+    "description": "Centers cannot be drafted for this slot.",
+    "type": "restriction",
+    "filter": "noPrimaryPosition:C"
+  },
+  {
+    "id": "under-25",
+    "label": "Under 25 Only",
+    "description": "Only players under age 25 qualify.",
+    "type": "restriction",
+    "filter": "maxAge:24"
+  },
+  {
+    "id": "year-span-3",
+    "label": "Year Span +3",
+    "description": "Pool expands to three seasons (year ±1) for extra options.",
+    "type": "expansion",
+    "yearSpan": 1
+  },
+  {
+    "id": "no-all-stars",
+    "label": "No All-Stars",
+    "description": "All-Star selections are excluded from this pool.",
+    "type": "restriction",
+    "filter": "noAllStars"
+  },
+  {
+    "id": "veterans-only",
+    "label": "Veterans Only",
+    "description": "Only players age 30+ qualify.",
+    "type": "restriction",
+    "filter": "minAge:30"
+  },
+  {
+    "id": "rookie-wave",
+    "label": "Rookie Wave",
+    "description": "Only first- and second-year players qualify.",
+    "type": "restriction",
+    "filter": "maxExperience:2"
+  },
+  {
+    "id": "defense-first",
+    "label": "Defense First",
+    "description": "Only players with 80+ defense rating qualify.",
+    "type": "restriction",
+    "filter": "minDefense:80"
+  },
+  {
+    "id": "sharpshooters",
+    "label": "Sharpshooters",
+    "description": "Only players with 85+ shooting rating qualify.",
+    "type": "restriction",
+    "filter": "minShooting:85"
+  },
+  {
+    "id": "home-court",
+    "label": "Home Court Edge",
+    "description": "+3% win chance boost during simulation for this lineup.",
+    "type": "simBonus",
+    "bonus": 0.03
+  },
+  {
+    "id": "injury-prone",
+    "label": "Injury Risk",
+    "description": "Random player loses 10 health during simulation.",
+    "type": "simPenalty"
+  }
+]

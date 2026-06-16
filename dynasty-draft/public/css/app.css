@@ -1,0 +1,659 @@
+/* Game-specific styles — scoped to game layout */
+
+.game-layout {
+  min-height: 100%;
+  --dyn-orange: #e85d04;
+  --dyn-orange-bright: #ff6b1a;
+  --dyn-orange-dim: #9a3412;
+  --dyn-black: #0a0a0a;
+  --dyn-card: #141414;
+  --dyn-border: #2a2a2a;
+  --dyn-text: #f5f5f5;
+  --dyn-muted: #9ca3af;
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a0f08 100%);
+  min-height: 100%;
+}
+
+.game-layout .panel {
+  background: var(--dyn-card);
+  border: 1px solid var(--dyn-border);
+  border-radius: 12px;
+}
+
+.dynasty-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border-left: 4px solid var(--dyn-orange);
+}
+
+.dynasty-brand h2 {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+  color: var(--dyn-orange-bright);
+  margin: 0;
+}
+
+.dynasty-stats-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dyn-stat-pill {
+  background: #1f1f1f;
+  border: 1px solid var(--dyn-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  text-align: center;
+  min-width: 5rem;
+}
+
+.dyn-stat-pill span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--dyn-muted);
+  text-transform: uppercase;
+}
+
+.dyn-stat-pill strong {
+  color: var(--dyn-orange-bright);
+  font-size: 1.1rem;
+}
+
+/* Spin grid */
+.dyn-spin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.dyn-spin-grid.is-animating .dyn-spin-card.is-spinning .dyn-reel-value {
+  animation: dyn-reel-spin 0.12s linear infinite;
+}
+
+@keyframes dyn-reel-spin {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.4; transform: translateY(-4px); }
+}
+
+.dyn-spin-grid.is-revealed .dyn-spin-card {
+  box-shadow: 0 0 16px rgba(232, 93, 4, 0.25);
+  border-color: var(--dyn-orange-dim);
+}
+
+.dyn-spin-btn {
+  min-width: 8rem;
+  font-size: 1.05rem;
+}
+
+.dyn-spin-actions {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.dyn-spin-card {
+  background: var(--dyn-card);
+  border: 1px solid var(--dyn-border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dyn-spin-card.is-spinning {
+  box-shadow: 0 0 20px rgba(232, 93, 4, 0.3);
+}
+
+.dyn-slot-badge {
+  display: inline-block;
+  background: var(--dyn-orange);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.dyn-reel {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #222;
+  font-size: 0.85rem;
+}
+
+.dyn-reel-label {
+  color: var(--dyn-muted);
+}
+
+.dyn-reel-value {
+  color: var(--dyn-text);
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+}
+
+.dyn-mod-desc {
+  font-size: 0.75rem;
+  color: var(--dyn-muted);
+  margin: 0.5rem 0 0;
+}
+
+.dyn-spin-actions {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.dyn-start-btn {
+  background: linear-gradient(135deg, var(--dyn-orange) 0%, var(--dyn-orange-dim) 100%);
+  border: none;
+  font-size: 1.1rem;
+  padding: 0.85rem 2rem;
+}
+
+/* Draft */
+.dyn-draft-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dyn-lineup-bar {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.dyn-lineup-slot {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
+  background: #1a1a1a;
+  border: 2px solid var(--dyn-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  text-align: center;
+  color: var(--dyn-text);
+}
+
+.dyn-lineup-slot.active {
+  border-color: var(--dyn-orange);
+  box-shadow: 0 0 12px rgba(232, 93, 4, 0.25);
+}
+
+.dyn-lineup-slot.filled {
+  background: #1f1208;
+}
+
+.dyn-lineup-pos {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--dyn-orange);
+  font-weight: 700;
+}
+
+.dyn-lineup-pick {
+  display: block;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 5rem;
+}
+
+.dyn-player-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.65rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.dyn-player-card {
+  background: #161616;
+  border: 2px solid var(--dyn-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--dyn-text);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.dyn-player-card:hover {
+  border-color: var(--dyn-orange-dim);
+  transform: translateY(-2px);
+}
+
+.dyn-player-card.is-selected {
+  border-color: var(--dyn-orange);
+  background: #1f1208;
+}
+
+.dyn-player-card.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dyn-roster-banner h3 {
+  margin: 0;
+  color: var(--dyn-orange-bright);
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.03em;
+}
+
+.dyn-spin-intro {
+  border-left: 4px solid var(--dyn-orange);
+}
+
+.dyn-reel-single .dyn-reel-value {
+  display: block;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 0.5rem 0;
+}
+
+.dyn-player-head strong {
+  display: block;
+  color: var(--dyn-orange-bright);
+}
+
+.dyn-player-meta {
+  font-size: 0.75rem;
+  color: var(--dyn-muted);
+}
+
+.dyn-stat {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  margin-top: 0.2rem;
+}
+
+.dyn-stat-label {
+  color: var(--dyn-muted);
+  font-weight: 500;
+}
+
+.dyn-stat-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--dyn-text);
+}
+
+.dyn-player-stats--draft .dyn-stat {
+  grid-template-columns: 4.75rem minmax(0, 1fr) 1.5rem;
+  gap: 0.25rem 0.35rem;
+  font-size: 0.6rem;
+  margin-top: 0.15rem;
+}
+
+.dyn-player-stats--draft .dyn-stat-label {
+  font-size: 0.58rem;
+  white-space: nowrap;
+}
+
+.dyn-player-stats--draft .dyn-stat-bar {
+  height: 3px;
+  min-width: 0;
+}
+
+.dyn-player-stats--draft .dyn-stat-val {
+  font-size: 0.58rem;
+}
+
+.dyn-stat-bar {
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dyn-stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--dyn-orange-dim), var(--dyn-orange-bright));
+  border-radius: 2px;
+}
+
+.dyn-draft-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Results */
+.dyn-grade-banner {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-radius: 16px;
+  margin: 1rem 0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a1508 100%);
+  border: 2px solid var(--dyn-orange);
+}
+
+.dyn-grade-letter {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--dyn-orange-bright);
+  text-shadow: 0 0 30px rgba(232, 93, 4, 0.5);
+}
+
+.dyn-grade-label {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--dyn-muted);
+  margin-top: 0.25rem;
+}
+
+.dyn-grade-score {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.dyn-record-big {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 3rem;
+  color: var(--dyn-orange-bright);
+  margin: 0.25rem 0;
+}
+
+.dyn-playoff-round {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #222;
+  font-size: 0.9rem;
+}
+
+.dyn-playoff-round.won strong { color: #4ade80; }
+.dyn-playoff-round.lost strong { color: #f87171; }
+
+.dyn-story {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #222;
+}
+
+.dyn-story h4 {
+  margin: 0 0 0.25rem;
+  color: var(--dyn-orange-bright);
+  font-size: 0.95rem;
+}
+
+.dyn-story p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--dyn-muted);
+}
+
+.dyn-score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.dyn-score-total {
+  font-weight: 700;
+  border-top: 1px solid var(--dyn-border);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  color: var(--dyn-orange-bright);
+}
+
+.dyn-share-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+/* Leaderboard */
+.dyn-lb-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dyn-lb-list li {
+  display: grid;
+  grid-template-columns: 2rem 1fr 2.5rem 3rem auto;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #222;
+  font-size: 0.85rem;
+  align-items: center;
+}
+
+.dyn-lb-rank { color: var(--dyn-muted); }
+.dyn-lb-grade { color: var(--dyn-orange); font-weight: 700; }
+.dyn-lb-score { font-weight: 600; text-align: right; }
+
+/* Settings & friends */
+.dyn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.dyn-friend-search input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: #1a1a1a;
+  border: 1px solid var(--dyn-border);
+  border-radius: 8px;
+  color: var(--dyn-text);
+}
+
+.dyn-friend-results {
+  margin-top: 0.5rem;
+}
+
+.dyn-friend-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem;
+  background: #161616;
+  border: 1px solid var(--dyn-border);
+  border-radius: 6px;
+  color: var(--dyn-text);
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+}
+
+.dyn-friend-result:hover {
+  border-color: var(--dyn-orange);
+}
+
+.dynasty-gate {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.dynasty-gate h2 {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2.5rem;
+  color: var(--dyn-orange-bright);
+}
+
+/* Dashboard entry */
+.dyn-dashboard {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border-left: 4px solid var(--dyn-orange);
+}
+
+.dyn-dashboard-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(2.4rem, 8vw, 3.5rem);
+  letter-spacing: 0.04em;
+  color: var(--dyn-orange-bright);
+  margin: 0 0 0.75rem;
+  line-height: 1.05;
+}
+
+.dyn-dashboard-sub {
+  color: var(--dyn-muted);
+  max-width: 28rem;
+  margin: 0 auto 1.5rem;
+}
+
+.dyn-play-btn {
+  font-size: 1.2rem;
+  padding: 0.85rem 2.5rem;
+  letter-spacing: 0.02em;
+}
+
+.dyn-round-banner,
+.dyn-roster-banner {
+  border-left: 3px solid var(--dyn-orange);
+  margin-bottom: 0.75rem;
+}
+
+.dyn-round-tag {
+  display: inline-block;
+  background: var(--dyn-orange);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.dyn-play-error {
+  margin: 0 auto 1rem;
+  max-width: 28rem;
+}
+
+.dyn-lineup-readonly .dyn-lineup-slot {
+  cursor: default;
+}
+
+.dyn-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.dyn-modal {
+  max-width: 420px;
+  width: 100%;
+  padding: 1.25rem;
+}
+
+.dyn-modal h3 {
+  margin-top: 0;
+}
+
+.dyn-pos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.dyn-pos-btn {
+  text-align: left;
+  width: 100%;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--dyn-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.dyn-review .dyn-picks-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.dyn-pick-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.35rem 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--dyn-border);
+  align-items: center;
+}
+
+.dyn-pick-round {
+  font-size: 0.75rem;
+  color: var(--dyn-orange-bright);
+  font-weight: 700;
+}
+
+.dyn-pick-slot {
+  font-size: 0.85rem;
+  color: var(--dyn-orange-bright);
+  font-weight: 600;
+}
+
+.dash-card.dynasty-entry-btn {
+  background: linear-gradient(135deg, #1a0f08 0%, #2a1508 100%);
+  border-color: var(--dyn-orange-dim);
+}
+
+.dash-card.dynasty-entry-btn .dash-icon {
+  filter: drop-shadow(0 0 8px rgba(232, 93, 4, 0.4));
+}
+
+@media (max-width: 640px) {
+  .top-bar-stats {
+    width: 100%;
+    margin-left: 2.4rem;
+  }
+
+  .top-stat-pill {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dyn-player-pool {
+    grid-template-columns: 1fr;
+    max-height: 45vh;
+  }
+
+  .dyn-grade-letter {
+    font-size: 4rem;
+  }
+
+  .dyn-draft-footer {
+    flex-wrap: wrap;
+  }
+
+  .dyn-draft-footer .btn-primary {
+    order: -1;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

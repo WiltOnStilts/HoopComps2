@@ -1,0 +1,8 @@
+.env
+node_modules/
+data/users.json
+data/dynasty-db.json
+data/social.json
+data/dynasty/raw/
+data/dynasty/imported-bbgm.json
+.venv/

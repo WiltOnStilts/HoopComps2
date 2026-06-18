@@ -242,6 +242,50 @@ function usedPlayerIds() {
   return new Set(dynastyState.picks.map((p) => p.player.id));
 }
 
+function rosterCacheKey(roundIndex) {
+  const round = getRoundConfig(roundIndex);
+  if (!round) return null;
+  return `r${roundIndex}-${round.teamId}-${round.year}-${round.modifierId}`;
+}
+
+function validateLineupBeforeSubmit() {
+  for (const slot of SLOTS) {
+    const playerId = dynastyState.assignments[slot];
+    if (!playerId) return `Assign a player to ${SLOT_LABELS[slot] || slot}`;
+
+    const pick = getPickByPlayerId(playerId);
+    if (!pick) return `Missing draft data for ${slot} — refresh and replay.`;
+
+    if (!canPlayPosition(pick.player, slot)) {
+      return `${pick.player.name} cannot play ${SLOT_LABELS[slot] || slot}`;
+    }
+
+    const key = rosterCacheKey(pick.roundIndex);
+    const pool = key ? dynastyState.players[key] : null;
+    if (pool && !pool.some((p) => p.id === pick.player.id)) {
+      return `${pick.player.name} is not valid for spin ${pick.roundIndex + 1}. Refresh and replay.`;
+    }
+  }
+  return null;
+}
+
+function buildLineupPayload() {
+  const lineup = {};
+  for (const slot of SLOTS) {
+    const playerId = dynastyState.assignments[slot];
+    const pick = getPickByPlayerId(playerId);
+    if (!pick?.round) throw new Error(`Missing draft data for ${slot}`);
+    lineup[slot] = {
+      playerId: pick.player.id,
+      roundIndex: pick.roundIndex,
+      teamId: pick.round.teamId,
+      year: pick.round.year,
+      modifierId: pick.round.modifierId,
+    };
+  }
+  return lineup;
+}
+
 function allSlotsFilled() {
   return SLOTS.every((s) => dynastyState.assignments[s]);
 }
@@ -296,7 +340,7 @@ function renderPlayerCard(player, { selected, showStats, disabled, fullStatLabel
 async function loadRosterForRound(roundIndex) {
   const round = getRoundConfig(roundIndex);
   if (!round) return [];
-  const key = `r${roundIndex}-${round.teamId}-${round.year}-${round.modifierId}`;
+  const key = rosterCacheKey(roundIndex);
   if (dynastyState.players[key]) return dynastyState.players[key];
 
   const data = await fetchDynastyPlayers({
@@ -428,7 +472,6 @@ function renderPositionModal() {
   if (!player) return "";
 
   const slots = playerEligibleSlots(player);
-  const sourceSlot = findPlayerSlot(player.id);
   const buttons = slots
     .map((slot) => {
       const occupied = dynastyState.assignments[slot];
@@ -439,15 +482,7 @@ function renderPositionModal() {
         </button>
       `;
       }
-      if (!sourceSlot) return "";
-      const occupant = getPickByPlayerId(occupied);
-      if (!occupant || occupant.player.id === player.id) return "";
-      if (!canMutualSwap(player, slot, occupant.player, sourceSlot)) return "";
-      return `
-        <button type="button" class="btn-secondary dyn-pos-btn" data-assign-slot="${slot}">
-          ${SLOT_LABELS[slot]} ↔ swap with ${escapeHtml(occupant.player.name)}
-        </button>
-      `;
+      return "";
     })
     .filter(Boolean)
     .join("");
@@ -456,7 +491,7 @@ function renderPositionModal() {
     <div class="dyn-modal-backdrop" id="dynPositionModal">
       <div class="dyn-modal panel">
         <h3>Where does ${escapeHtml(player.name)} play?</h3>
-        <p class="hint">NBA positions: ${escapeHtml((player.positions || []).join(", "))}. Occupied spots only if both players can swap positions.</p>
+        <p class="hint">NBA positions: ${escapeHtml((player.positions || []).join(", "))}. Choose an open spot — use the lineup bar to swap after drafting.</p>
         <div class="dyn-pos-grid">${buttons || `<p class="hint">No open spots available</p>`}</div>
         <button type="button" class="btn-text" id="dynCancelPos">Cancel</button>
       </div>
@@ -895,12 +930,19 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
 
   root.querySelector("#dynSubmitLineup")?.addEventListener("click", async () => {
     if (!allSlotsFilled()) return;
-    const lineup = {};
-    for (const s of SLOTS) {
-      const playerId = dynastyState.assignments[s];
-      const pick = getPickByPlayerId(playerId);
-      if (!pick) return;
-      lineup[s] = { playerId, roundIndex: pick.roundIndex };
+
+    const validationError = validateLineupBeforeSubmit();
+    if (validationError) {
+      alert(validationError);
+      return;
+    }
+
+    let lineup;
+    try {
+      lineup = buildLineupPayload();
+    } catch (e) {
+      alert(e.message || "Lineup incomplete");
+      return;
     }
 
     const btn = root.querySelector("#dynSubmitLineup");
@@ -908,7 +950,9 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
     btn.textContent = "Simulating…";
     try {
       playSound("submit");
-      const result = await submitDynastyLineup(lineup);
+      const result = await submitDynastyLineup(lineup, {
+        dayKey: dynastyState.challenge?.dayKey,
+      });
       dynastyState.submission = result.submission;
       dynastyState.phase = "results";
       await paintGame(root, { onAuthRequired });

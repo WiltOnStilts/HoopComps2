@@ -52,15 +52,23 @@ for (const slot of LINEUP_SLOTS) {
     throw new Error(`No player can fill ${slot} — check positions in roster data`);
   }
   const pick = remaining.splice(idx, 1)[0];
-  lineup[slot] = { playerId: pick.player.id, roundIndex: pick.roundIndex };
+  const round = challenge.rounds[pick.roundIndex];
+  lineup[slot] = {
+    playerId: pick.player.id,
+    roundIndex: pick.roundIndex,
+    teamId: round.teamId,
+    year: round.year,
+    modifierId: round.modifierId,
+  };
 }
 
+const dayKey = getDayKey();
 let result = null;
 await handleDynastyRoute(
   { method: "POST", headers: { "x-dynasty-seed": user.id } },
   "/api/dynasty/submit",
   {
-    readBody: async () => ({ lineup, challengeSeed: user.id }),
+    readBody: async () => ({ lineup, challengeSeed: user.id, dayKey }),
     send: (status, data) => {
       result = { status, data };
     },

@@ -176,6 +176,38 @@ export function getRoundConfig(challenge, roundIndex) {
   return challenge?.rounds?.[roundIndex] || null;
 }
 
+function roundSnapshotMatches(a, b) {
+  if (!a || !b) return false;
+  return a.teamId === b.teamId && Number(a.year) === Number(b.year) && a.modifierId === b.modifierId;
+}
+
+/** Match a submitted pick to a challenge round (handles index drift after refresh). */
+export function resolveSubmitRound(challenge, pick) {
+  const roundIndex = pick.roundIndex;
+  const hasSnapshot = pick.teamId != null && pick.year != null && pick.modifierId != null;
+  const snapshot = hasSnapshot
+    ? { teamId: pick.teamId, year: Number(pick.year), modifierId: pick.modifierId }
+    : null;
+
+  const atIndex = getRoundConfig(challenge, roundIndex);
+  if (atIndex && (!snapshot || roundSnapshotMatches(atIndex, snapshot))) {
+    return { roundIndex, round: atIndex };
+  }
+
+  if (snapshot) {
+    const idx = challenge.rounds.findIndex((r) => roundSnapshotMatches(r, snapshot));
+    if (idx >= 0) return { roundIndex: idx, round: challenge.rounds[idx] };
+    return {
+      error: "Your spins are out of date. Refresh the page and replay today's challenge.",
+    };
+  }
+
+  if (!atIndex) return { error: `Invalid round for lineup` };
+  return {
+    error: "Your game no longer matches today's challenge. Refresh the page and try again.",
+  };
+}
+
 export function getSimModifierIds(challenge) {
   if (!challenge?.rounds) return [];
   const all = loadModifiers();

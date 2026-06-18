@@ -103,6 +103,33 @@ export function getRosterPlayers({ teamId, year, modifierIds, modifierId }) {
   return getEligiblePlayers({ teamId, year, modifierIds, modifierId, slotPosition: null });
 }
 
+export function findPlayerInRoundPool(round, playerId) {
+  const id = String(playerId || "").trim();
+  if (!id || !round?.teamId || !round?.year) return null;
+
+  const pool = getRosterPlayers({
+    teamId: round.teamId,
+    year: round.year,
+    modifierIds: [round.modifierId || "standard"],
+  });
+  const player = pool.find((p) => p.id === id);
+  if (player) return { player };
+
+  const modifier = getModifierById(round.modifierId);
+  const years = yearRangeForChallenge(round.year, [modifier]);
+  for (const y of years) {
+    for (const p of buildFullRoster(round.teamId, y)) {
+      if (p.id === id) {
+        return {
+          error: `${p.name} is not eligible for that spin's pool rules`,
+        };
+      }
+    }
+  }
+
+  return { error: "Player not found for that spin — refresh and replay today's challenge." };
+}
+
 export function getEligiblePlayers({ teamId, year, modifierIds, modifierId, slotPosition }) {
   const ids = modifierIds?.length ? modifierIds : modifierId ? [modifierId] : ["standard"];
   const modifiers = ids.map((id) => getModifierById(id));
@@ -167,7 +194,7 @@ function passesFilter(player, filter) {
 
 export function canPlayPosition(player, position) {
   if (position === "sixth") return true;
-  if (player.positions.includes(position)) return true;
+  if (player.positions?.includes(position)) return true;
   const adjacency = {
     PG: ["SG"],
     SG: ["PG", "SF"],

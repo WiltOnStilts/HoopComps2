@@ -1,12 +1,13 @@
 import crypto from "crypto";
 import { getDayKey } from "./day-key.mjs";
-import { getOrCreateUserChallenge, getRoundConfig } from "./challenge.mjs";
+import { getOrCreateUserChallenge, resolveSubmitRound } from "./challenge.mjs";
 import {
   getRosterPlayers,
   buildFullRoster,
   loadTeams,
   loadModifiers,
   canPlayPosition,
+  findPlayerInRoundPool,
   sanitizePlayerForClient,
   LINEUP_SLOTS,
 } from "./players.mjs";
@@ -52,24 +53,21 @@ function computeLineupSubmission(store, { lineupInput, dayKey, userId, challenge
     const pick = lineupInput[slot];
     if (!pick?.playerId) return { error: `Missing pick for ${slot}` };
 
-    const roundIndex = pick.roundIndex;
-    if (typeof roundIndex !== "number" || roundIndex < 0 || roundIndex >= challenge.rounds.length) {
-      return { error: `Invalid round for ${slot}` };
-    }
-    if (usedRoundIndexes.has(roundIndex)) {
-      return { error: "Each spin round can only be used once" };
-    }
     if (usedPlayerIds.has(pick.playerId)) {
       return { error: "Each player can only be used once" };
     }
 
-    const round = getRoundConfig(challenge, roundIndex);
-    const pool = getRosterPlayers({
-      teamId: round.teamId,
-      year: round.year,
-      modifierIds: [round.modifierId],
-    });
-    const player = pool.find((p) => p.id === pick.playerId);
+    const resolved = resolveSubmitRound(challenge, pick);
+    if (resolved.error) return { error: resolved.error };
+
+    const { roundIndex, round } = resolved;
+    if (usedRoundIndexes.has(roundIndex)) {
+      return { error: "Each spin round can only be used once" };
+    }
+
+    const found = findPlayerInRoundPool(round, pick.playerId);
+    if (found?.error) return { error: `${found.error} (${slot})` };
+    const player = found?.player;
     if (!player) return { error: `Invalid player for ${slot}` };
     if (!canPlayPosition(player, slot)) return { error: `${player.name} cannot play ${slot}` };
 
@@ -186,11 +184,17 @@ export async function handleDynastyRoute(req, url, ctx) {
   if (req.method === "POST" && path === "/api/dynasty/submit") {
     const user = await requireUser(req);
     const body = await readBody(req);
-    const dayKey = getDayKey();
+    const dayKey = String(body.dayKey || getDayKey()).trim();
     const lineupInput = body.lineup || {};
     const challengeSeed = resolveChallengeSeed(req, user) || body.challengeSeed;
     if (!challengeSeed) {
       send(400, { error: "Missing challenge seed" });
+      return true;
+    }
+
+    const todayKey = getDayKey();
+    if (dayKey !== todayKey) {
+      send(400, { error: "This daily challenge has expired. Refresh and play today's challenge." });
       return true;
     }
 

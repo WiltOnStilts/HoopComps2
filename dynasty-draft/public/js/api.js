@@ -36,10 +36,10 @@ export async function fetchDynastyPlayers({ teamId, year, modifierIds, slot = "a
   return dynastyFetch(`/api/dynasty/players?${params}`);
 }
 
-export async function submitDynastyLineup(lineup) {
+export async function submitDynastyLineup(lineup, { dayKey } = {}) {
   return dynastyFetch("/api/dynasty/submit", {
     method: "POST",
-    body: JSON.stringify({ lineup, challengeSeed: getChallengeSeed() }),
+    body: JSON.stringify({ lineup, challengeSeed: getChallengeSeed(), dayKey }),
   });
 }
 

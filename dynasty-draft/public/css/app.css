@@ -107,6 +107,88 @@
   box-shadow: 0 0 20px rgba(232, 93, 4, 0.3);
 }
 
+.dyn-respin-row {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--dyn-border);
+}
+
+.dyn-respin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dyn-respin-chip {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid var(--dyn-orange);
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--dyn-orange-bright);
+  cursor: pointer;
+}
+
+.dyn-respin-chip:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.22);
+}
+
+.dyn-respin-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dyn-respin-chip.is-used {
+  border-color: var(--dyn-border);
+  background: transparent;
+  color: var(--dyn-muted);
+  font-weight: 600;
+  cursor: default;
+}
+
+.dyn-respin-chip.is-spinning {
+  animation: dyn-reel-spin 0.12s linear infinite;
+}
+
+.dyn-respin-hint {
+  margin-bottom: 0.5rem !important;
+}
+
+.dyn-respin-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid var(--dyn-orange);
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--dyn-orange-bright);
+  cursor: pointer;
+}
+
+.dyn-respin-btn:hover {
+  background: rgba(249, 115, 22, 0.22);
+}
+
+.dyn-respin-used {
+  display: block;
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dyn-muted);
+  text-align: center;
+}
+
+.dyn-respin-hint {
+  margin-bottom: 0.75rem !important;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .dyn-slot-badge {
   display: inline-block;
   background: var(--dyn-orange);
@@ -142,6 +224,81 @@
   font-size: 0.75rem;
   color: var(--dyn-muted);
   margin: 0.5rem 0 0;
+}
+
+.dyn-mod-banner {
+  margin: 1rem 0 0;
+  padding: 1rem 1.15rem;
+  border-radius: 10px;
+  border: 2px solid var(--dyn-border);
+}
+
+.dyn-mod-banner-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.45rem;
+}
+
+.dyn-mod-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+}
+
+.dyn-mod-title {
+  font-size: 1.05rem;
+}
+
+.dyn-mod-summary {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.dyn-mod-advantage {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: #22c55e;
+}
+
+.dyn-mod-advantage .dyn-mod-badge {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.dyn-mod-advantage .dyn-mod-summary {
+  color: #bbf7d0;
+}
+
+.dyn-mod-disadvantage {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+}
+
+.dyn-mod-disadvantage .dyn-mod-badge {
+  background: #ef4444;
+  color: #450a0a;
+}
+
+.dyn-mod-disadvantage .dyn-mod-summary {
+  color: #fecaca;
+}
+
+.dyn-mod-neutral {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: #64748b;
+}
+
+.dyn-mod-neutral .dyn-mod-badge {
+  background: #64748b;
+  color: #0f172a;
+}
+
+.dyn-mod-neutral .dyn-mod-summary {
+  color: var(--dyn-muted);
 }
 
 .dyn-spin-actions {
@@ -403,9 +560,20 @@
 .dyn-playoff-round.lost strong { color: #f87171; }
 
 .dyn-story {
-  padding: 0.75rem 0;
+  padding: 0.85rem 0;
   border-bottom: 1px solid #222;
 }
+
+.dyn-story-injury h4,
+.dyn-story-injury_watch h4 { color: #f87171; }
+
+.dyn-story-player_explosion h4,
+.dyn-story-blowout h4 { color: #4ade80; }
+
+.dyn-story-player_dud h4,
+.dyn-story-upset_loss h4 { color: #fb923c; }
+
+.dyn-story-championship h4 { color: #fbbf24; }
 
 .dyn-story h4 {
   margin: 0 0 0.25rem;

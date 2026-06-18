@@ -2,6 +2,9 @@
 
 **Scout basketball card values.** Multi-user cloud collections, eBay/Amazon comps, AI insights, and a collector leaderboard.
 
+> **DynastyDraft** (daily basketball team-building game) is a **separate app** in [`dynasty-draft/`](./dynasty-draft/).  
+> See **[dynasty-draft/GETTING_STARTED.md](./dynasty-draft/GETTING_STARTED.md)** for how to run and deploy it.
+
 ## Quick start
 
 ```bash

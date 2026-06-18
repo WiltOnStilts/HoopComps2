@@ -1,7 +1,7 @@
 import { getDayKey } from "./day-key.mjs";
 import { loadTeams, loadModifiers, getRosterPlayers } from "./players.mjs";
 
-export const CHALLENGE_VERSION = 6;
+export const CHALLENGE_VERSION = 7;
 export const PICK_COUNT = 6;
 
 let draftablePairsCache = null;
@@ -72,11 +72,115 @@ function pickDraftableRound(teams, rng) {
   return { team, year: pick.year };
 }
 
+function isDraftableConfig(teamId, year, modifierId) {
+  return (
+    getRosterPlayers({ teamId, year, modifierIds: [modifierId] }).length >= PICK_COUNT
+  );
+}
+
+export function getModifierPool() {
+  const modifiers = loadModifiers();
+  let modPool = modifiers.filter(
+    (m) =>
+      m.id === "standard" ||
+      m.effectType === "advantage" ||
+      m.effectType === "disadvantage" ||
+      m.type === "simBonus" ||
+      m.type === "simPenalty"
+  );
+  if (!modPool.length) modPool = modifiers;
+  return modPool;
+}
+
+function freshRoundRespins() {
+  return {
+    respinsUsed: { team: false, year: false, modifier: false },
+    respinCounts: { team: 0, year: 0, modifier: 0 },
+  };
+}
+
+function applyRoundFields(round, team, year, mod, extras = {}) {
+  return {
+    ...round,
+    teamId: team.id,
+    teamName: team.name,
+    teamAbbr: team.abbr,
+    year,
+    yearsLabel: yearsLabel(year, mod),
+    modifierId: mod.id,
+    modifierLabel: mod.label,
+    modifierDescription: mod.description,
+    modifierEffectType: mod.effectType || "neutral",
+    modifierEffectSummary: mod.effectSummary || mod.description,
+    ...extras,
+  };
+}
+
+/** Re-roll team, year, or modifier for one pick (once per category). */
+export function respinRoundDimension(challenge, roundIndex, dimension) {
+  const valid = new Set(["team", "year", "modifier"]);
+  if (!valid.has(dimension)) return { error: "Invalid respin type" };
+
+  const round = challenge?.rounds?.[roundIndex];
+  if (!round) return { error: "Invalid round" };
+
+  if (!round.respinsUsed) {
+    Object.assign(round, freshRoundRespins());
+  }
+  if (round.respinsUsed[dimension]) {
+    return { error: `You already respun ${dimension} for this pick` };
+  }
+
+  const teams = loadTeams();
+  const modPool = getModifierPool();
+  round.respinCounts[dimension] = (round.respinCounts[dimension] || 0) + 1;
+
+  const rng = seededRng(
+    hashString(
+      `${challenge.seed}-${challenge.dayKey}-respin-r${roundIndex}-${dimension}-n${round.respinCounts[dimension]}`
+    )
+  );
+
+  let teamId = round.teamId;
+  let year = round.year;
+  let modifierId = round.modifierId;
+
+  if (dimension === "team") {
+    const candidates = teams
+      .map((t) => t.id)
+      .filter((id) => id !== round.teamId && isDraftableConfig(id, year, modifierId));
+    if (!candidates.length) return { error: "No other teams work with this year and modifier" };
+    teamId = candidates[Math.floor(rng() * candidates.length)];
+  } else if (dimension === "year") {
+    const candidates = [];
+    for (let y = 1970; y <= 2024; y++) {
+      if (y !== round.year && isDraftableConfig(teamId, y, modifierId)) candidates.push(y);
+    }
+    if (!candidates.length) return { error: "No other years work with this team and modifier" };
+    year = candidates[Math.floor(rng() * candidates.length)];
+  } else {
+    const candidates = modPool
+      .map((m) => m.id)
+      .filter((id) => id !== round.modifierId && isDraftableConfig(teamId, year, id));
+    if (!candidates.length) return { error: "No other modifiers work with this team and year" };
+    modifierId = candidates[Math.floor(rng() * candidates.length)];
+  }
+
+  const team = teams.find((t) => t.id === teamId) || teams[0];
+  const mod = loadModifiers().find((m) => m.id === modifierId) || loadModifiers()[0];
+
+  const updated = applyRoundFields(round, team, year, mod, {
+    respinsUsed: { ...round.respinsUsed, [dimension]: true },
+    respinCounts: { ...round.respinCounts },
+  });
+
+  challenge.rounds[roundIndex] = updated;
+  return { round: updated, challenge };
+}
+
 export function buildDailyChallenge(dayKey = getDayKey(), seed = "shared") {
   const teams = loadTeams();
-  const modifiers = loadModifiers();
-  let modPool = modifiers.filter((m) => m.id === "standard" || m.type === "simBonus" || m.type === "simPenalty");
-  if (!modPool.length) modPool = [modifiers.find((m) => m.id === "standard") || modifiers[0]];
+  const modPool = getModifierPool();
 
   for (let attempt = 0; attempt < 50; attempt++) {
     const rng = seededRng(hashString(`dynasty-v6-${dayKey}-${seed}-${attempt}`));
@@ -85,17 +189,9 @@ export function buildDailyChallenge(dayKey = getDayKey(), seed = "shared") {
     for (let i = 0; i < PICK_COUNT; i++) {
       const { team, year } = pickDraftableRound(teams, rng);
       const mod = pickRandom(modPool, rng);
-      rounds.push({
-        round: i + 1,
-        teamId: team.id,
-        teamName: team.name,
-        teamAbbr: team.abbr,
-        year,
-        yearsLabel: yearsLabel(year, mod),
-        modifierId: mod.id,
-        modifierLabel: mod.label,
-        modifierDescription: mod.description,
-      });
+      rounds.push(
+        applyRoundFields({ round: i + 1, ...freshRoundRespins() }, team, year, mod)
+      );
     }
 
     if (rounds.every(roundIsDraftable)) {
@@ -127,17 +223,14 @@ function buildDailyChallengeFallback(dayKey, seed = "shared") {
     { team: lakers, year: 2009 },
   ];
 
-  const rounds = presets.map((p, i) => ({
-    round: i + 1,
-    teamId: p.team.id,
-    teamName: p.team.name,
-    teamAbbr: p.team.abbr,
-    year: p.year,
-    yearsLabel: String(p.year),
-    modifierId: mod.id,
-    modifierLabel: mod.label,
-    modifierDescription: mod.description,
-  }));
+  const rounds = presets.map((p, i) =>
+    applyRoundFields(
+      { round: i + 1, ...freshRoundRespins() },
+      p.team,
+      p.year,
+      mod
+    )
+  );
 
   return {
     challengeVersion: CHALLENGE_VERSION,
@@ -208,11 +301,15 @@ export function resolveSubmitRound(challenge, pick) {
   };
 }
 
-export function getSimModifierIds(challenge) {
+export function getSimModifiers(challenge) {
   if (!challenge?.rounds) return [];
   const all = loadModifiers();
   return challenge.rounds
     .map((r) => all.find((m) => m.id === r.modifierId))
-    .filter((m) => m && (m.type === "simBonus" || m.type === "simPenalty"))
-    .map((m) => m.id);
+    .filter((m) => m && (m.type === "simBonus" || m.type === "simPenalty"));
+}
+
+/** @deprecated */
+export function getSimModifierIds(challenge) {
+  return getSimModifiers(challenge).map((m) => m.id);
 }

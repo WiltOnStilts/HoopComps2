@@ -5,6 +5,7 @@ import {
   fetchDynastyToday,
   fetchDynastyPlayers,
   submitDynastyLineup,
+  respinDynastyRound,
   updateDynastySettings,
   fetchDynastyLeaderboard,
 } from "./api.js";
@@ -43,6 +44,7 @@ let dynastyState = {
   phase: "loading",
   spinning: false,
   spinDisplay: null,
+  respinningDimension: null,
   pendingPlayer: null,
   selectedLineupSlot: null,
   playError: null,
@@ -368,6 +370,44 @@ function spinReelHtml(label, value, spinning) {
   `;
 }
 
+function spinDisplayFromRound(round) {
+  if (!round) return null;
+  return {
+    team: round.teamName,
+    year: round.yearsLabel,
+    mod: round.modifierLabel,
+  };
+}
+
+function renderRespinControls(round) {
+  if (!round) return "";
+  const respinsUsed = round.respinsUsed || { team: false, year: false, modifier: false };
+  const busy = Boolean(dynastyState.respinningDimension);
+
+  const chip = (dimension, label) => {
+    if (respinsUsed[dimension]) {
+      return `<span class="dyn-respin-chip is-used">${escapeHtml(label)} · respin used</span>`;
+    }
+    const spinning = dynastyState.respinningDimension === dimension;
+    return `
+      <button type="button" class="dyn-respin-chip${spinning ? " is-spinning" : ""}" data-respin="${dimension}" ${busy ? "disabled" : ""}>
+        ↻ ${spinning ? "Respining…" : escapeHtml(label)}
+      </button>
+    `;
+  };
+
+  return `
+    <div class="dyn-respin-row">
+      <p class="hint dyn-respin-hint">Don't like this pool? One respin per category:</p>
+      <div class="dyn-respin-chips">
+        ${chip("team", "Respin team")}
+        ${chip("year", "Respin year")}
+        ${chip("modifier", "Respin advantage/disadvantage")}
+      </div>
+    </div>
+  `;
+}
+
 function renderGuestBanner(onAuthRequired) {
   if (isLoggedIn()) return "";
   return `
@@ -389,6 +429,35 @@ function renderDashboard({ onAuthRequired } = {}) {
       <button type="button" class="btn-primary dyn-play-btn" id="dynPlayBtn">▶ Play</button>
     </div>
   `;
+}
+
+function modifierEffectClass(type) {
+  if (type === "advantage") return "dyn-mod-advantage";
+  if (type === "disadvantage") return "dyn-mod-disadvantage";
+  return "dyn-mod-neutral";
+}
+
+function renderModifierBanner(round) {
+  if (!round) return "";
+  const type = round.modifierEffectType || "neutral";
+  const cls = modifierEffectClass(type);
+  const badge =
+    type === "advantage" ? "▲ ADVANTAGE" : type === "disadvantage" ? "▼ DISADVANTAGE" : "● STANDARD";
+  const summary = round.modifierEffectSummary || round.modifierDescription || "";
+  return `
+    <div class="dyn-mod-banner ${cls}">
+      <div class="dyn-mod-banner-head">
+        <span class="dyn-mod-badge">${badge}</span>
+        <strong class="dyn-mod-title">${escapeHtml(round.modifierLabel || "Standard")}</strong>
+      </div>
+      <p class="dyn-mod-summary">${escapeHtml(summary)}</p>
+    </div>
+  `;
+}
+
+function invalidateRosterCacheForRound(roundIndex) {
+  const key = rosterCacheKey(roundIndex);
+  if (key) delete dynastyState.players[key];
 }
 
 function renderSpinPhase() {
@@ -424,7 +493,7 @@ function renderSpinPhase() {
       ${spinReelHtml("Year(s)", display.year, dynastyState.spinning)}
       ${spinReelHtml("Advantage / Disadvantage", display.mod, dynastyState.spinning)}
     </div>
-    ${round?.modifierDescription && revealed ? `<p class="dyn-mod-desc panel">${escapeHtml(round.modifierDescription)}</p>` : ""}
+    ${revealed && round ? renderModifierBanner(round) : ""}
     ${actions}
   `;
 }
@@ -444,7 +513,9 @@ function renderPickPhase() {
       <div class="panel dyn-roster-banner">
         <span class="dyn-round-tag">Pick ${roundIndex + 1} of 6</span>
         <h3>${escapeHtml(round?.teamName || "")} · ${escapeHtml(round?.yearsLabel || "")}</h3>
-        <p class="hint">${dynastyState.rosterSize || players.length} players · ${escapeHtml(round?.modifierLabel || "")}</p>
+        ${renderModifierBanner(round)}
+        ${renderRespinControls(round)}
+        <p class="hint dyn-roster-count">${dynastyState.rosterSize || players.length} players in pool</p>
       </div>
       <div class="dyn-lineup-bar${canReassign ? "" : " dyn-lineup-readonly"}">
         ${canReassign ? `<p class="hint dyn-lineup-hint">Tap a player, then tap an open spot or another player to move or swap.</p>` : ""}
@@ -572,7 +643,7 @@ function renderResults(submission, grade, breakdown) {
   const storiesHtml = (sim.stories || [])
     .map(
       (s) => `
-    <article class="dyn-story">
+    <article class="dyn-story dyn-story-${escapeHtml(s.type || "default")}">
       <h4>${escapeHtml(s.headline)}</h4>
       <p>${escapeHtml(s.body)}</p>
     </article>
@@ -818,9 +889,45 @@ async function runSpinAnimation(root, { onAuthRequired } = {}) {
   await paintGame(root, { onAuthRequired });
 
   await new Promise((r) => setTimeout(r, 2500));
+  await continueToPickPhase(root, { onAuthRequired });
+}
 
+async function continueToPickPhase(root, { onAuthRequired } = {}) {
   dynastyState.phase = "pick";
   dynastyState.playersCache = await loadRosterForRound(dynastyState.currentRound);
+  await paintGame(root, { onAuthRequired });
+}
+
+async function runRespinAnimation(root, dimension, { onAuthRequired } = {}) {
+  if (dynastyState.spinning || dynastyState.respinningDimension) return;
+  if (dynastyState.phase !== "pick") return;
+
+  const round = getRoundConfig(dynastyState.currentRound);
+  if (round?.respinsUsed?.[dimension]) return;
+
+  dynastyState.respinningDimension = dimension;
+  playSound("spin");
+  await paintGame(root, { onAuthRequired });
+
+  try {
+    const data = await respinDynastyRound({
+      roundIndex: dynastyState.currentRound,
+      dimension,
+      dayKey: dynastyState.challenge?.dayKey,
+    });
+    if (data.challenge) dynastyState.challenge = data.challenge;
+    else if (data.round) {
+      dynastyState.challenge.rounds[dynastyState.currentRound] = data.round;
+    }
+    dynastyState.spinDisplay = spinDisplayFromRound(getRoundConfig(dynastyState.currentRound));
+    invalidateRosterCacheForRound(dynastyState.currentRound);
+    dynastyState.playersCache = await loadRosterForRound(dynastyState.currentRound);
+    playSound("win");
+  } catch (e) {
+    alert(e.message || "Respin failed");
+  }
+
+  dynastyState.respinningDimension = null;
   await paintGame(root, { onAuthRequired });
 }
 
@@ -828,6 +935,7 @@ async function enterSpinPhase(root, { onAuthRequired } = {}) {
   dynastyState.phase = "spin";
   dynastyState.spinDisplay = null;
   dynastyState.spinning = false;
+  dynastyState.respinningDimension = null;
   await paintGame(root, { onAuthRequired });
 }
 
@@ -865,6 +973,11 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
         if (!dynastyState.spinning && !dynastyState.spinDisplay) {
           void runSpinAnimation(root, { onAuthRequired });
         }
+      }
+      const respinBtn = e.target.closest("[data-respin]");
+      if (respinBtn) {
+        e.preventDefault();
+        void runRespinAnimation(root, respinBtn.dataset.respin, { onAuthRequired });
       }
     });
   }
@@ -912,6 +1025,7 @@ function bindGameEvents(root, { onAuthRequired } = {}) {
       dynastyState.phase = "spin";
       dynastyState.spinDisplay = null;
       dynastyState.spinning = false;
+      dynastyState.respinningDimension = null;
       await enterSpinPhase(root, { onAuthRequired });
     });
   });

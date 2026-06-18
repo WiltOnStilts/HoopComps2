@@ -36,6 +36,18 @@ export async function fetchDynastyPlayers({ teamId, year, modifierIds, slot = "a
   return dynastyFetch(`/api/dynasty/players?${params}`);
 }
 
+export async function respinDynastyRound({ roundIndex, dimension, dayKey } = {}) {
+  return dynastyFetch("/api/dynasty/respin", {
+    method: "POST",
+    body: JSON.stringify({
+      roundIndex,
+      dimension,
+      challengeSeed: getChallengeSeed(),
+      dayKey,
+    }),
+  });
+}
+
 export async function submitDynastyLineup(lineup, { dayKey } = {}) {
   return dynastyFetch("/api/dynasty/submit", {
     method: "POST",

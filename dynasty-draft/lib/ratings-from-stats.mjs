@@ -18,7 +18,10 @@ export function ratingsFromStatRow(row, positions = ["SF"]) {
   const dbpm = Number(row?.dbpm);
 
   if (Number.isFinite(per) || Number.isFinite(obpm)) {
-    const scoring = scale(Number(row.pts || 0) / gp, 5, 30);
+    const ppg = Number(row.pts || 0) / gp;
+    let scoring = scale(ppg, 10, 33, 52, 99);
+    if (ppg >= 27) scoring = Math.min(99, scoring + 4);
+    if (ppg >= 30) scoring = Math.min(99, scoring + 3);
     const shooting = scale(row.fga ? Number(row.fg || 0) / Number(row.fga) : 0.45, 0.35, 0.58);
     const playmaking = scale(Number(row.ast || 0) / gp, 1, 10);
     const rebounding = scale(
@@ -56,15 +59,19 @@ export function ratingsFromStatRow(row, positions = ["SF"]) {
   const ftPct = Number(row?.FT_PCT ?? (row?.fta ? row.ft / row.fta : 0.75));
   const min = Number(row?.MIN ?? row?.min ?? gp * 20) / gp;
 
-  const scoring = scale(pts, 2, 32);
+  // Scoring: 10–33 PPG maps to ~55–99; elite 27+ PPG lands in low 90s
+  let scoring = scale(pts, 10, 33, 52, 99);
+  if (pts >= 27) scoring = Math.min(99, scoring + 4);
+  if (pts >= 30) scoring = Math.min(99, scoring + 3);
+
   const shooting = scale(fgPct * 0.55 + fg3Pct * 0.25 + ftPct * 0.2, 0.35, 0.62);
   const playmaking = scale(ast, 0.5, 10);
   const rebounding = scale(reb, 0.5, 12);
   const defense = scale(stl * 2.2 + blk * 2, 0.3, 4.5);
   const health = scale(Math.min(gp, 82), 20, 82, 55, 99);
-  const usageBoost = scale(min, 10, 38, 0, 8);
+  const usageBoost = scale(min, 10, 38, 0, 10);
   const impact = clamp(
-    Math.round((scoring + shooting + defense + playmaking + rebounding) / 5 + usageBoost),
+    Math.round(scoring * 0.3 + shooting * 0.1 + defense * 0.18 + playmaking * 0.14 + rebounding * 0.12 + usageBoost),
     40,
     99
   );

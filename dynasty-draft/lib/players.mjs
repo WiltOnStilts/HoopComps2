@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { withCalibratedRatings } from "./rating-calibration.mjs";
 import { expandCareerToSeason } from "./roster-builder.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -96,7 +97,7 @@ function passesAllModifiers(player, modifiers) {
 /** Real players only — exact team + season from seed index */
 export function buildFullRoster(teamId, year) {
   const index = getRosterIndex();
-  return [...(index.get(`${teamId}:${year}`) || [])];
+  return (index.get(`${teamId}:${year}`) || []).map(withCalibratedRatings);
 }
 
 export function getRosterPlayers({ teamId, year, modifierIds, modifierId }) {
@@ -228,10 +229,12 @@ export function lineupOverall(lineup, showStats = true) {
     const pos = entry.slot;
     const mult = positionFitMultiplier(player, pos);
     const r = player.ratings;
-    const impact = showStats
-      ? (r.scoring + r.shooting + r.defense + r.playmaking + r.rebounding + r.health + r.impact) / 7
+    const skill = showStats
+      ? r.impact * 0.45 +
+        (r.scoring + r.defense + r.playmaking) / 3 * 0.35 +
+        (r.shooting + r.rebounding + r.health) / 3 * 0.2
       : r.impact;
-    total += impact * mult * (r.health / 100);
+    total += skill * mult;
     count++;
   }
   return count ? total / count : 50;

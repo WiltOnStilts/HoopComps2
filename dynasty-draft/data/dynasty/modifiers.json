@@ -2,83 +2,108 @@
   {
     "id": "standard",
     "label": "Standard Rules",
-    "description": "No special restrictions — build freely from the pool.",
+    "description": "No special restrictions — build freely from the full roster pool.",
+    "effectType": "neutral",
+    "effectSummary": "Normal draft rules — full roster available.",
     "type": "neutral"
   },
   {
     "id": "no-pg",
     "label": "No Point Guards",
-    "description": "Primary point guards are ineligible for this slot.",
+    "description": "Primary point guards are removed from this pool. You'll need playmaking elsewhere.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Primary point guards cannot be drafted.",
     "type": "restriction",
     "filter": "noPrimaryPosition:PG"
   },
   {
     "id": "no-centers",
     "label": "No Centers",
-    "description": "Centers cannot be drafted for this slot.",
+    "description": "Centers are removed from this pool. Small-ball or position-flex only.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Centers cannot be drafted.",
     "type": "restriction",
     "filter": "noPrimaryPosition:C"
   },
   {
     "id": "under-25",
     "label": "Under 25 Only",
-    "description": "Only players under age 25 qualify.",
+    "description": "Only young players under age 25 qualify. High upside, less polish.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Only players age 24 and under.",
     "type": "restriction",
     "filter": "maxAge:24"
   },
   {
     "id": "year-span-3",
     "label": "Year Span +3",
-    "description": "Pool expands to three seasons (year ±1) for extra options.",
+    "description": "Pool expands to three seasons (year ±1). More options to find the right fit.",
+    "effectType": "advantage",
+    "effectSummary": "ADVANTAGE — Roster pool includes 3 seasons (±1 year).",
     "type": "expansion",
     "yearSpan": 1
   },
   {
     "id": "no-all-stars",
     "label": "No All-Stars",
-    "description": "All-Star selections are excluded from this pool.",
+    "description": "All-Star selections are excluded. Role players and hidden gems only.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — All-Star players removed from pool.",
     "type": "restriction",
     "filter": "noAllStars"
   },
   {
     "id": "veterans-only",
     "label": "Veterans Only",
-    "description": "Only players age 30+ qualify.",
+    "description": "Only players age 30+ qualify. Experience over upside.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Only veterans age 30+.",
     "type": "restriction",
     "filter": "minAge:30"
   },
   {
     "id": "rookie-wave",
     "label": "Rookie Wave",
-    "description": "Only first- and second-year players qualify.",
+    "description": "Only first- and second-year players qualify. Raw talent, steep learning curve.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Rookies & sophomores only.",
     "type": "restriction",
     "filter": "maxExperience:2"
   },
   {
     "id": "defense-first",
     "label": "Defense First",
-    "description": "Only players with 80+ defense rating qualify.",
+    "description": "Only players with 80+ defense rating qualify. Grind-it-out rosters.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — 80+ defense required.",
     "type": "restriction",
     "filter": "minDefense:80"
   },
   {
     "id": "sharpshooters",
     "label": "Sharpshooters",
-    "description": "Only players with 85+ shooting rating qualify.",
+    "description": "Only players with 85+ shooting rating qualify. Spacing specialists only.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — 85+ shooting required.",
     "type": "restriction",
     "filter": "minShooting:85"
   },
   {
     "id": "home-court",
     "label": "Home Court Edge",
-    "description": "+3% win chance boost during simulation for this lineup.",
+    "description": "Your lineup gets a big simulation boost — every game feels like a home crowd.",
+    "effectType": "advantage",
+    "effectSummary": "ADVANTAGE — +12% win chance all season.",
     "type": "simBonus",
-    "bonus": 0.03
+    "bonus": 0.12
   },
   {
     "id": "injury-prone",
     "label": "Injury Risk",
-    "description": "Random player loses 10 health during simulation.",
-    "type": "simPenalty"
+    "description": "A random player takes a health hit before the season sim. Depth matters.",
+    "effectType": "disadvantage",
+    "effectSummary": "DISADVANTAGE — Random player loses 18 health & −8% win chance.",
+    "type": "simPenalty",
+    "penalty": 0.08
   }
 ]

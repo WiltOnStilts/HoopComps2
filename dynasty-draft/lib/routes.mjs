@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { getDayKey } from "./day-key.mjs";
-import { getOrCreateUserChallenge, resolveSubmitRound } from "./challenge.mjs";
+import { getOrCreateUserChallenge, resolveSubmitRound, respinRoundDimension } from "./challenge.mjs";
 import {
   getRosterPlayers,
   buildFullRoster,
@@ -178,6 +178,43 @@ export async function handleDynastyRoute(req, url, ctx) {
     const body = await readBody(req);
     const settings = await withDynastyStore((store) => updateUserSettings(store, user.id, body));
     send(200, { settings });
+    return true;
+  }
+
+  if (req.method === "POST" && path === "/api/dynasty/respin") {
+    const user = await requireUser(req);
+    const body = await readBody(req);
+    const dayKey = String(body.dayKey || getDayKey()).trim();
+    const roundIndex = Number(body.roundIndex);
+    const dimension = String(body.dimension || "").trim();
+    const challengeSeed = resolveChallengeSeed(req, user) || body.challengeSeed;
+
+    if (!challengeSeed) {
+      send(400, { error: "Missing challenge seed" });
+      return true;
+    }
+    if (dayKey !== getDayKey()) {
+      send(400, { error: "This daily challenge has expired. Refresh and play today's challenge." });
+      return true;
+    }
+    if (!Number.isInteger(roundIndex) || roundIndex < 0 || roundIndex > 5) {
+      send(400, { error: "Invalid round" });
+      return true;
+    }
+
+    const result = await withDynastyStore((store) => {
+      const challenge = getOrCreateUserChallenge(store, dayKey, challengeSeed);
+      const respin = respinRoundDimension(challenge, roundIndex, dimension);
+      if (respin.error) return respin;
+      return respin;
+    });
+
+    if (result.error) {
+      send(400, { error: result.error });
+      return true;
+    }
+
+    send(200, result);
     return true;
   }
 

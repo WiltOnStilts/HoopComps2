@@ -48,7 +48,14 @@ function yearsLabel(year, modifier) {
   if (span <= 0) return String(year);
   const lo = Math.max(1960, year - span);
   const hi = Math.min(2026, year + span);
-  return lo === hi ? String(year) : `${lo}–${hi}`;
+  const years = [];
+  for (let y = lo; y <= hi; y++) years.push(y);
+  if (years.length === 1) return String(years[0]);
+  if (years.length === 2) return `${years[0]} & ${years[1]}`;
+  if (years.length <= 4) {
+    return `${years.slice(0, -1).join(", ")} & ${years[years.length - 1]}`;
+  }
+  return `${lo}–${hi} (${years.length} seasons)`;
 }
 
 function roundIsDraftable(round) {
@@ -241,12 +248,21 @@ function buildDailyChallengeFallback(dayKey, seed = "shared") {
   };
 }
 
+function refreshChallengeRoundLabels(challenge) {
+  if (!challenge?.rounds) return challenge;
+  for (const round of challenge.rounds) {
+    const mod = loadModifiers().find((m) => m.id === round.modifierId);
+    if (mod) round.yearsLabel = yearsLabel(round.year, mod);
+  }
+  return challenge;
+}
+
 export function getOrCreateUserChallenge(store, dayKey = getDayKey(), seed = "shared") {
   store.dailyChallenges = store.dailyChallenges || [];
   const idx = store.dailyChallenges.findIndex(
     (c) => c.dayKey === dayKey && c.seed === seed && c.challengeVersion === CHALLENGE_VERSION
   );
-  if (idx >= 0) return store.dailyChallenges[idx];
+  if (idx >= 0) return refreshChallengeRoundLabels(store.dailyChallenges[idx]);
 
   const challenge = buildDailyChallenge(dayKey, seed);
   const staleIdx = store.dailyChallenges.findIndex((c) => c.dayKey === dayKey && c.seed === seed);
@@ -257,7 +273,7 @@ export function getOrCreateUserChallenge(store, dayKey = getDayKey(), seed = "sh
     const age = Date.now() - new Date(c.createdAt || c.dayKey).getTime();
     return age < 14 * 24 * 60 * 60 * 1000;
   });
-  return challenge;
+  return refreshChallengeRoundLabels(challenge);
 }
 
 /** @deprecated use getOrCreateUserChallenge */

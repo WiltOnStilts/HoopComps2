@@ -36,10 +36,10 @@
   },
   {
     "id": "year-span-3",
-    "label": "Year Span +3",
-    "description": "Pool expands to three seasons (year ±1). More options to find the right fit.",
+    "label": "3-Season Pool",
+    "description": "Pool includes the spin year plus one season on each side — three seasons total.",
     "effectType": "advantage",
-    "effectSummary": "ADVANTAGE — Roster pool includes 3 seasons (±1 year).",
+    "effectSummary": "ADVANTAGE — Draft from 3 seasons (center year ±1).",
     "type": "expansion",
     "yearSpan": 1
   },

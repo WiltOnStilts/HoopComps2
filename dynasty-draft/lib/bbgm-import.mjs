@@ -122,8 +122,14 @@ export function playerSeasonFromSnapshot(player, team, year, startingSeason) {
 
   const ratingSeason = startingSeason >= 2020 ? startingSeason - 1 : startingSeason;
   const rating = ratingForSeason(player, ratingSeason) || ratingForSeason(player, startingSeason);
-  const ratings = bbgmToDynastyRatings(rating);
   const positions = parsePositions(player.pos);
+  const stat =
+    (player.stats || []).find(
+      (s) => !s.playoffs && s.season === year && s.gp >= 1 && s.tid === team?.tid
+    ) ||
+    (player.stats || []).find((s) => !s.playoffs && s.season === year && s.gp >= 1);
+  const ratings =
+    stat && stat.gp >= 1 ? ratingsFromStatRow(stat, positions) : bbgmToDynastyRatings(rating);
   const age = player.born?.year ? year - player.born.year : 25;
 
   return {
@@ -137,7 +143,7 @@ export function playerSeasonFromSnapshot(player, team, year, startingSeason) {
     primaryPosition: positions[0],
     allStar: isAllStar(player, ratingSeason) || isAllStar(player, year),
     ratings,
-    source: "bbgm-snapshot",
+    source: stat ? "bbgm-stats" : "bbgm-snapshot",
   };
 }
 
@@ -147,9 +153,8 @@ export function playerSeasonFromStat(player, teamByTid, stat) {
   if (!teamId || !player?.name || stat.gp < 1) return null;
 
   const year = stat.season;
-  const bbgmRating = ratingForSeason(player, stat.season);
   const positions = parsePositions(player.pos);
-  const ratings = bbgmRating ? bbgmToDynastyRatings(bbgmRating) : ratingsFromStatRow(stat, positions);
+  const ratings = ratingsFromStatRow(stat, positions);
   const age = player.born?.year ? year - player.born.year : 25;
 
   return {
@@ -222,7 +227,7 @@ export function extractRatingsHistory(league) {
       const year = r.season;
       const stat = (p.stats || []).find((s) => !s.playoffs && s.season === year && s.tid === tid);
       const positions = parsePositions(p.pos);
-      const ratings = r ? bbgmToDynastyRatings(r) : ratingsFromStatRow(stat, positions);
+      const ratings = stat ? ratingsFromStatRow(stat, positions) : bbgmToDynastyRatings(r);
       const age = p.born?.year ? year - p.born.year : 25;
 
       players.push({
@@ -244,10 +249,24 @@ export function extractRatingsHistory(league) {
   return players;
 }
 
+const SOURCE_RANK = {
+  "bbgm-stats": 5,
+  "bbgm-ratings": 4,
+  "nba-api": 3,
+  "bbgm-snapshot": 2,
+};
+
 export function mergeImportedPlayers(existingMap, rows) {
   for (const row of rows) {
     const key = `${row.name.toLowerCase()}:${row.teamId}:${row.year}`;
-    if (!existingMap.has(key)) existingMap.set(key, row);
+    const existing = existingMap.get(key);
+    if (!existing) {
+      existingMap.set(key, row);
+      continue;
+    }
+    const rankNew = SOURCE_RANK[row.source] || 0;
+    const rankOld = SOURCE_RANK[existing.source] || 0;
+    if (rankNew > rankOld) existingMap.set(key, row);
   }
   return existingMap;
 }

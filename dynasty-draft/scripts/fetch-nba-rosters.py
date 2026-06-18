@@ -105,34 +105,69 @@ def scale(val, lo, hi, out_lo=40, out_hi=99):
     return clamp(round(out_lo + t * (out_hi - out_lo)), out_lo, out_hi)
 
 
+def rate_anchors(value, anchors):
+    if value is None or value != value:
+        return anchors[0][1]
+    if value <= anchors[0][0]:
+        return anchors[0][1]
+    for i in range(1, len(anchors)):
+        x0, y0 = anchors[i - 1]
+        x1, y1 = anchors[i]
+        if value <= x1:
+            t = (value - x0) / (x1 - x0)
+            return clamp(round(y0 + t * (y1 - y0)), 40, 99)
+    return anchors[-1][1]
+
+
 def ratings_from_stats(row, positions):
     gp = max(1, float(row.get("GP") or 1))
-    pts = float(row.get("PTS") or 0) / gp
-    reb = float(row.get("REB") or 0) / gp
-    ast = float(row.get("AST") or 0) / gp
-    stl = float(row.get("STL") or 0) / gp
-    blk = float(row.get("BLK") or 0) / gp
+    pts = float(row.get("PTS") or 0)
+    reb = float(row.get("REB") or 0)
+    ast = float(row.get("AST") or 0)
+    stl = float(row.get("STL") or 0)
+    blk = float(row.get("BLK") or 0)
     fg_pct = float(row.get("FG_PCT") or 0.45)
     fg3_pct = float(row.get("FG3_PCT") or 0)
     ft_pct = float(row.get("FT_PCT") or 0.75)
     mins = float(row.get("MIN") or gp * 20) / gp
 
-    scoring = scale(pts, 2, 32)
-    shooting = scale(fg_pct * 0.55 + fg3_pct * 0.25 + ft_pct * 0.2, 0.35, 0.62)
-    playmaking = scale(ast, 0.5, 10)
-    rebounding = scale(reb, 0.5, 12)
-    defense = scale(stl * 2.2 + blk * 2, 0.3, 4.5)
-    health = scale(min(gp, 82), 20, 82, 55, 99)
-    usage = scale(mins, 10, 38, 0, 8)
-    impact = clamp(round((scoring + shooting + defense + playmaking + rebounding) / 5 + usage), 40, 99)
+    scoring = rate_anchors(pts, [
+        (0, 40), (5, 50), (10, 62), (15, 72), (18, 78), (22, 85),
+        (25, 90), (28, 94), (32, 97), (36, 99),
+    ])
+    shooting_blend = fg_pct * 0.55 + fg3_pct * 0.25 + ft_pct * 0.2
+    shooting = rate_anchors(shooting_blend, [
+        (0.4, 45), (0.48, 58), (0.54, 72), (0.58, 82), (0.62, 90), (0.66, 96), (0.7, 99),
+    ])
+    playmaking = rate_anchors(ast, [
+        (0, 40), (1, 52), (3, 65), (5, 75), (7, 85), (9, 92), (11, 97), (13, 99),
+    ])
+    rebounding = rate_anchors(reb, [
+        (0, 40), (2, 52), (4, 62), (6, 72), (8, 82), (10, 90), (12, 95), (14, 99),
+    ])
+    stocks = stl * 2.1 + blk * 2.4
+    defense = rate_anchors(stocks, [
+        (0, 40), (0.5, 52), (1.2, 65), (2, 75), (2.8, 85), (3.5, 92), (4.5, 97), (5.5, 99),
+    ])
+    health = rate_anchors(min(gp, 82), [
+        (20, 55), (40, 65), (55, 72), (65, 78), (72, 85), (78, 92), (82, 99),
+    ])
+    usage = rate_anchors(mins, [(10, 40), (20, 55), (28, 70), (34, 82), (38, 92)])
+    impact = clamp(
+        round(scoring * 0.28 + shooting * 0.1 + defense * 0.2 + playmaking * 0.16 + rebounding * 0.14 + usage * 0.12),
+        40,
+        99,
+    )
 
     pos = positions[0]
     if pos in ("C", "PF"):
         defense = clamp(defense + 2, 40, 99)
-        rebounding = clamp(rebounding + 4, 40, 99)
+        rebounding = clamp(rebounding + 3, 40, 99)
     elif pos == "PG":
-        playmaking = clamp(playmaking + 4, 40, 99)
-        rebounding = clamp(rebounding - 4, 40, 99)
+        playmaking = clamp(playmaking + 3, 40, 99)
+        rebounding = clamp(rebounding - 3, 40, 99)
+    elif pos == "SG":
+        shooting = clamp(shooting + 1, 40, 99)
 
     return {
         "scoring": scoring,

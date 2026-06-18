@@ -64,6 +64,7 @@ export function expandCareerToSeason(career, teamId, year) {
     primaryPosition: career.primaryPosition,
     allStar: Boolean(allStar),
     ratings,
+    source: "career-fallback",
   };
 }
 

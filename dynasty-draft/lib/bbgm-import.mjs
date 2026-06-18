@@ -241,7 +241,7 @@ export function extractRatingsHistory(league) {
         primaryPosition: positions[0],
         allStar: isAllStar(p, year),
         ratings,
-        source: "bbgm-ratings",
+        source: stat ? "bbgm-stats" : "bbgm-ratings",
       });
     }
   }
@@ -251,8 +251,8 @@ export function extractRatingsHistory(league) {
 
 const SOURCE_RANK = {
   "bbgm-stats": 5,
-  "bbgm-ratings": 4,
-  "nba-api": 3,
+  "nba-api": 5,
+  "bbgm-ratings": 3,
   "bbgm-snapshot": 2,
 };
 

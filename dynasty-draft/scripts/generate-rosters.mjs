@@ -258,13 +258,13 @@ function buildRosterIndex() {
 
       for (const row of imported) {
         if (row.teamId === team.id && row.year === year) {
-          addPlayerToRoster(players, row);
+          addPlayerToRoster(players, row, { overwrite: true });
         }
       }
 
       for (const c of careers) {
         const p = expandCareerToSeason(c, team.id, year);
-        if (p) addPlayerToRoster(players, p, { overwrite: true });
+        if (p) addPlayerToRoster(players, p, { overwrite: false });
       }
 
       const snapshotNames = seasonRosters[key];
@@ -272,7 +272,7 @@ function buildRosterIndex() {
         for (const name of snapshotNames) {
           const c = stubCareer(name, team.id, year);
           const p = expandCareerToSeason(c, team.id, year);
-          if (p) addPlayerToRoster(players, p, { overwrite: true });
+          if (p) addPlayerToRoster(players, p, { overwrite: false });
         }
       }
 

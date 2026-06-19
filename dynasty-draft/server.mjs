@@ -82,8 +82,10 @@ function send(res, status, body, extraHeaders = {}) {
 function serveStatic(req, res) {
   let reqPath = req.url?.split("?")[0] || "/";
   if (reqPath === "/") reqPath = "/index.html";
-  const filePath = path.join(PUBLIC, reqPath);
-  if (!filePath.startsWith(PUBLIC)) {
+  const libFile = reqPath.startsWith("/lib/") ? path.join(__dirname, reqPath.slice(1)) : null;
+  const filePath = libFile || path.join(PUBLIC, reqPath);
+  const publicRoot = libFile ? __dirname : PUBLIC;
+  if (!filePath.startsWith(publicRoot)) {
     send(res, 403, { error: "Forbidden" });
     return;
   }

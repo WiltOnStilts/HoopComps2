@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { ratingsFromStatRow } from "./ratings-from-stats.mjs";
+import { normalizePlayerPositions, parsePositionLabel } from "./positions.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ALIASES = JSON.parse(
@@ -48,26 +49,19 @@ export function mapBBGMTeamId(team) {
 }
 
 export function parsePositions(pos) {
-  const raw = String(pos || "SF").toUpperCase();
-  const out = [];
-  const add = (p) => {
-    if (p && !out.includes(p)) out.push(p);
-  };
-  if (raw.includes("PG") || raw === "G") add("PG");
-  if (raw.includes("SG") || raw === "G") add("SG");
-  if (raw.includes("SF") || raw === "F") add("SF");
-  if (raw.includes("PF") || raw === "F") add("PF");
-  if (raw.includes("C")) add("C");
-  if (raw.includes("GF")) {
-    add("SG");
-    add("SF");
-  }
-  if (raw.includes("FC")) {
-    add("PF");
-    add("C");
-  }
-  if (out.length === 0) add("SF");
-  return out;
+  return parsePositionLabel(pos);
+}
+
+function playerHeight(player) {
+  return player?.hgt ?? player?.height ?? null;
+}
+
+function finalizePlayerRow(row, sourcePlayer) {
+  return normalizePlayerPositions({
+    ...row,
+    height: playerHeight(sourcePlayer),
+    hgt: playerHeight(sourcePlayer),
+  });
 }
 
 export function bbgmToDynastyRatings(r) {
@@ -132,19 +126,22 @@ export function playerSeasonFromSnapshot(player, team, year, startingSeason) {
     stat && stat.gp >= 1 ? ratingsFromStatRow(stat, positions) : bbgmToDynastyRatings(rating);
   const age = player.born?.year ? year - player.born.year : 25;
 
-  return {
-    id: `${slug(player.name)}-${teamId}-${year}`,
-    name: player.name,
-    teamId,
-    year,
-    age,
-    experience: experienceFor(player, year),
-    positions,
-    primaryPosition: positions[0],
-    allStar: isAllStar(player, ratingSeason) || isAllStar(player, year),
-    ratings,
-    source: stat ? "bbgm-stats" : "bbgm-snapshot",
-  };
+  return finalizePlayerRow(
+    {
+      id: `${slug(player.name)}-${teamId}-${year}`,
+      name: player.name,
+      teamId,
+      year,
+      age,
+      experience: experienceFor(player, year),
+      positions,
+      primaryPosition: positions[0],
+      allStar: isAllStar(player, ratingSeason) || isAllStar(player, year),
+      ratings,
+      source: stat ? "bbgm-stats" : "bbgm-snapshot",
+    },
+    player
+  );
 }
 
 export function playerSeasonFromStat(player, teamByTid, stat) {
@@ -157,19 +154,22 @@ export function playerSeasonFromStat(player, teamByTid, stat) {
   const ratings = ratingsFromStatRow(stat, positions);
   const age = player.born?.year ? year - player.born.year : 25;
 
-  return {
-    id: `${slug(player.name)}-${teamId}-${year}`,
-    name: player.name,
-    teamId,
-    year,
-    age,
-    experience: experienceFor(player, year),
-    positions,
-    primaryPosition: positions[0],
-    allStar: isAllStar(player, year),
-    ratings,
-    source: "bbgm-stats",
-  };
+  return finalizePlayerRow(
+    {
+      id: `${slug(player.name)}-${teamId}-${year}`,
+      name: player.name,
+      teamId,
+      year,
+      age,
+      experience: experienceFor(player, year),
+      positions,
+      primaryPosition: positions[0],
+      allStar: isAllStar(player, year),
+      ratings,
+      source: "bbgm-stats",
+    },
+    player
+  );
 }
 
 export function extractSnapshotRoster(league) {
@@ -230,19 +230,24 @@ export function extractRatingsHistory(league) {
       const ratings = stat ? ratingsFromStatRow(stat, positions) : bbgmToDynastyRatings(r);
       const age = p.born?.year ? year - p.born.year : 25;
 
-      players.push({
-        id: `${slug(p.name)}-${teamId}-${year}`,
-        name: p.name,
-        teamId,
-        year,
-        age,
-        experience: experienceFor(p, year),
-        positions,
-        primaryPosition: positions[0],
-        allStar: isAllStar(p, year),
-        ratings,
-        source: stat ? "bbgm-stats" : "bbgm-ratings",
-      });
+      players.push(
+        finalizePlayerRow(
+          {
+            id: `${slug(p.name)}-${teamId}-${year}`,
+            name: p.name,
+            teamId,
+            year,
+            age,
+            experience: experienceFor(p, year),
+            positions,
+            primaryPosition: positions[0],
+            allStar: isAllStar(p, year),
+            ratings,
+            source: stat ? "bbgm-stats" : "bbgm-ratings",
+          },
+          p
+        )
+      );
     }
   }
 

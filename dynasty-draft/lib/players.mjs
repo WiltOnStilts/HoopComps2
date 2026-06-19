@@ -3,6 +3,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { withCalibratedRatings } from "./rating-calibration.mjs";
 import { expandCareerToSeason } from "./roster-builder.mjs";
+import {
+  canPlayPosition,
+  getEligiblePositions as eligiblePositionsForPlayer,
+  normalizePlayerPositions,
+  positionFitMultiplier,
+} from "./positions.mjs";
+
+export { canPlayPosition, positionFitMultiplier };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data", "dynasty");
@@ -31,7 +39,9 @@ export function loadModifiers() {
 
 export function loadSeedPlayers() {
   if (!playersCache) {
-    playersCache = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "players-seed.json"), "utf8"));
+    playersCache = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "players-seed.json"), "utf8")).map(
+      normalizePlayerPositions
+    );
   }
   return playersCache;
 }
@@ -158,9 +168,7 @@ export function countRoster(teamId, year) {
 
 /** Positions a player can realistically be assigned to in the draft */
 export function getEligiblePositions(player) {
-  const positions = new Set(player.positions || []);
-  if (player.primaryPosition) positions.add(player.primaryPosition);
-  return LINEUP_SLOTS.filter((slot) => slot === "sixth" || positions.has(slot));
+  return eligiblePositionsForPlayer(player, LINEUP_SLOTS);
 }
 
 function passesFilter(player, filter) {
@@ -191,33 +199,6 @@ function passesFilter(player, filter) {
     if ((player.ratings?.shooting || 0) < min) return false;
   }
   return true;
-}
-
-export function canPlayPosition(player, position) {
-  if (position === "sixth") return true;
-  if (player.positions?.includes(position)) return true;
-  const adjacency = {
-    PG: ["SG"],
-    SG: ["PG", "SF"],
-    SF: ["SG", "PF"],
-    PF: ["SF", "C"],
-    C: ["PF"],
-  };
-  return adjacency[position]?.includes(player.primaryPosition) || false;
-}
-
-export function positionFitMultiplier(player, assignedPosition) {
-  if (assignedPosition === "sixth") return 0.95;
-  if (player.primaryPosition === assignedPosition) return 1.0;
-  if (player.positions.includes(assignedPosition)) return 0.92;
-  const adjacency = {
-    PG: { SG: 0.85 },
-    SG: { PG: 0.82, SF: 0.88 },
-    SF: { SG: 0.86, PF: 0.88 },
-    PF: { SF: 0.86, C: 0.82 },
-    C: { PF: 0.84 },
-  };
-  return adjacency[assignedPosition]?.[player.primaryPosition] || 0.75;
 }
 
 export function lineupOverall(lineup, showStats = true) {

@@ -9,6 +9,7 @@ import {
   updateDynastySettings,
   fetchDynastyLeaderboard,
 } from "./api.js";
+import { canPlayPosition } from "/lib/positions.mjs";
 import { searchFriendCandidates, sendFriendRequest } from "./social.js";
 
 function escapeHtml(str) {
@@ -86,20 +87,6 @@ function getRoundConfig(index) {
 
 function getPickByPlayerId(playerId) {
   return dynastyState.picks.find((p) => p.player.id === playerId);
-}
-
-function canPlayPosition(player, position) {
-  if (position === "sixth") return true;
-  const positions = player.positions || [];
-  if (positions.includes(position)) return true;
-  const adjacency = {
-    PG: ["SG"],
-    SG: ["PG", "SF"],
-    SF: ["SG", "PF"],
-    PF: ["SF", "C"],
-    C: ["PF"],
-  };
-  return adjacency[position]?.includes(player.primaryPosition) || false;
 }
 
 function playerEligibleSlots(player) {
@@ -561,7 +548,7 @@ function renderPositionModal() {
   return `
     <div class="dyn-modal-backdrop" id="dynPositionModal">
       <div class="dyn-modal panel">
-        <h3>Where does ${escapeHtml(player.name)} play?</h3>
+        <h3>Choose position.</h3>
         <p class="hint">NBA positions: ${escapeHtml((player.positions || []).join(", "))}. Choose an open spot — use the lineup bar to swap after drafting.</p>
         <div class="dyn-pos-grid">${buttons || `<p class="hint">No open spots available</p>`}</div>
         <button type="button" class="btn-text" id="dynCancelPos">Cancel</button>

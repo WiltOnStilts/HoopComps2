@@ -94,6 +94,20 @@ def parse_positions(raw: str):
     return list(dict.fromkeys(out)) or ["SF"]
 
 
+def parse_height(raw) -> int | None:
+    if raw in (None, ""):
+        return None
+    text = str(raw).strip()
+    match = re.match(r"^(\d+)\s*[-']\s*(\d+)$", text)
+    if match:
+        return int(match.group(1)) * 12 + int(match.group(2))
+    try:
+        value = int(float(text))
+        return value if value > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
 def clamp(n, lo, hi):
     return max(lo, min(hi, n))
 
@@ -293,22 +307,25 @@ def fetch():
 
                 age_raw = row.get("AGE")
                 age = int(float(age_raw)) if age_raw not in (None, "") else 25
+                height = parse_height(row.get("HEIGHT"))
 
-                players.append(
-                    {
-                        "id": f"{slug(name)}-{team_id}-{end_year}",
-                        "name": name,
-                        "teamId": team_id,
-                        "year": end_year,
-                        "age": age,
-                        "experience": 4,
-                        "positions": positions,
-                        "primaryPosition": positions[0],
-                        "allStar": False,
-                        "ratings": ratings,
-                        "source": "nba-api",
-                    }
-                )
+                row_payload = {
+                    "id": f"{slug(name)}-{team_id}-{end_year}",
+                    "name": name,
+                    "teamId": team_id,
+                    "year": end_year,
+                    "age": age,
+                    "experience": 4,
+                    "positions": positions,
+                    "primaryPosition": positions[0],
+                    "allStar": False,
+                    "ratings": ratings,
+                    "source": "nba-api",
+                }
+                if height is not None:
+                    row_payload["height"] = height
+
+                players.append(row_payload)
                 season_count += 1
 
             time.sleep(0.45)

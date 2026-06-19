@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { expandCareerToSeason, expandExplicitEntry, ratingsForCareer } from "../lib/roster-builder.mjs";
+import { normalizePlayerPositions } from "../lib/positions.mjs";
 import { seasonRosters } from "./roster-snapshots.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -229,8 +230,9 @@ function stubCareer(name, teamId, year) {
 }
 
 function addPlayerToRoster(players, player, { overwrite = false } = {}) {
-  const key = `${player.name.toLowerCase()}:${player.teamId}:${player.year}`;
-  if (!players.has(key) || overwrite) players.set(key, player);
+  const normalized = normalizePlayerPositions(player);
+  const key = `${normalized.name.toLowerCase()}:${normalized.teamId}:${normalized.year}`;
+  if (!players.has(key) || overwrite) players.set(key, normalized);
 }
 
 function loadImportedPlayers() {
@@ -243,8 +245,11 @@ function loadImportedPlayers() {
   if (fs.existsSync(nbaApi)) {
     const data = JSON.parse(fs.readFileSync(nbaApi, "utf8"));
     rows.push(...(data.players || data));
+  } else if (fs.existsSync(OUT)) {
+    const existing = JSON.parse(fs.readFileSync(OUT, "utf8"));
+    rows.push(...existing.filter((p) => p.source === "nba-api"));
   }
-  return rows;
+  return rows.map(normalizePlayerPositions);
 }
 
 function buildRosterIndex() {
@@ -291,11 +296,13 @@ for (const roster of index.values()) flat.push(...roster);
 
 // Deduplicate by id
 const seen = new Set();
-const unique = flat.filter((p) => {
-  if (seen.has(p.id)) return false;
-  seen.add(p.id);
-  return true;
-});
+const unique = flat
+  .map(normalizePlayerPositions)
+  .filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
 
 fs.writeFileSync(CAREERS_OUT, JSON.stringify(careers, null, 2));
 fs.writeFileSync(OUT, JSON.stringify(unique, null, 2));

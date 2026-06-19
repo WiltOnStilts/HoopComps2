@@ -89,7 +89,11 @@ export function getSessionCookieToken(req) {
 }
 
 export function getRequestToken(req) {
-  return getBearerToken(req) || getSessionCookieToken(req);
+  const bearer = getBearerToken(req);
+  const cookie = getSessionCookieToken(req);
+  if (bearer && verifyToken(bearer)) return bearer;
+  if (cookie && verifyToken(cookie)) return cookie;
+  return bearer || cookie;
 }
 
 export function sessionCookieHeader(token) {

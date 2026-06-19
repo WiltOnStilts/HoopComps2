@@ -71,6 +71,7 @@ async function refreshGame() {
 
 async function init() {
   loadStoredSession();
+  renderAuthUI();
   await restoreSessionFromServer();
   renderAuthUI();
   await refreshGame();
@@ -141,8 +142,8 @@ async function init() {
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-      void restoreSessionFromServer().then((user) => {
-        if (user) renderAuthUI();
+      void restoreSessionFromServer().then(() => {
+        renderAuthUI();
       });
     }
   });

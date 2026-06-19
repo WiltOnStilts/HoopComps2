@@ -32,22 +32,35 @@ export function loadStoredSession() {
 }
 
 export async function restoreSessionFromServer() {
-  const headers = {};
-  if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-  try {
+  async function fetchSession({ useBearer = true } = {}) {
+    const headers = {};
+    if (useBearer && authToken) headers.Authorization = `Bearer ${authToken}`;
     const res = await fetch("/api/auth/session", { credentials: "include", headers });
     const data = await res.json().catch(() => ({}));
-    if (data.user) {
+    return { ok: res.ok, data };
+  }
+
+  try {
+    let { ok, data } = await fetchSession({ useBearer: true });
+
+    // Stale localStorage token can shadow a valid session cookie — retry cookie-only once.
+    if ((!ok || !data.user) && authToken) {
+      const retry = await fetchSession({ useBearer: false });
+      if (retry.ok && retry.data.user) {
+        ok = retry.ok;
+        data = retry.data;
+      }
+    }
+
+    if (ok && data.user) {
       persistSession(data.token || authToken, data.user);
       return data.user;
     }
-    // Stale token in localStorage or cookie — clear so login works cleanly
-    if (authToken || currentUser) {
+
+    if (ok && (authToken || currentUser)) {
       persistSession(null, null);
     }
   } catch {
-    // Offline: keep cached session so the app still feels signed in
     if (authToken && currentUser) return currentUser;
   }
   return null;

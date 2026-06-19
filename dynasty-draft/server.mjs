@@ -46,6 +46,7 @@ const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
   ".json": "application/json",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
@@ -79,7 +80,7 @@ function send(res, status, body, extraHeaders = {}) {
   res.end(json);
 }
 
-function serveStatic(req, res) {
+function serveStatic(req, res, { headOnly = false } = {}) {
   let reqPath = req.url?.split("?")[0] || "/";
   if (reqPath === "/") reqPath = "/index.html";
   const libFile = reqPath.startsWith("/lib/") ? path.join(__dirname, reqPath.slice(1)) : null;
@@ -89,14 +90,26 @@ function serveStatic(req, res) {
     send(res, 403, { error: "Forbidden" });
     return;
   }
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
+  fs.stat(filePath, (statErr, stats) => {
+    if (statErr || !stats.isFile()) {
       send(res, 404, { error: "Not found" });
       return;
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
-    res.end(data);
+    const headers = { "Content-Type": MIME[ext] || "application/octet-stream" };
+    if (headOnly) {
+      res.writeHead(200, headers);
+      res.end();
+      return;
+    }
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        send(res, 404, { error: "Not found" });
+        return;
+      }
+      res.writeHead(200, headers);
+      res.end(data);
+    });
   });
 }
 
@@ -194,6 +207,11 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && !url.startsWith("/api/")) {
     serveStatic(req, res);
+    return;
+  }
+
+  if (req.method === "HEAD" && !url.startsWith("/api/")) {
+    serveStatic(req, res, { headOnly: true });
     return;
   }
 

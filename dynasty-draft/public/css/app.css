@@ -5,13 +5,28 @@
   --dyn-orange: #e85d04;
   --dyn-orange-bright: #ff6b1a;
   --dyn-orange-dim: #9a3412;
+  --dyn-accent-gradient: linear-gradient(135deg, #fff5ee 0%, #ffc9a3 32%, #ff9f5a 65%, #e85d04 100%);
+  --dyn-accent-gradient-h: linear-gradient(90deg, #ffe8d6 0%, #ffb380 45%, #ff8c42 100%);
+  --dyn-accent-gradient-badge: linear-gradient(135deg, #ffe4d4 0%, #ffb380 40%, #ff8c42 75%, #e85d04 100%);
+  --dyn-accent-text: #ffe8d6;
+  --dyn-accent-text-soft: #ffd4b8;
+  --dyn-accent-border: rgba(255, 210, 175, 0.48);
+  --dyn-accent-border-strong: rgba(255, 188, 145, 0.72);
+  --dyn-accent-glow: rgba(255, 190, 150, 0.2);
   --dyn-black: #0a0a0a;
   --dyn-card: #141414;
   --dyn-border: #2a2a2a;
-  --dyn-text: #f5f5f5;
-  --dyn-muted: #9ca3af;
+  --dyn-text: #f8f8f8;
+  --dyn-muted: #b8bcc4;
   background: linear-gradient(180deg, #0a0a0a 0%, #1a0f08 100%);
   min-height: 100%;
+}
+
+.game-layout .dyn-accent-gradient-text {
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .game-layout .panel {
@@ -26,15 +41,19 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  border-left: 4px solid var(--dyn-orange);
+  border-left: 4px solid transparent;
+  border-image: var(--dyn-accent-gradient-h) 1;
 }
 
 .dynasty-brand h2 {
   font-family: "Bebas Neue", sans-serif;
   font-size: 2.2rem;
   letter-spacing: 0.04em;
-  color: var(--dyn-orange-bright);
   margin: 0;
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .dynasty-stats-row {
@@ -59,7 +78,7 @@
 }
 
 .dyn-stat-pill strong {
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text);
   font-size: 1.1rem;
 }
 
@@ -81,8 +100,8 @@
 }
 
 .dyn-spin-grid.is-revealed .dyn-spin-card {
-  box-shadow: 0 0 16px rgba(232, 93, 4, 0.25);
-  border-color: var(--dyn-orange-dim);
+  box-shadow: 0 0 16px var(--dyn-accent-glow);
+  border-color: var(--dyn-accent-border-strong);
 }
 
 .dyn-spin-btn {
@@ -104,7 +123,7 @@
 }
 
 .dyn-spin-card.is-spinning {
-  box-shadow: 0 0 20px rgba(232, 93, 4, 0.3);
+  box-shadow: 0 0 20px var(--dyn-accent-glow);
 }
 
 .dyn-respin-row {
@@ -124,14 +143,15 @@
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 6px;
-  border: 1px solid var(--dyn-orange);
-  background: rgba(249, 115, 22, 0.12);
-  color: var(--dyn-orange-bright);
+  border: 1px solid var(--dyn-accent-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--dyn-accent-text);
   cursor: pointer;
 }
 
 .dyn-respin-chip:hover:not(:disabled) {
-  background: rgba(249, 115, 22, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 220, 190, 0.85);
 }
 
 .dyn-respin-chip:disabled {
@@ -163,14 +183,15 @@
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 6px;
-  border: 1px solid var(--dyn-orange);
-  background: rgba(249, 115, 22, 0.12);
-  color: var(--dyn-orange-bright);
+  border: 1px solid var(--dyn-accent-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--dyn-accent-text);
   cursor: pointer;
 }
 
 .dyn-respin-btn:hover {
-  background: rgba(249, 115, 22, 0.22);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 220, 190, 0.85);
 }
 
 .dyn-respin-used {
@@ -191,8 +212,8 @@
 
 .dyn-slot-badge {
   display: inline-block;
-  background: var(--dyn-orange);
-  color: #000;
+  background: var(--dyn-accent-gradient-badge);
+  color: #1a0a00;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -307,7 +328,7 @@
 }
 
 .dyn-start-btn {
-  background: linear-gradient(135deg, var(--dyn-orange) 0%, var(--dyn-orange-dim) 100%);
+  background: linear-gradient(135deg, #ffb380 0%, var(--dyn-orange) 45%, var(--dyn-orange-dim) 100%);
   border: none;
   font-size: 1.1rem;
   padding: 0.85rem 2rem;
@@ -323,6 +344,7 @@
 .dyn-lineup-bar {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.35rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
@@ -341,8 +363,8 @@
 }
 
 .dyn-lineup-slot.active {
-  border-color: var(--dyn-orange);
-  box-shadow: 0 0 12px rgba(232, 93, 4, 0.25);
+  border-color: var(--dyn-accent-border-strong);
+  box-shadow: 0 0 12px var(--dyn-accent-glow);
 }
 
 .dyn-lineup-slot.swap-target {
@@ -370,7 +392,7 @@
 .dyn-lineup-pos {
   display: block;
   font-size: 0.65rem;
-  color: var(--dyn-orange);
+  color: var(--dyn-accent-text-soft);
   font-weight: 700;
 }
 
@@ -403,12 +425,12 @@
 }
 
 .dyn-player-card:hover {
-  border-color: var(--dyn-orange-dim);
+  border-color: var(--dyn-accent-border-strong);
   transform: translateY(-2px);
 }
 
 .dyn-player-card.is-selected {
-  border-color: var(--dyn-orange);
+  border-color: var(--dyn-accent-border-strong);
   background: #1f1208;
 }
 
@@ -419,14 +441,18 @@
 
 .dyn-roster-banner h3 {
   margin: 0;
-  color: var(--dyn-orange-bright);
   font-family: "Bebas Neue", sans-serif;
   font-size: 1.6rem;
   letter-spacing: 0.03em;
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .dyn-spin-intro {
-  border-left: 4px solid var(--dyn-orange);
+  border-left: 4px solid transparent;
+  border-image: var(--dyn-accent-gradient-h) 1;
 }
 
 .dyn-reel-single .dyn-reel-value {
@@ -438,7 +464,7 @@
 
 .dyn-player-head strong {
   display: block;
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text);
 }
 
 .dyn-player-meta {
@@ -496,7 +522,7 @@
 
 .dyn-stat-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--dyn-orange-dim), var(--dyn-orange-bright));
+  background: linear-gradient(90deg, #fff0e6 0%, #ffb380 35%, #ff8c42 70%, #e85d04 100%);
   border-radius: 2px;
 }
 
@@ -514,7 +540,7 @@
   border-radius: 16px;
   margin: 1rem 0;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a1508 100%);
-  border: 2px solid var(--dyn-orange);
+  border: 2px solid var(--dyn-accent-border-strong);
 }
 
 .dyn-grade-letter {
@@ -522,8 +548,12 @@
   font-family: "Bebas Neue", sans-serif;
   font-size: 5rem;
   line-height: 1;
-  color: var(--dyn-orange-bright);
-  text-shadow: 0 0 30px rgba(232, 93, 4, 0.5);
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 24px var(--dyn-accent-glow));
 }
 
 .dyn-grade-label {
@@ -543,7 +573,10 @@
 .dyn-record-big {
   font-family: "Bebas Neue", sans-serif;
   font-size: 3rem;
-  color: var(--dyn-orange-bright);
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin: 0.25rem 0;
 }
 
@@ -577,7 +610,7 @@
 
 .dyn-story h4 {
   margin: 0 0 0.25rem;
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text);
   font-size: 0.95rem;
 }
 
@@ -599,7 +632,7 @@
   border-top: 1px solid var(--dyn-border);
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text);
 }
 
 .dyn-share-row {
@@ -627,7 +660,7 @@
 }
 
 .dyn-lb-rank { color: var(--dyn-muted); }
-.dyn-lb-grade { color: var(--dyn-orange); font-weight: 700; }
+.dyn-lb-grade { color: var(--dyn-accent-text-soft); font-weight: 700; }
 .dyn-lb-score { font-weight: 600; text-align: right; }
 
 /* Settings & friends */
@@ -667,7 +700,7 @@
 }
 
 .dyn-friend-result:hover {
-  border-color: var(--dyn-orange);
+  border-color: var(--dyn-accent-border-strong);
 }
 
 .dynasty-gate {
@@ -678,7 +711,10 @@
 .dynasty-gate h2 {
   font-family: "Bebas Neue", sans-serif;
   font-size: 2.5rem;
-  color: var(--dyn-orange-bright);
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Guest play notice */
@@ -690,7 +726,8 @@
   gap: 0.75rem 1rem;
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
-  border-left: 3px solid var(--dyn-orange);
+  border-left: 3px solid transparent;
+  border-image: var(--dyn-accent-gradient-h) 1;
 }
 
 .dyn-guest-banner p {
@@ -703,7 +740,7 @@
   margin: 1rem 0 0;
   padding: 0.65rem 0.85rem;
   background: #1a1208;
-  border: 1px solid var(--dyn-orange-dim);
+  border: 1px solid var(--dyn-accent-border);
   border-radius: 8px;
   color: var(--dyn-muted);
   font-size: 0.875rem;
@@ -714,16 +751,20 @@
 .dyn-dashboard {
   text-align: center;
   padding: 2.5rem 1.5rem;
-  border-left: 4px solid var(--dyn-orange);
+  border-left: 4px solid transparent;
+  border-image: var(--dyn-accent-gradient-h) 1;
 }
 
 .dyn-dashboard-title {
   font-family: "Bebas Neue", sans-serif;
   font-size: clamp(2.4rem, 8vw, 3.5rem);
   letter-spacing: 0.04em;
-  color: var(--dyn-orange-bright);
   margin: 0 0 0.75rem;
   line-height: 1.05;
+  background: var(--dyn-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .dyn-dashboard-sub {
@@ -740,14 +781,15 @@
 
 .dyn-round-banner,
 .dyn-roster-banner {
-  border-left: 3px solid var(--dyn-orange);
+  border-left: 3px solid transparent;
+  border-image: var(--dyn-accent-gradient-h) 1;
   margin-bottom: 0.75rem;
 }
 
 .dyn-round-tag {
   display: inline-block;
-  background: var(--dyn-orange);
-  color: #000;
+  background: var(--dyn-accent-gradient-badge);
+  color: #1a0a00;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -807,6 +849,18 @@
   width: 100%;
 }
 
+.dyn-review #dynSubmitLineup {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  margin: 0.5rem auto 0;
+}
+
+.dyn-review h3,
+.dyn-review > .hint {
+  text-align: center;
+}
+
 .dyn-review .dyn-picks-list {
   list-style: none;
   padding: 0;
@@ -815,43 +869,135 @@
 
 .dyn-pick-row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.35rem 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "round name slot"
+    "meta meta meta";
+  gap: 0.2rem 0.65rem;
   padding: 0.65rem 0;
   border-bottom: 1px solid var(--dyn-border);
   align-items: center;
 }
 
+.dyn-pick-row .dyn-pick-round {
+  grid-area: round;
+}
+
+.dyn-pick-row strong {
+  grid-area: name;
+  min-width: 0;
+}
+
+.dyn-pick-row .dyn-pick-slot {
+  grid-area: slot;
+  text-align: right;
+}
+
+.dyn-pick-row .hint {
+  grid-area: meta;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
 .dyn-pick-round {
   font-size: 0.75rem;
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text-soft);
   font-weight: 700;
 }
 
 .dyn-pick-slot {
   font-size: 0.85rem;
-  color: var(--dyn-orange-bright);
+  color: var(--dyn-accent-text);
   font-weight: 600;
 }
 
 .dash-card.dynasty-entry-btn {
   background: linear-gradient(135deg, #1a0f08 0%, #2a1508 100%);
-  border-color: var(--dyn-orange-dim);
+  border-color: var(--dyn-accent-border);
 }
 
 .dash-card.dynasty-entry-btn .dash-icon {
-  filter: drop-shadow(0 0 8px rgba(232, 93, 4, 0.4));
+  filter: drop-shadow(0 0 8px var(--dyn-accent-glow));
 }
 
 @media (max-width: 640px) {
-  .top-bar-stats {
-    width: 100%;
-    margin-left: 2.4rem;
+  .game-layout .panel {
+    padding: 0.85rem;
   }
 
-  .top-stat-pill {
-    flex: 1;
-    min-width: 0;
+  .dyn-dashboard {
+    padding: 1.75rem 1rem;
+  }
+
+  .dyn-dashboard-title {
+    font-size: clamp(2rem, 10vw, 2.75rem);
+  }
+
+  .dyn-dashboard-sub,
+  .dyn-play-error {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .dyn-play-btn {
+    width: 100%;
+    max-width: 18rem;
+  }
+
+  .dyn-spin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dyn-spin-actions {
+    margin: 1rem 0;
+  }
+
+  .dyn-mod-banner-head {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .dyn-mod-summary {
+    text-align: center;
+  }
+
+  .dyn-round-banner,
+  .dyn-roster-banner {
+    text-align: center;
+  }
+
+  .dyn-roster-banner h3 {
+    font-size: 1.2rem;
+    line-height: 1.25;
+  }
+
+  .dyn-respin-chips {
+    justify-content: center;
+  }
+
+  .dyn-guest-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .dyn-guest-banner .btn-secondary {
+    width: 100%;
+  }
+
+  .dyn-lineup-hint {
+    flex-basis: 100%;
+    text-align: center;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .dyn-lineup-slot {
+    min-width: 4.1rem;
+    padding: 0.45rem 0.35rem;
+  }
+
+  .dyn-lineup-pick {
+    max-width: 4.1rem;
   }
 
   .dyn-player-pool {
@@ -863,6 +1009,53 @@
     font-size: 4rem;
   }
 
+  .dyn-record-big {
+    font-size: 2.35rem;
+    text-align: center;
+  }
+
+  .dyn-record h3 {
+    text-align: center;
+  }
+
+  .dyn-playoff-round {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.2rem;
+  }
+
+  .dyn-share-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dyn-share-row .btn-secondary {
+    width: 100%;
+  }
+
+  .dyn-lb-list li {
+    grid-template-columns: 1.5rem minmax(0, 1fr) 2rem 2.5rem;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+  }
+
+  .dyn-lb-user {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dyn-settings h3,
+  .dyn-friends h3,
+  .dyn-results .panel > h3 {
+    text-align: center;
+  }
+
+  .dyn-toggle {
+    justify-content: space-between;
+  }
+
   .dyn-draft-footer {
     flex-wrap: wrap;
   }
@@ -871,5 +1064,13 @@
     order: -1;
     width: 100%;
     margin-bottom: 0.5rem;
+  }
+
+  .dyn-modal {
+    margin: 0 auto;
+  }
+
+  .dyn-pos-grid .dyn-pos-btn {
+    text-align: center;
   }
 }

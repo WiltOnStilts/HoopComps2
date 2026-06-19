@@ -4,9 +4,24 @@
   --border: #2a2a2a;
   --orange: #e85d04;
   --orange-bright: #ff6b1a;
-  --text: #f5f5f5;
-  --muted: #9ca3af;
+  --orange-dim: #9a3412;
+  --accent-gradient: linear-gradient(135deg, #fff5ee 0%, #ffc9a3 32%, #ff9f5a 65%, #e85d04 100%);
+  --accent-gradient-h: linear-gradient(90deg, #ffe8d6 0%, #ffb380 45%, #ff8c42 100%);
+  --accent-text: #ffe8d6;
+  --accent-text-soft: #ffd4b8;
+  --accent-border: rgba(255, 210, 175, 0.48);
+  --accent-border-strong: rgba(255, 188, 145, 0.72);
+  --accent-glow: rgba(255, 190, 150, 0.2);
+  --text: #f8f8f8;
+  --muted: #b8bcc4;
   --error: #f87171;
+}
+
+.accent-gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -32,72 +47,87 @@ html, body {
   top: 0;
   z-index: 10;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.85rem 1rem;
+  justify-content: flex-start;
+  gap: 0.5rem 0.65rem;
+  padding: 0.65rem max(1rem, env(safe-area-inset-right)) 0.65rem max(1rem, env(safe-area-inset-left));
   background: rgba(10, 10, 10, 0.92);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(8px);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-
 .brand-title {
   margin: 0;
+  flex: 0 0 auto;
   font-family: "Bebas Neue", sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   letter-spacing: 0.04em;
-  color: var(--orange-bright);
   line-height: 1;
   white-space: nowrap;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .top-bar-stats {
   display: flex;
-  gap: 0.45rem;
+  gap: 0.35rem;
   align-items: center;
+  margin-left: auto;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .top-stat-pill {
   background: #1f1f1f;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.3rem 0.6rem;
+  padding: 0.28rem 0.55rem;
   text-align: center;
-  min-width: 4.5rem;
+  min-width: 3.5rem;
 }
 
 .top-stat-pill span {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  line-height: 1.2;
 }
 
 .top-stat-pill strong {
-  color: var(--orange-bright);
-  font-size: 0.95rem;
+  display: block;
+  color: var(--accent-text);
+  font-size: 0.88rem;
+  line-height: 1.2;
 }
 
-.brand-mark { font-size: 1.75rem; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  margin-left: 0.15rem;
+}
 
-.header-actions { display: flex; align-items: center; gap: 0.5rem; }
+.top-bar-stats.hidden + .header-actions {
+  margin-left: auto;
+}
 
 .auth-pill {
-  font-size: 0.8rem;
-  color: var(--orange-bright);
-  background: #1f1208;
-  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--accent-text-soft);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--accent-border);
   border-radius: 999px;
-  padding: 0.25rem 0.65rem;
+  padding: 0.25rem 0.6rem;
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .app-main {
@@ -105,7 +135,7 @@ html, body {
   z-index: 1;
   max-width: 960px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem max(1rem, env(safe-area-inset-right)) 1rem max(1rem, env(safe-area-inset-left));
 }
 
 .panel {
@@ -128,7 +158,7 @@ html, body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--orange) 0%, #9a3412 100%);
+  background: linear-gradient(135deg, #ffb380 0%, var(--orange) 45%, #9a3412 100%);
   color: #fff;
   font-weight: 600;
 }
@@ -202,9 +232,47 @@ body.modal-open { overflow: hidden; }
 .friend-action {
   float: right;
   font-size: 0.75rem;
-  color: var(--orange-bright);
+  color: var(--accent-text-soft);
 }
 
 @media (max-width: 640px) {
-  .app-main { padding: 0.75rem; }
+  .app-main { padding: 0.75rem max(0.75rem, env(safe-area-inset-right)) 0.75rem max(0.75rem, env(safe-area-inset-left)); }
+
+  .top-bar {
+    gap: 0.35rem 0.45rem;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+  }
+
+  .brand-title {
+    font-size: 1.3rem;
+  }
+
+  .top-bar-stats {
+    gap: 0.25rem;
+  }
+
+  .top-stat-pill {
+    min-width: 2.85rem;
+    padding: 0.2rem 0.35rem;
+  }
+
+  .top-stat-pill span {
+    font-size: 0.5rem;
+  }
+
+  .top-stat-pill strong {
+    font-size: 0.75rem;
+  }
+
+  .auth-pill {
+    max-width: 5.25rem;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .header-actions .btn-sm {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.78rem;
+  }
 }

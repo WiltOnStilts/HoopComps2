@@ -126,8 +126,8 @@ export function normalizeStatRow(row) {
   };
 }
 
-function rateScoring(ppg) {
-  return rateAnchors(ppg, [
+function rateScoring(ppg, tsPct = null) {
+  let score = rateAnchors(ppg, [
     [0, 40],
     [5, 50],
     [10, 62],
@@ -139,6 +139,15 @@ function rateScoring(ppg) {
     [32, 97],
     [36, 99],
   ]);
+
+  if (tsPct != null && Number.isFinite(tsPct)) {
+    if (ppg >= 25 && tsPct >= 0.62) score = clamp(score + 5, 40, 99);
+    else if (ppg >= 25 && tsPct >= 0.58) score = clamp(score + 3, 40, 99);
+    else if (ppg >= 22 && tsPct >= 0.6) score = clamp(score + 2, 40, 99);
+    else if (ppg >= 20 && tsPct >= 0.62) score = clamp(score + 1, 40, 99);
+  }
+
+  return score;
 }
 
 function rateShooting(stats) {
@@ -221,6 +230,8 @@ function rateDefense(stats, pos = "SF") {
     else if (stocks < 3.6) fromStocks = Math.min(fromStocks, 78);
   } else if (pos === "SF" && stocks < 2.6) {
     fromStocks = Math.min(fromStocks, 84);
+  } else if ((pos === "SF" || pos === "PF") && stocks < 4) {
+    fromStocks = Math.min(fromStocks, 82);
   }
   return clamp(fromStocks, 40, 99);
 }
@@ -304,7 +315,7 @@ function applyPositionTweaks(ratings, pos) {
 export function ratingsFromNormalized(stats, positions = ["SF"]) {
   const pos = positions[0] || "SF";
   const skills = {
-    scoring: rateScoring(stats.ppg),
+    scoring: rateScoring(stats.ppg, stats.tsPct),
     shooting: rateShooting(stats),
     playmaking: ratePlaymaking(stats.apg),
     rebounding: rateRebounding(stats.rpg),

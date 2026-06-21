@@ -50,7 +50,8 @@ export function calibrateRatings(player) {
   const legend = starSeason && impact >= 90;
 
   const skipDefenseLift =
-    ["PG", "SG"].includes(pos) && r.defense < 82;
+    (["PG", "SG"].includes(pos) && r.defense < 82) ||
+    (["SF", "PF"].includes(pos) && r.scoring >= 88 && r.playmaking >= 82);
 
   if (elite) applyFloors(r, pos, superElite ? 0 : 2);
   if (superElite) liftUnderrated(r, 84, 0.45, 96, skipDefenseLift ? ["defense"] : []);
@@ -81,9 +82,17 @@ export function calibrateRatings(player) {
     r.shooting = Math.min(92, r.shooting + 4);
   }
 
-  // Lockdown defenders (Pippen, GP tier)
-  if (r.defense >= 84 && ["SG", "SF", "PF"].includes(pos)) {
+  // Lockdown defenders (Pippen, GP tier) — skip offensive forwards
+  const offensiveForward = ["SF", "PF"].includes(pos) && r.scoring >= 88 && r.playmaking >= 80;
+  if (r.defense >= 84 && ["SG", "SF", "PF"].includes(pos) && !offensiveForward) {
     r.defense = Math.min(97, r.defense + 5);
+  }
+
+  // Complete offensive engines (LeBron-tier: high impact + playmaking + volume scoring)
+  if (legend && r.scoring >= 88 && r.playmaking >= 85 && impact >= 88) {
+    r.scoring = Math.min(99, Math.max(r.scoring, 96));
+  } else if (superElite && r.scoring >= 84 && r.playmaking >= 88 && impact >= 86) {
+    r.scoring = Math.min(98, r.scoring + 3);
   }
 
   // Elite passers beyond PG

@@ -178,6 +178,14 @@ def ratings_from_stats(row, positions):
         (0, 40), (5, 50), (10, 62), (15, 72), (18, 78), (22, 85),
         (25, 90), (28, 94), (32, 97), (36, 99),
     ])
+    if pts >= 25 and ts_pct >= 0.62:
+        scoring = clamp(scoring + 5, 40, 99)
+    elif pts >= 25 and ts_pct >= 0.58:
+        scoring = clamp(scoring + 3, 40, 99)
+    elif pts >= 22 and ts_pct >= 0.6:
+        scoring = clamp(scoring + 2, 40, 99)
+    elif pts >= 20 and ts_pct >= 0.62:
+        scoring = clamp(scoring + 1, 40, 99)
     shooting_blend = ts_pct * 0.5 + efg_pct * 0.2 + fg3_pct * 0.18 + ft_pct * 0.12
     if tpa_pg >= 5 and fg3_pct >= 0.355:
         shooting_blend += 0.02
@@ -222,6 +230,8 @@ def ratings_from_stats(row, positions):
             defense = min(defense, 78)
     elif pos == "SF" and stocks < 2.6:
         defense = min(defense, 84)
+    elif pos in ("SF", "PF") and stocks < 4:
+        defense = min(defense, 82)
     if pos in ("C", "PF"):
         defense = clamp(defense + 2, 40, 99)
         rebounding = clamp(rebounding + 3, 40, 99)

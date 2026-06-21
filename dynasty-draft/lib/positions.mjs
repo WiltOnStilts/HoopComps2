@@ -1,5 +1,7 @@
 /** Position parsing, normalization, and lineup eligibility rules */
 
+import { inferPositions } from "./position-inference.mjs";
+
 export const LINEUP_POSITIONS = ["PG", "SG", "SF", "PF", "C"];
 
 const POSITION_INDEX = { PG: 0, SG: 1, SF: 2, PF: 3, C: 4 };
@@ -136,6 +138,16 @@ export function refinePositions(positions, { height = null, ratings = null } = {
   return uniquePositions(out);
 }
 
+function heightFallbackPositions(height) {
+  if (height == null) return ["SF"];
+  if (height >= 84) return ["PF", "C"];
+  if (height >= 82) return ["PF"];
+  if (height >= 80) return ["SF", "PF"];
+  if (height <= 74) return ["PG", "SG"];
+  if (height <= 76) return ["PG", "SG"];
+  return ["SF"];
+}
+
 /** Remove unrealistic positions based on height */
 export function applyHeightCaps(positions, height) {
   if (height == null) return uniquePositions(positions);
@@ -143,24 +155,34 @@ export function applyHeightCaps(positions, height) {
 
   if (height >= 84) out = out.filter((pos) => !isGuard(pos) && pos !== "SF");
   else if (height >= 82) out = out.filter((pos) => !isGuard(pos));
-  else if (height >= 80) out = out.filter((pos) => pos !== "PG");
+  else if (height >= 80) {
+    const keepPg = out.includes("PG") && out.some((p) => p === "SF" || p === "PF");
+    out = out.filter((pos) => pos !== "PG" || keepPg);
+  }
 
   if (height <= 72) out = out.filter((pos) => pos !== "C");
   if (height <= 74) out = out.filter((pos) => !isBig(pos));
 
-  return out.length ? out : uniquePositions(positions).filter((pos) => {
-    if (height >= 84) return isBig(pos);
-    if (height <= 74) return isGuard(pos) || pos === "SF";
-    return true;
-  });
+  if (!out.length) {
+    return heightFallbackPositions(height);
+  }
+  return out;
 }
 
 function pickPrimary(positions, height = null) {
   const list = uniquePositions(positions);
   if (!list.length) return "SF";
+
+  if (height != null && height >= 80 && height <= 81) {
+    if (list.includes("SF")) return "SF";
+    if (list.includes("PF")) return "PF";
+  }
   if (height != null && height >= 82 && list.includes("PF")) return "PF";
   if (height != null && height >= 84 && list.includes("C")) return "C";
   if (height != null && height <= 74 && list.includes("PG")) return "PG";
+  if (list.includes("PG") && (list.includes("SF") || list.includes("PF"))) {
+    return list.includes("SF") ? "SF" : "PF";
+  }
   return list[0];
 }
 
@@ -180,14 +202,17 @@ export function normalizePlayerPositions(player) {
   let positions = refinePositions(rawPositions, { height, ratings });
   positions = applyHeightCaps(positions, height);
 
+  const inferred = inferPositions({ ...player, height, positions, ratings });
+  positions = inferred.positions;
+
   if (!positions.length) {
-    positions = height != null && height >= 82 ? ["PF"] : ["SF"];
+    positions = heightFallbackPositions(height);
   }
 
   const normalized = {
     ...player,
     positions,
-    primaryPosition: pickPrimary(positions, height),
+    primaryPosition: inferred.primaryPosition || pickPrimary(positions, height),
   };
 
   if (height != null) normalized.height = height;

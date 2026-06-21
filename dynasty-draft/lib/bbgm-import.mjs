@@ -57,10 +57,20 @@ function playerHeight(player) {
 }
 
 function finalizePlayerRow(row, sourcePlayer) {
+  const stat = row.stats;
+  const positions = row.positions || parsePositions(sourcePlayer?.pos);
+  const ratings =
+    stat && stat.gp >= 1
+      ? ratingsFromStatRow(stat, positions)
+      : row.ratings;
+
   return normalizePlayerPositions({
     ...row,
+    ratings,
     height: playerHeight(sourcePlayer),
     hgt: playerHeight(sourcePlayer),
+    stats: stat || undefined,
+    posLabel: sourcePlayer?.pos,
   });
 }
 

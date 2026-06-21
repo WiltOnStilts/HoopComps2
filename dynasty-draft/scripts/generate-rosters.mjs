@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { expandCareerToSeason, expandExplicitEntry, ratingsForCareer } from "../lib/roster-builder.mjs";
 import { normalizePlayerPositions } from "../lib/positions.mjs";
+import { applyCareerPositionHints, loadCareerPositionHints } from "../lib/position-inference.mjs";
 import { ratingRowQuality } from "../lib/rating-quality.mjs";
 import { ratingsFromStatRow } from "../lib/ratings-from-stats.mjs";
 import { seasonRosters } from "./roster-snapshots.mjs";
@@ -233,7 +234,10 @@ function stubCareer(name, teamId, year) {
 }
 
 function hydrateImportedRow(row) {
-  const normalized = normalizePlayerPositions(row);
+  const careerHint = loadCareerPositionHints().get(row.name?.toLowerCase());
+  let base = row;
+  if (careerHint) base = applyCareerPositionHints(row, careerHint);
+  const normalized = normalizePlayerPositions(base);
   if (normalized.stats && normalized.positions?.length) {
     normalized.ratings = ratingsFromStatRow(normalized.stats, normalized.positions);
   }
@@ -295,7 +299,10 @@ function buildRosterIndex() {
 
       for (const c of careers) {
         const p = expandCareerToSeason(c, team.id, year);
-        if (p) addPlayerToRoster(players, p);
+        if (p) {
+          const hinted = applyCareerPositionHints(p, c);
+          addPlayerToRoster(players, hinted);
+        }
       }
 
       const snapshotNames = seasonRosters[key];

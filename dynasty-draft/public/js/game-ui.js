@@ -311,9 +311,7 @@ function renderPlayerStats(ratings, { fullLabels = false } = {}) {
 function renderPlayerCard(player, { selected, showStats, disabled, fullStatLabels = false }) {
   const r = player.ratings || {};
   const posList = (player.positions || []).join(", ");
-  const statsHtml = showStats
-    ? renderPlayerStats(r, { fullLabels: fullStatLabels })
-    : `<p class="dyn-hidden-stats">Stats hidden — toggle in settings</p><div class="dyn-impact-only">Impact: <strong>${r.impact || "?"}</strong></div>`;
+  const statsHtml = showStats ? renderPlayerStats(r, { fullLabels: fullStatLabels }) : "";
 
   return `
     <button type="button" class="dyn-player-card${selected ? " is-selected" : ""}${disabled ? " is-disabled" : ""}" data-pick="${escapeHtml(player.id)}" ${disabled ? "disabled" : ""}>

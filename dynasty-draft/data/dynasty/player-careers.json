@@ -2189,6 +2189,58 @@
     "allStar": true
   },
   {
+    "id": "charles-barkley",
+    "name": "Charles Barkley",
+    "birthYear": 1963,
+    "debut": 1984,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "SF"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 72,
+      "defense": 78,
+      "playmaking": 82,
+      "rebounding": 92,
+      "health": 88,
+      "impact": 94
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "76ers",
+        "from": 1984,
+        "to": 1992
+      },
+      {
+        "teamId": "suns",
+        "from": 1992,
+        "to": 1996
+      },
+      {
+        "teamId": "rockets",
+        "from": 1996,
+        "to": 2000
+      }
+    ],
+    "allStarYears": [
+      1987,
+      1988,
+      1989,
+      1990,
+      1991,
+      1992,
+      1993,
+      1994,
+      1995,
+      1996,
+      1997
+    ],
+    "allStar": true
+  },
+  {
     "id": "john-stockton",
     "name": "John Stockton",
     "birthYear": 1962,

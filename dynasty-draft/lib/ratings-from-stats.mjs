@@ -36,15 +36,22 @@ function perGameValue(raw, gp, { forceTotal = false } = {}) {
   return raw;
 }
 
+function usesSeasonTotals(row, gp, bbgm) {
+  if (bbgm) return true;
+  const rawPts = Number(row?.PTS ?? row?.pts);
+  return Number.isFinite(rawPts) && rawPts > gp * 4;
+}
+
 /** Normalize NBA API or BBGM stat rows into per-game rates. */
 export function normalizeStatRow(row) {
   const gp = Math.max(1, Number(row?.GP ?? row?.gp ?? 1));
   const bbgm = isBbgmStatRow(row);
+  const seasonTotals = usesSeasonTotals(row, gp, bbgm);
 
   let ppg = 0;
   const rawPts = Number(row?.PTS ?? row?.pts);
   if (Number.isFinite(rawPts) && rawPts > 0) {
-    ppg = bbgm ? rawPts / gp : perGameValue(rawPts, gp);
+    ppg = seasonTotals ? rawPts / gp : perGameValue(rawPts, gp);
   } else if (row?.fg != null) {
     const fg = Number(row.fg || 0);
     const tp = Number(row.tp || 0);
@@ -55,19 +62,19 @@ export function normalizeStatRow(row) {
   const rawReb = Number(row?.REB ?? row?.trb ?? row?.reb);
   let rpg = 0;
   if (Number.isFinite(rawReb)) {
-    rpg = bbgm ? rawReb / gp : perGameValue(rawReb, gp);
+    rpg = seasonTotals ? rawReb / gp : perGameValue(rawReb, gp);
   } else {
     rpg = (Number(row?.orb || 0) + Number(row?.drb || 0)) / gp;
   }
 
   const rawAst = Number(row?.AST ?? row?.ast);
-  const apg = Number.isFinite(rawAst) ? (bbgm ? rawAst / gp : perGameValue(rawAst, gp)) : 0;
+  const apg = Number.isFinite(rawAst) ? (seasonTotals ? rawAst / gp : perGameValue(rawAst, gp)) : 0;
 
   const rawStl = Number(row?.STL ?? row?.stl);
-  const spg = Number.isFinite(rawStl) ? (bbgm ? rawStl / gp : perGameValue(rawStl, gp)) : 0;
+  const spg = Number.isFinite(rawStl) ? (seasonTotals ? rawStl / gp : perGameValue(rawStl, gp)) : 0;
 
   const rawBlk = Number(row?.BLK ?? row?.blk);
-  const bpg = Number.isFinite(rawBlk) ? (bbgm ? rawBlk / gp : perGameValue(rawBlk, gp)) : 0;
+  const bpg = Number.isFinite(rawBlk) ? (seasonTotals ? rawBlk / gp : perGameValue(rawBlk, gp)) : 0;
 
   const fga = Number(row?.FGA ?? row?.fga ?? 0);
   const fg = Number(row?.FG ?? row?.fg ?? 0);

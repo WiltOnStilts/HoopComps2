@@ -38,9 +38,15 @@ export function calibrateRatings(player) {
   const r = { ...player.ratings };
   const pos = player.primaryPosition || player.positions?.[0] || "SF";
   const impact = r.impact || 70;
-  const elite = player.allStar && impact >= 86;
-  const superElite = player.allStar && impact >= 88;
-  const legend = player.allStar && impact >= 90;
+  const starSeason =
+    player.allStar ||
+    impact >= 84 ||
+    r.scoring >= 84 ||
+    (r.scoring >= 78 && r.rebounding >= 88) ||
+    (r.playmaking >= 90 && r.scoring >= 72);
+  const elite = starSeason && impact >= 82;
+  const superElite = starSeason && impact >= 86;
+  const legend = starSeason && impact >= 90;
 
   if (elite) applyFloors(r, pos, superElite ? 0 : 2);
   if (superElite) liftUnderrated(r, 84, 0.45, 96);

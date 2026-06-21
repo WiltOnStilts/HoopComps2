@@ -15,7 +15,7 @@ import time
 import unicodedata
 from pathlib import Path
 
-from nba_api.stats.endpoints import commonteamroster, leaguedashplayerstats
+from nba_api.stats.endpoints import commonteamroster, leaguedashplayerstats, playercareerstats
 from nba_api.stats.static import teams as nba_teams
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -94,7 +94,7 @@ def parse_positions(raw: str):
     return list(dict.fromkeys(out)) or ["SF"]
 
 
-def parse_height(raw) -> int | None:
+def parse_height(raw):
     if raw in (None, ""):
         return None
     text = str(raw).strip()
@@ -133,7 +133,25 @@ def rate_anchors(value, anchors):
     return anchors[-1][1]
 
 
+def normalize_stat_row(row):
+    gp = max(1, float(row.get("GP") or 1))
+    pts = float(row.get("PTS") or 0)
+    if pts <= gp * 4:
+        return row
+    return {
+        **row,
+        "GP": gp,
+        "PTS": pts / gp,
+        "REB": float(row.get("REB") or 0) / gp,
+        "AST": float(row.get("AST") or 0) / gp,
+        "STL": float(row.get("STL") or 0) / gp,
+        "BLK": float(row.get("BLK") or 0) / gp,
+        "MIN": float(row.get("MIN") or gp * 20) / gp,
+    }
+
+
 def ratings_from_stats(row, positions):
+    row = normalize_stat_row(row)
     gp = max(1, float(row.get("GP") or 1))
     pts = float(row.get("PTS") or 0)
     reb = float(row.get("REB") or 0)
@@ -232,8 +250,39 @@ def season_label(end_year: int) -> str:
     return f"{end_year - 1}-{str(end_year)[-2:]}"
 
 
+CAREER_FRAMES = {}
+
+
+def career_stat_row(player_id, end_year: int):
+    pid = int(player_id)
+    if pid not in CAREER_FRAMES:
+        try:
+            CAREER_FRAMES[pid] = playercareerstats.PlayerCareerStats(player_id=pid).get_data_frames()[0]
+            time.sleep(0.55)
+        except Exception:
+            CAREER_FRAMES[pid] = None
+    frame = CAREER_FRAMES[pid]
+    if frame is None or frame.empty:
+        return None
+    sid = season_label(end_year)
+    rows = frame[frame["SEASON_ID"] == sid]
+    if rows.empty:
+        return None
+    return rows.iloc[0].to_dict()
+
+
+def resolve_stat_row(player_id, end_year: int, stats_lookup, name: str, abbr: str):
+    stat_row = stats_lookup.get((norm_name(name), abbr))
+    if stat_row:
+        return stat_row
+    if player_id in (None, ""):
+        return None
+    return career_stat_row(player_id, end_year)
+
+
 def fetch_season_stats(end_year: int):
-    if end_year < 2000:
+    # LeagueDashPlayerStats only returns data from ~1999-00 onward.
+    if end_year < 1999:
         return {}
     try:
         resp = leaguedashplayerstats.LeagueDashPlayerStats(
@@ -298,7 +347,8 @@ def fetch():
                 seen.add(key)
 
                 positions = parse_positions(str(row.get("POSITION") or "F"))
-                stat_row = stats_lookup.get((norm_name(name), abbr))
+                player_id = row.get("PLAYER_ID")
+                stat_row = resolve_stat_row(player_id, end_year, stats_lookup, name, abbr)
                 ratings = (
                     ratings_from_stats(stat_row, positions)
                     if stat_row
@@ -322,6 +372,21 @@ def fetch():
                     "ratings": ratings,
                     "source": "nba-api",
                 }
+                if stat_row:
+                    normalized = normalize_stat_row(stat_row)
+                    gp = max(1, float(normalized.get("GP") or 1))
+                    row_payload["stats"] = {
+                        "GP": gp,
+                        "PTS": float(normalized.get("PTS") or 0),
+                        "REB": float(normalized.get("REB") or 0),
+                        "AST": float(normalized.get("AST") or 0),
+                        "STL": float(normalized.get("STL") or 0),
+                        "BLK": float(normalized.get("BLK") or 0),
+                        "FG_PCT": float(normalized.get("FG_PCT") or 0.45),
+                        "FG3_PCT": float(normalized.get("FG3_PCT") or 0),
+                        "FT_PCT": float(normalized.get("FT_PCT") or 0.75),
+                        "MIN": float(normalized.get("MIN") or gp * 20),
+                    }
                 if height is not None:
                     row_payload["height"] = height
 

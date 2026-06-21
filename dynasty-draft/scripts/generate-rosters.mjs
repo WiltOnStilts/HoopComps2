@@ -6,6 +6,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { expandCareerToSeason, expandExplicitEntry, ratingsForCareer } from "../lib/roster-builder.mjs";
 import { normalizePlayerPositions } from "../lib/positions.mjs";
+import { ratingRowQuality } from "../lib/rating-quality.mjs";
+import { ratingsFromStatRow } from "../lib/ratings-from-stats.mjs";
 import { seasonRosters } from "./roster-snapshots.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -91,6 +93,7 @@ const careers = [
   career("Devin Booker", 1996, 2015, "SG", ["SG", "PG"], peak(92, 90, 68, 78, 52, 88, 88), [stint("suns", 2015, 2026)], [2020, 2022, 2024, 2025]),
   career("Allen Iverson", 1975, 1996, "PG", ["PG", "SG"], peak(96, 78, 72, 85, 48, 88, 94), [stint("76ers", 1996, 2006), stint("nuggets", 2006, 2008), stint("pistons", 2008, 2009), stint("grizzlies", 2009, 2009), stint("76ers", 2009, 2010)], [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010]),
   career("Karl Malone", 1963, 1985, "PF", ["PF"], peak(92, 78, 78, 72, 88, 92, 92), [stint("jazz", 1985, 2003), stint("lakers", 2003, 2004)], [1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002]),
+  career("Charles Barkley", 1963, 1984, "PF", ["PF", "SF"], peak(92, 72, 78, 82, 92, 88, 94), [stint("76ers", 1984, 1992), stint("suns", 1992, 1996), stint("rockets", 1996, 2000)], [1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997]),
   career("John Stockton", 1962, 1984, "PG", ["PG"], peak(78, 82, 78, 98, 48, 92, 92), [stint("jazz", 1984, 2003)], [1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 2000]),
   career("Patrick Ewing", 1962, 1985, "C", ["C"], peak(88, 72, 88, 62, 88, 85, 90), [stint("knicks", 1985, 2000), stint("thunder", 2000, 2000), stint("magic", 2001, 2002)], [1986, 1988, 1989, 1990, 1991, 1992, 1993, 1997]),
   career("Isiah Thomas", 1961, 1981, "PG", ["PG"], peak(85, 78, 78, 92, 48, 88, 90), [stint("pistons", 1981, 1994)], [1982, 1984, 1985, 1986, 1987, 1988, 1990, 1991, 1993]),
@@ -229,10 +232,21 @@ function stubCareer(name, teamId, year) {
   };
 }
 
-function addPlayerToRoster(players, player, { overwrite = false } = {}) {
-  const normalized = normalizePlayerPositions(player);
+function hydrateImportedRow(row) {
+  const normalized = normalizePlayerPositions(row);
+  if (normalized.stats && normalized.positions?.length) {
+    normalized.ratings = ratingsFromStatRow(normalized.stats, normalized.positions);
+  }
+  return normalized;
+}
+
+function addPlayerToRoster(players, player) {
+  const normalized = hydrateImportedRow(player);
   const key = `${normalized.name.toLowerCase()}:${normalized.teamId}:${normalized.year}`;
-  if (!players.has(key) || overwrite) players.set(key, normalized);
+  const existing = players.get(key);
+  if (!existing || ratingRowQuality(normalized) > ratingRowQuality(existing)) {
+    players.set(key, normalized);
+  }
 }
 
 function loadImportedPlayers() {
@@ -241,15 +255,27 @@ function loadImportedPlayers() {
     const data = JSON.parse(fs.readFileSync(IMPORTED, "utf8"));
     rows.push(...(data.players || data));
   }
+
+  const seedNbaRows = fs.existsSync(OUT)
+    ? JSON.parse(fs.readFileSync(OUT, "utf8")).filter((p) => p.source === "nba-api")
+    : [];
   const nbaApi = path.join(__dirname, "..", "data", "dynasty", "raw", "nba-api-rosters.json");
   if (fs.existsSync(nbaApi)) {
     const data = JSON.parse(fs.readFileSync(nbaApi, "utf8"));
-    rows.push(...(data.players || data));
-  } else if (fs.existsSync(OUT)) {
-    const existing = JSON.parse(fs.readFileSync(OUT, "utf8"));
-    rows.push(...existing.filter((p) => p.source === "nba-api"));
+    const rawRows = data.players || data;
+    const rawKeys = new Set(
+      rawRows.map((p) => `${p.name.toLowerCase()}:${p.teamId}:${p.year}`)
+    );
+    for (const row of seedNbaRows) {
+      const key = `${row.name.toLowerCase()}:${row.teamId}:${row.year}`;
+      if (!rawKeys.has(key)) rows.push(row);
+    }
+    rows.push(...rawRows);
+  } else {
+    rows.push(...seedNbaRows);
   }
-  return rows.map(normalizePlayerPositions);
+
+  return rows.map(hydrateImportedRow).sort((a, b) => ratingRowQuality(a) - ratingRowQuality(b));
 }
 
 function buildRosterIndex() {
@@ -263,13 +289,13 @@ function buildRosterIndex() {
 
       for (const row of imported) {
         if (row.teamId === team.id && row.year === year) {
-          addPlayerToRoster(players, row, { overwrite: true });
+          addPlayerToRoster(players, row);
         }
       }
 
       for (const c of careers) {
         const p = expandCareerToSeason(c, team.id, year);
-        if (p) addPlayerToRoster(players, p, { overwrite: false });
+        if (p) addPlayerToRoster(players, p);
       }
 
       const snapshotNames = seasonRosters[key];
@@ -277,7 +303,7 @@ function buildRosterIndex() {
         for (const name of snapshotNames) {
           const c = stubCareer(name, team.id, year);
           const p = expandCareerToSeason(c, team.id, year);
-          if (p) addPlayerToRoster(players, p, { overwrite: false });
+          if (p) addPlayerToRoster(players, p);
         }
       }
 

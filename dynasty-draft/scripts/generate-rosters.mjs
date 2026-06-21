@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { expandCareerToSeason, expandExplicitEntry, ratingsForCareer } from "../lib/roster-builder.mjs";
-import { normalizePlayerPositions } from "../lib/positions.mjs";
+import { normalizePlayerPositions } from "../lib/position-normalize.mjs";
 import { applyCareerPositionHints, loadCareerPositionHints } from "../lib/position-inference.mjs";
 import { ratingRowQuality } from "../lib/rating-quality.mjs";
 import { ratingsFromStatRow } from "../lib/ratings-from-stats.mjs";

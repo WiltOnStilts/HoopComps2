@@ -4,7 +4,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { ratingsFromStatRow } from "./ratings-from-stats.mjs";
-import { normalizePlayerPositions, parsePositionLabel } from "./positions.mjs";
+import { parsePositionLabel } from "./positions.mjs";
+import { normalizePlayerPositions } from "./position-normalize.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ALIASES = JSON.parse(

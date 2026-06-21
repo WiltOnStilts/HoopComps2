@@ -1,7 +1,5 @@
 /** Position parsing, normalization, and lineup eligibility rules */
 
-import { inferPositions } from "./position-inference.mjs";
-
 export const LINEUP_POSITIONS = ["PG", "SG", "SF", "PF", "C"];
 
 const POSITION_INDEX = { PG: 0, SG: 1, SF: 2, PF: 3, C: 4 };
@@ -169,62 +167,14 @@ export function applyHeightCaps(positions, height) {
   return out;
 }
 
-function pickPrimary(positions, height = null) {
-  const list = uniquePositions(positions);
-  if (!list.length) return "SF";
-
-  if (height != null && height >= 80 && height <= 81) {
-    if (list.includes("SF")) return "SF";
-    if (list.includes("PF")) return "PF";
-  }
-  if (height != null && height >= 82 && list.includes("PF")) return "PF";
-  if (height != null && height >= 84 && list.includes("C")) return "C";
-  if (height != null && height <= 74 && list.includes("PG")) return "PG";
-  if (list.includes("PG") && (list.includes("SF") || list.includes("PF"))) {
-    return list.includes("SF") ? "SF" : "PF";
-  }
-  return list[0];
-}
-
-function hasExplicitCrossover(positions) {
-  return isGuard(positions[0]) && positions.some(isBig);
-}
-
-/** Normalize stored positions on import / roster generation */
-export function normalizePlayerPositions(player) {
-  const height = parseHeight(player.height ?? player.hgt);
-  const ratings = player.ratings || null;
-  const rawPositions =
-    player.positions?.length > 0
-      ? uniquePositions(player.positions)
-      : parsePositionLabel(player.posLabel || player.pos || player.position);
-
-  let positions = refinePositions(rawPositions, { height, ratings });
-  positions = applyHeightCaps(positions, height);
-
-  const inferred = inferPositions({ ...player, height, positions, ratings });
-  positions = inferred.positions;
-
-  if (!positions.length) {
-    positions = heightFallbackPositions(height);
-  }
-
-  const normalized = {
-    ...player,
-    positions,
-    primaryPosition: inferred.primaryPosition || pickPrimary(positions, height),
-  };
-
-  if (height != null) normalized.height = height;
-  else delete normalized.height;
-
-  return normalized;
-}
-
 function listedPositions(player) {
   const set = new Set(player.positions || []);
   if (player.primaryPosition) set.add(player.primaryPosition);
   return [...set];
+}
+
+function hasExplicitCrossover(positions) {
+  return isGuard(positions[0]) && positions.some(isBig);
 }
 
 function crossesGuardBigBarrier(playerPositions, slot) {

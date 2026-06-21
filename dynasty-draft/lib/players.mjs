@@ -6,9 +6,9 @@ import { expandCareerToSeason } from "./roster-builder.mjs";
 import {
   canPlayPosition,
   getEligiblePositions as eligiblePositionsForPlayer,
-  normalizePlayerPositions,
   positionFitMultiplier,
 } from "./positions.mjs";
+import { normalizePlayerPositions } from "./position-normalize.mjs";
 
 export { canPlayPosition, positionFitMultiplier };
 

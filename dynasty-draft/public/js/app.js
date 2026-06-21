@@ -72,9 +72,17 @@ async function refreshGame() {
 async function init() {
   loadStoredSession();
   renderAuthUI();
-  await restoreSessionFromServer();
-  renderAuthUI();
-  await refreshGame();
+  try {
+    await restoreSessionFromServer();
+    renderAuthUI();
+    await refreshGame();
+  } catch (err) {
+    console.error("DynastyDraft init failed:", err);
+    const root = $("gameRoot");
+    if (root) {
+      root.innerHTML = `<div class="dyn-error-card"><h2>Could not load game</h2><p>${err?.message || "Something went wrong."}</p><button type="button" class="btn-primary" onclick="location.reload()">Reload</button></div>`;
+    }
+  }
 
   setAuthChangeHandler(() => {
     renderAuthUI();

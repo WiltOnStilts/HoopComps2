@@ -44,7 +44,7 @@ function b64urlDecode(str) {
 export function signToken(payload, expiresInDays = 3650) {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const exp = Math.floor(Date.now() / 1000) + expiresInDays * 86400;
-  const body = b64url(JSON.stringify({ ...payload, exp }));
+  const body = b64url(JSON.stringify({ ...payload, exp, iat: Math.floor(Date.now() / 1000) }));
   const sig = crypto
     .createHmac("sha256", JWT_SECRET())
     .update(`${header}.${body}`)
@@ -110,7 +110,16 @@ export async function requireUser(req) {
   const token = getRequestToken(req);
   const payload = verifyToken(token);
   if (!payload?.sub) return null;
-  return findUserById(payload.sub);
+  const user = findUserById(payload.sub);
+  if (user) return user;
+  const email = payload.email || "";
+  const username = payload.username || email.split("@")[0] || "player";
+  return {
+    id: payload.sub,
+    email,
+    display_name: payload.displayName || username,
+    username,
+  };
 }
 
 function publicUser(user) {
@@ -138,8 +147,14 @@ export async function registerUser({ email, password, username }) {
     passwordHash: hashPassword(String(password)),
     username: handle,
   });
-  const token = signToken({ sub: user.id, email: user.email });
-  return { user: publicUser(user), token };
+  const pub = publicUser(user);
+  const token = signToken({
+    sub: user.id,
+    email: user.email,
+    username: pub.username,
+    displayName: pub.displayName,
+  });
+  return { user: pub, token };
 }
 
 export async function loginUser({ email, password }) {
@@ -150,16 +165,34 @@ export async function loginUser({ email, password }) {
   if (!row) throw new Error("Invalid email or password");
   const hash = getUserPasswordHash(row.id);
   if (!verifyPassword(String(password ?? ""), hash)) throw new Error("Invalid email or password");
-  const token = signToken({ sub: row.id, email: row.email });
-  return { user: publicUser(row), token };
+  const pub = publicUser(row);
+  const token = signToken({
+    sub: row.id,
+    email: row.email,
+    username: pub.username,
+    displayName: pub.displayName,
+  });
+  return { user: pub, token };
 }
 
 export async function sessionFromToken(token) {
   const payload = verifyToken(token);
   if (!payload?.sub) return null;
   const user = findUserById(payload.sub);
-  if (!user) return null;
-  return { user: publicUser(user), token };
+  if (user) return { user: publicUser(user), token };
+
+  // Ephemeral deploys may lose users.json while cookies/local tokens remain valid.
+  const email = payload.email || "";
+  const username = payload.username || email.split("@")[0] || "player";
+  return {
+    user: {
+      id: payload.sub,
+      email,
+      username,
+      displayName: payload.displayName || username,
+    },
+    token,
+  };
 }
 
 export { SESSION_COOKIE };

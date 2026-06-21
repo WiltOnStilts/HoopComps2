@@ -147,6 +147,12 @@ async function init() {
       });
     }
   });
+
+  window.addEventListener("online", () => {
+    void restoreSessionFromServer().then(() => {
+      renderAuthUI();
+    });
+  });
 }
 
 init();

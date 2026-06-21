@@ -139,6 +139,7 @@ export function playerSeasonFromSnapshot(player, team, year, startingSeason) {
       allStar: isAllStar(player, ratingSeason) || isAllStar(player, year),
       ratings,
       source: stat ? "bbgm-stats" : "bbgm-snapshot",
+      stats: stat || undefined,
     },
     player
   );
@@ -167,6 +168,7 @@ export function playerSeasonFromStat(player, teamByTid, stat) {
       allStar: isAllStar(player, year),
       ratings,
       source: "bbgm-stats",
+      stats: stat,
     },
     player
   );
@@ -244,6 +246,7 @@ export function extractRatingsHistory(league) {
             allStar: isAllStar(p, year),
             ratings,
             source: stat ? "bbgm-stats" : "bbgm-ratings",
+            stats: stat || undefined,
           },
           p
         )

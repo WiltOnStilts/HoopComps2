@@ -12,7 +12,7 @@ export function isPlaceholderRatings(ratings) {
   if ([scoring, shooting, defense, playmaking, rebounding, impact].some((v) => !Number.isFinite(v))) {
     return true;
   }
-  return PLACEHOLDER_SIGNATURES.some(
+  if (PLACEHOLDER_SIGNATURES.some(
     (sig) =>
       sig.scoring === scoring &&
       sig.shooting === shooting &&
@@ -20,7 +20,16 @@ export function isPlaceholderRatings(ratings) {
       sig.playmaking === playmaking &&
       sig.rebounding === rebounding &&
       sig.impact === impact
-  );
+  )) {
+    return true;
+  }
+  // NBA API default_ratings for guards (68/67/64/68/60/66) and generic 66 flats
+  if (impact >= 64 && impact <= 68 && scoring >= 64 && scoring <= 70 && shooting >= 62 && shooting <= 68) {
+    const flat = Math.max(scoring, shooting, defense, playmaking, rebounding) -
+      Math.min(scoring, shooting, defense, playmaking, rebounding);
+    if (flat <= 10) return true;
+  }
+  return false;
 }
 
 const SOURCE_RANK = {

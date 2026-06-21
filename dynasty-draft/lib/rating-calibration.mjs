@@ -24,8 +24,9 @@ function applyFloors(r, pos, margin = 0) {
   }
 }
 
-function liftUnderrated(r, threshold, factor = 0.5, cap = 97) {
+function liftUnderrated(r, threshold, factor = 0.5, cap = 97, skipKeys = []) {
   for (const key of STAT_KEYS) {
+    if (skipKeys.includes(key)) continue;
     if (r[key] < threshold) {
       r[key] = Math.min(cap, r[key] + Math.ceil((threshold - r[key]) * factor));
     }
@@ -48,12 +49,15 @@ export function calibrateRatings(player) {
   const superElite = starSeason && impact >= 86;
   const legend = starSeason && impact >= 90;
 
+  const skipDefenseLift =
+    ["PG", "SG"].includes(pos) && r.defense < 82;
+
   if (elite) applyFloors(r, pos, superElite ? 0 : 2);
-  if (superElite) liftUnderrated(r, 84, 0.45, 96);
-  if (legend) liftUnderrated(r, 88, 0.55, 99);
+  if (superElite) liftUnderrated(r, 84, 0.45, 96, skipDefenseLift ? ["defense"] : []);
+  if (legend) liftUnderrated(r, 88, 0.55, 99, skipDefenseLift ? ["defense"] : []);
 
   if (legend) {
-    liftUnderrated(r, 90, 0.65, 99);
+    liftUnderrated(r, 90, 0.65, 99, skipDefenseLift ? ["defense"] : []);
     applyFloors(r, pos, 0);
   }
 
@@ -69,9 +73,12 @@ export function calibrateRatings(player) {
     r.scoring = Math.min(95, Math.max(r.scoring, r.playmaking - 8));
   }
 
-  // Elite shooters (Reggie, Curry tier when shooting 88+)
-  if (r.shooting >= 86) {
-    r.shooting = Math.min(99, r.shooting + (r.shooting >= 90 ? 4 : 2));
+  // Elite shooters (Reggie, Curry, Dame tier)
+  if (r.shooting >= 84) {
+    r.shooting = Math.min(99, r.shooting + (r.shooting >= 92 ? 4 : r.shooting >= 88 ? 3 : 2));
+  }
+  if (["PG", "SG", "SF"].includes(pos) && r.scoring >= 88 && r.shooting < 88) {
+    r.shooting = Math.min(92, r.shooting + 4);
   }
 
   // Lockdown defenders (Pippen, GP tier)

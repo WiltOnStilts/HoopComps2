@@ -158,18 +158,40 @@ def ratings_from_stats(row, positions):
     ast = float(row.get("AST") or 0)
     stl = float(row.get("STL") or 0)
     blk = float(row.get("BLK") or 0)
-    fg_pct = float(row.get("FG_PCT") or 0.45)
-    fg3_pct = float(row.get("FG3_PCT") or 0)
-    ft_pct = float(row.get("FT_PCT") or 0.75)
+    fg = float(row.get("FG") or 0)
+    fga = float(row.get("FGA") or 0)
+    tp = float(row.get("FG3") or 0)
+    tpa = float(row.get("FG3A") or 0)
+    ft = float(row.get("FT") or 0)
+    fta = float(row.get("FTA") or 0)
+    fg_pct = float(row.get("FG_PCT") or (fg / fga if fga else 0.45))
+    fg3_pct = float(row.get("FG3_PCT") or (tp / tpa if tpa else 0))
+    ft_pct = float(row.get("FT_PCT") or (ft / fta if fta else 0.75))
     mins = float(row.get("MIN") or gp * 20) / gp
+    ts_attempts = fga + 0.44 * fta
+    ts_pct = (fg * 2 + tp + ft) / (2 * ts_attempts) if ts_attempts else fg_pct
+    efg_pct = (fg + 0.5 * tp) / fga if fga else fg_pct
+    tpa_pg = tpa / gp
+    tpm_pg = tp / gp
 
     scoring = rate_anchors(pts, [
         (0, 40), (5, 50), (10, 62), (15, 72), (18, 78), (22, 85),
         (25, 90), (28, 94), (32, 97), (36, 99),
     ])
-    shooting_blend = fg_pct * 0.55 + fg3_pct * 0.25 + ft_pct * 0.2
+    shooting_blend = ts_pct * 0.5 + efg_pct * 0.2 + fg3_pct * 0.18 + ft_pct * 0.12
+    if tpa_pg >= 5 and fg3_pct >= 0.355:
+        shooting_blend += 0.02
+    if tpa_pg >= 7 and fg3_pct >= 0.36:
+        shooting_blend += 0.025
+    if tpa_pg >= 9 and fg3_pct >= 0.38:
+        shooting_blend += 0.025
+    if tpm_pg >= 3 and fg3_pct >= 0.37:
+        shooting_blend += 0.02
+    if tpm_pg >= 4 and fg3_pct >= 0.39:
+        shooting_blend += 0.03
     shooting = rate_anchors(shooting_blend, [
-        (0.4, 45), (0.48, 58), (0.54, 72), (0.58, 82), (0.62, 90), (0.66, 96), (0.7, 99),
+        (0.4, 45), (0.48, 58), (0.52, 68), (0.56, 78), (0.58, 84),
+        (0.62, 90), (0.66, 95), (0.7, 99),
     ])
     playmaking = rate_anchors(ast, [
         (0, 40), (1, 52), (3, 65), (5, 75), (7, 85), (9, 92), (11, 97), (13, 99),
@@ -177,9 +199,10 @@ def ratings_from_stats(row, positions):
     rebounding = rate_anchors(reb, [
         (0, 40), (2, 52), (4, 62), (6, 72), (8, 82), (10, 90), (12, 95), (14, 99),
     ])
-    stocks = stl * 2.1 + blk * 2.4
+    stocks = stl * 1.35 + blk * 1.75
     defense = rate_anchors(stocks, [
-        (0, 40), (0.5, 52), (1.2, 65), (2, 75), (2.8, 85), (3.5, 92), (4.5, 97), (5.5, 99),
+        (0, 40), (0.5, 52), (1.0, 60), (1.6, 68), (2.2, 76), (2.8, 84),
+        (3.5, 91), (4.5, 97), (5.5, 99),
     ])
     health = rate_anchors(min(gp, 82), [
         (20, 55), (40, 65), (55, 72), (65, 78), (72, 85), (78, 92), (82, 99),
@@ -192,6 +215,13 @@ def ratings_from_stats(row, positions):
     )
 
     pos = positions[0]
+    if pos in ("PG", "SG"):
+        if stocks < 2.4:
+            defense = min(defense, 74)
+        elif stocks < 3.6:
+            defense = min(defense, 78)
+    elif pos == "SF" and stocks < 2.6:
+        defense = min(defense, 84)
     if pos in ("C", "PF"):
         defense = clamp(defense + 2, 40, 99)
         rebounding = clamp(rebounding + 3, 40, 99)

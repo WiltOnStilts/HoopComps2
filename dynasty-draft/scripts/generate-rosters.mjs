@@ -328,7 +328,8 @@ const unique = flat
     if (seen.has(p.id)) return false;
     seen.add(p.id);
     return true;
-  });
+  })
+  .map(({ stats: _stats, ...player }) => player);
 
 fs.writeFileSync(CAREERS_OUT, JSON.stringify(careers, null, 2));
 fs.writeFileSync(OUT, JSON.stringify(unique, null, 2));

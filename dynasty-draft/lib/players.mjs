@@ -211,9 +211,11 @@ export function lineupOverall(lineup, showStats = true) {
     const mult = positionFitMultiplier(player, pos);
     const r = player.ratings;
     const skill = showStats
-      ? r.impact * 0.45 +
-        (r.scoring + r.defense + r.playmaking) / 3 * 0.35 +
-        (r.shooting + r.rebounding + r.health) / 3 * 0.2
+      ? r.impact * 0.38 +
+        r.scoring * 0.14 +
+        r.shooting * 0.14 +
+        ((r.defense + r.playmaking) / 2) * 0.18 +
+        ((r.rebounding + r.health) / 2) * 0.16
       : r.impact;
     total += skill * mult;
     count++;

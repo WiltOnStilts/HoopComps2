@@ -101,6 +101,9 @@ export function normalizeStatRow(row) {
 
   const tsAttempts = fga + 0.44 * fta;
   const tsPct = tsAttempts > 0 ? (fg * 2 + tp + ft) / (2 * tsAttempts) : fgPct || 0.45;
+  const efgPct = fga > 0 ? (fg + 0.5 * tp) / fga : fgPct || 0.45;
+  const tpaPg = tpa / gp;
+  const tpmPg = tp / gp;
 
   return {
     gp,
@@ -112,6 +115,9 @@ export function normalizeStatRow(row) {
     fgPct: Number.isFinite(fgPct) ? fgPct : 0.45,
     fg3Pct: Number.isFinite(fg3Pct) ? fg3Pct : 0,
     ftPct: Number.isFinite(ftPct) ? ftPct : 0.75,
+    efgPct,
+    tpaPg,
+    tpmPg,
     mpg,
     tsPct,
     per: Number.isFinite(per) ? per : null,
@@ -135,15 +141,25 @@ function rateScoring(ppg) {
   ]);
 }
 
-function rateShooting(tsPct, fg3Pct, ftPct) {
-  const blend = tsPct * 0.55 + fg3Pct * 0.25 + ftPct * 0.2;
+function rateShooting(stats) {
+  const { tsPct, efgPct, fg3Pct, ftPct, tpaPg, tpmPg } = stats;
+  let blend = tsPct * 0.5 + efgPct * 0.2 + fg3Pct * 0.18 + ftPct * 0.12;
+
+  // Reward high-volume deep shooters (Curry, Dame, Klay tier)
+  if (tpaPg >= 5 && fg3Pct >= 0.355) blend += 0.02;
+  if (tpaPg >= 7 && fg3Pct >= 0.36) blend += 0.025;
+  if (tpaPg >= 9 && fg3Pct >= 0.38) blend += 0.025;
+  if (tpmPg >= 3 && fg3Pct >= 0.37) blend += 0.02;
+  if (tpmPg >= 4 && fg3Pct >= 0.39) blend += 0.03;
+
   return rateAnchors(blend, [
     [0.4, 45],
     [0.48, 58],
-    [0.54, 72],
-    [0.58, 82],
+    [0.52, 68],
+    [0.56, 78],
+    [0.58, 84],
     [0.62, 90],
-    [0.66, 96],
+    [0.66, 95],
     [0.7, 99],
   ]);
 }
@@ -174,15 +190,17 @@ function rateRebounding(rpg) {
   ]);
 }
 
-function rateDefense({ spg, bpg, dbpm }) {
-  const stocks = spg * 2.1 + bpg * 2.4;
+function rateDefense(stats, pos = "SF") {
+  const { spg, bpg, dbpm } = stats;
+  const stocks = spg * 1.35 + bpg * 1.75;
   let fromStocks = rateAnchors(stocks, [
     [0, 40],
     [0.5, 52],
-    [1.2, 65],
-    [2, 75],
-    [2.8, 85],
-    [3.5, 92],
+    [1.0, 60],
+    [1.6, 68],
+    [2.2, 76],
+    [2.8, 84],
+    [3.5, 91],
     [4.5, 97],
     [5.5, 99],
   ]);
@@ -197,7 +215,12 @@ function rateDefense({ spg, bpg, dbpm }) {
       [4, 96],
       [5, 99],
     ]);
-    fromStocks = Math.round(fromStocks * 0.45 + fromBpm * 0.55);
+    fromStocks = Math.round(fromStocks * 0.4 + fromBpm * 0.6);
+  } else if (pos === "PG" || pos === "SG") {
+    if (stocks < 2.4) fromStocks = Math.min(fromStocks, 74);
+    else if (stocks < 3.6) fromStocks = Math.min(fromStocks, 78);
+  } else if (pos === "SF" && stocks < 2.6) {
+    fromStocks = Math.min(fromStocks, 84);
   }
   return clamp(fromStocks, 40, 99);
 }
@@ -279,12 +302,13 @@ function applyPositionTweaks(ratings, pos) {
 
 /** Build ratings from a normalized stat row + position. */
 export function ratingsFromNormalized(stats, positions = ["SF"]) {
+  const pos = positions[0] || "SF";
   const skills = {
     scoring: rateScoring(stats.ppg),
-    shooting: rateShooting(stats.tsPct, stats.fg3Pct, stats.ftPct),
+    shooting: rateShooting(stats),
     playmaking: ratePlaymaking(stats.apg),
     rebounding: rateRebounding(stats.rpg),
-    defense: rateDefense(stats),
+    defense: rateDefense(stats, pos),
     health: rateHealth(stats.gp),
   };
   skills.impact = rateImpact(stats, skills);

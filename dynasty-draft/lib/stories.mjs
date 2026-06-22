@@ -1,3 +1,27 @@
+const MAX_STORIES = 7;
+
+const STORY_PRIORITY = {
+  championship: 100,
+  playoff_elimination: 95,
+  playoff_win: 82,
+  elite_record: 72,
+  superteam: 70,
+  strong_record: 66,
+  playoff_clinch: 62,
+  missed_playoffs: 60,
+  upset_loss: 54,
+  notable_loss: 50,
+  injury: 44,
+  player_explosion: 42,
+  blowout: 38,
+  hot_start: 34,
+  strong_start: 32,
+  highlight: 28,
+  season_opening: 24,
+  injury_watch: 18,
+  player_dud: 12,
+};
+
 function pick(rng, arr) {
   return arr[Math.floor(rng() * arr.length)];
 }
@@ -68,6 +92,120 @@ function performanceBody(perf, rng) {
   ]);
 }
 
+function isStoryworthyUpset(up, teamStrength) {
+  if (up.opponentEra === "rebuild") return false;
+  if (teamStrength >= 88 && (up.opponentStrength ?? 0) < 76) return false;
+  if (teamStrength >= 84 && (up.opponentStrength ?? 0) < 70) return false;
+  return true;
+}
+
+function lossBody(loss, starName, rosterLabel, rng) {
+  const oppStr = loss.opponentStrength ?? 0;
+  const margin = loss.margin;
+
+  if (oppStr >= 88) {
+    return pick(rng, [
+      `${loss.opponent} brought championship pedigree and won by ${margin}. A measuring-stick loss against a true heavyweight.`,
+      `A ${margin}-point defeat to ${loss.opponent}. ${starName} had ${20 + Math.floor(rng() * 15)} but the reigning formula was too much.`,
+      `${loss.opponent} executed in crunch time. ${rosterLabel} ran into a team built for June.`,
+    ]);
+  }
+  if (oppStr >= 80) {
+    return pick(rng, [
+      `${loss.opponent} punched their playoff ticket with a ${margin}-point win. A tough night against a legitimate contender.`,
+      `A ${margin}-point loss to ${loss.opponent}. ${starName} battled, but the other side had more answers down the stretch.`,
+      `${loss.opponent} made the plays that mattered. ${rosterLabel} will want that one back.`,
+    ]);
+  }
+  return pick(rng, [
+    `A ${margin}-point loss to ${loss.opponent}. ${starName} had ${18 + Math.floor(rng() * 12)} but the supporting cast went quiet.`,
+    `${loss.opponent} caught fire from three and held on. ${rosterLabel} couldn't get stops when it counted.`,
+    `An off night at the wrong time — ${loss.opponent} won by ${margin} despite being outgunned on paper.`,
+  ]);
+}
+
+function upsetBody(up, starName, rosterLabel, rng) {
+  return pick(rng, [
+    `A ${up.margin}-point shocker. ${up.opponent} hit timely shots while ${rosterLabel} couldn't close.`,
+    `Rare off night. ${up.opponent} out-executed a stacked roster in crunch time.`,
+    `${up.opponent} played with house money and cashed in — ${starName} wasn't enough in the clutch.`,
+  ]);
+}
+
+function pickDiverseTimeline(timeline, teamStrength) {
+  const picked = [];
+  const usedOpponents = new Set();
+  const counts = { injury: 0, performance: 0, blowout: 0, upset: 0, dud: 0 };
+  const limits = { injury: 1, performance: 1, blowout: 1, upset: 1, dud: 0 };
+
+  for (const item of timeline) {
+    let bucket = item.kind;
+    if (bucket === "performance") {
+      bucket = item.data.type === "career" ? "performance" : "dud";
+    }
+    if (bucket === "upset" && !isStoryworthyUpset(item.data, teamStrength)) continue;
+    if (counts[bucket] >= (limits[bucket] ?? 0)) continue;
+
+    const opp = item.data?.opponent;
+    if (opp && usedOpponents.has(opp) && (bucket === "blowout" || bucket === "upset")) continue;
+
+    picked.push(item);
+    counts[bucket]++;
+    if (opp) usedOpponents.add(opp);
+  }
+
+  return picked;
+}
+
+function storyOpponent(story) {
+  return story.meta?.opponent || null;
+}
+
+function prioritizeStories(stories, max = MAX_STORIES) {
+  const ranked = [...stories].sort(
+    (a, b) => (STORY_PRIORITY[b.type] ?? 10) - (STORY_PRIORITY[a.type] ?? 10)
+  );
+  const selected = [];
+  const usedOpponents = new Set();
+  const typeCounts = {};
+
+  for (const story of ranked) {
+    if (selected.length >= max) break;
+
+    const opp = storyOpponent(story);
+    const lossLike = story.type === "upset_loss" || story.type === "notable_loss" || story.type === "blowout";
+    if (opp && lossLike && usedOpponents.has(opp)) continue;
+
+    const capType = story.type === "upset_loss" || story.type === "notable_loss";
+    if (capType && (typeCounts.upset_loss || 0) + (typeCounts.notable_loss || 0) >= 1) continue;
+    if (story.type === "blowout" && (typeCounts.blowout || 0) >= 1) continue;
+    if (story.type === "injury" && (typeCounts.injury || 0) >= 1) continue;
+    if (story.type === "player_explosion" && (typeCounts.player_explosion || 0) >= 1) continue;
+
+    selected.push(story);
+    typeCounts[story.type] = (typeCounts[story.type] || 0) + 1;
+    if (opp && lossLike) usedOpponents.add(opp);
+  }
+
+  if (selected.length < Math.min(5, max)) {
+    for (const story of ranked) {
+      if (selected.includes(story)) continue;
+      selected.push(story);
+      if (selected.length >= Math.min(5, max)) break;
+    }
+  }
+
+  return selected.slice(0, max);
+}
+
+export function finalizeStories(seasonStories, playoffStories = [], { max = MAX_STORIES } = {}) {
+  const playoffReserve = Math.min(playoffStories.length, 2);
+  const seasonCap = Math.max(4, max - playoffReserve);
+  const trimmedSeason = prioritizeStories(seasonStories, seasonCap);
+  const playoffTrimmed = playoffStories.slice(0, playoffReserve);
+  return prioritizeStories([...trimmedSeason, ...playoffTrimmed], max);
+}
+
 export function generateSeasonStories({
   wins,
   losses,
@@ -84,41 +222,23 @@ export function generateSeasonStories({
   const starName = star?.player?.name || "Your franchise player";
   const rosterLabel = stars.length >= 2 ? `${stars[0]} and ${stars[1]}` : starName;
 
-  const openHeadlines = ["Opening Night: Lights On", "Season Tip-Off", "The March Begins", "82 Games Await"];
-  const openBodies = [
-    `${starName} leads a revamped roster into the spotlight as the league wonders how far this experiment can go.`,
-    `Media day buzz centers on ${rosterLabel} — a lineup stitched together from across NBA history.`,
-    `Fans pack the arena for Game 1. ${starName} says this group has "championship habits."`,
-    `Analysts call ${rosterLabel} one of the most intriguing builds of the season. The proof starts now.`,
-  ];
   stories.push({
     type: "season_opening",
-    headline: pick(rng, openHeadlines),
-    body: pick(rng, openBodies),
+    headline: pick(rng, ["Opening Night: Lights On", "Season Tip-Off", "The March Begins"]),
+    body: pick(rng, [
+      `${starName} leads a revamped roster into the spotlight as the league wonders how far this experiment can go.`,
+      `Media day buzz centers on ${rosterLabel} — a lineup stitched together from across NBA history.`,
+      `Fans pack the arena for Game 1. ${starName} says this group has "championship habits."`,
+    ]),
   });
-
-  // Injury risk preview at season start
-  const fragile = lineup.filter((e) => (e.player?.ratings?.health || 99) < 78);
-  if (fragile.length) {
-    const names = fragile.map((e) => e.player.name).slice(0, 2).join(" and ");
-    stories.push({
-      type: "injury_watch",
-      headline: pick(rng, ["Medical Staff on Alert", "Injury Watch List", "Health Concerns Enter Season"]),
-      body: pick(rng, [
-        `Team doctors flag ${names} as high-risk based on durability ratings. Load management could factor in.`,
-        `${names} enter the year with injury concerns. The training staff has a plan — but health is never guaranteed.`,
-      ]),
-    });
-  }
 
   if (wins >= 10 && losses === 0) {
     stories.push({
       type: "hot_start",
       headline: pick(rng, ["Unbeaten & Unbothered", "Historic Hot Start", "The League Is On Notice"]),
       body: pick(rng, [
-        `${wins}-0. ${rosterLabel} look like they're playing a different sport. Opponents are searching for answers.`,
+        `${wins}-0. ${rosterLabel} look like they're playing a different sport.`,
         `An undefeated run has social media calling this the best fantasy roster ever assembled.`,
-        `Vegas odds on an undefeated season just shifted. ${starName} says the group isn't satisfied yet.`,
       ]),
     });
   } else if (wins >= 8 && losses <= 2) {
@@ -129,9 +249,7 @@ export function generateSeasonStories({
     });
   }
 
-  // Merge timeline: injuries, performances, blowouts, upsets by game number
   const timeline = [];
-
   for (const inj of events.injuries || []) {
     timeline.push({ game: inj.game, kind: "injury", data: inj });
   }
@@ -144,21 +262,22 @@ export function generateSeasonStories({
   for (const up of events.upsets || []) {
     timeline.push({ game: up.game, kind: "upset", data: up });
   }
-
   timeline.sort((a, b) => a.game - b.game);
 
-  for (const item of timeline.slice(0, 14)) {
+  for (const item of pickDiverseTimeline(timeline, teamStrength)) {
     if (item.kind === "injury") {
       stories.push({
         type: "injury",
         headline: injuryHeadline(item.data),
         body: injuryBody(item.data, rng),
+        meta: { game: item.data.game },
       });
     } else if (item.kind === "performance") {
       stories.push({
         type: item.data.type === "career" ? "player_explosion" : "player_dud",
         headline: performanceHeadline(item.data),
         body: performanceBody(item.data, rng),
+        meta: { game: item.data.game, opponent: item.data.opponent },
       });
     } else if (item.kind === "blowout") {
       const bo = item.data;
@@ -166,14 +285,13 @@ export function generateSeasonStories({
         type: "blowout",
         headline: pick(rng, [
           `Game ${bo.game}: ${bo.margin}-Point Blowout vs ${bo.opponent}`,
-          `Game ${bo.game}: Rout of ${bo.opponent}`,
           `Game ${bo.game}: Statement Win (+${bo.margin})`,
         ]),
         body: pick(rng, [
           `${rosterLabel} demolished ${bo.opponent} by ${bo.margin}. The bench cleared with minutes still on the clock.`,
-          `A ${bo.margin}-point hammering of ${bo.opponent}. ${starName} didn't even need to play the fourth quarter.`,
           `Dominant from tip to buzzer — ${bo.margin} over ${bo.opponent}. This is what a superteam looks like.`,
         ]),
+        meta: { game: bo.game, opponent: bo.opponent },
       });
     } else if (item.kind === "upset") {
       const up = item.data;
@@ -182,108 +300,78 @@ export function generateSeasonStories({
         headline: pick(rng, [
           `Game ${up.game}: Upset! Fall to ${up.opponent}`,
           `Game ${up.game}: Shocker vs ${up.opponent}`,
-          `Game ${up.game}: Stunned by ${up.opponent}`,
         ]),
-        body: pick(rng, [
-          `A ${up.margin}-point stunner. ${up.opponent} punched above their weight and ${starName} wasn't enough in the clutch.`,
-          `Rare off night. ${up.opponent} outworked a stacked roster. Film session will be brutal.`,
-          `The scoreboard lied all night — ${up.opponent} hit timely shots while ${rosterLabel} couldn't close.`,
-        ]),
+        body: upsetBody(up, starName, rosterLabel, rng),
+        meta: { game: up.game, opponent: up.opponent },
       });
     }
   }
 
-  // Notable losses not already covered as upsets
   const upsetGames = new Set((events.upsets || []).map((u) => u.game));
-  for (const loss of (notableLosses || []).filter((l) => !l.upset && !upsetGames.has(l.game)).slice(0, 3)) {
+  const lossCandidates = (notableLosses || []).filter((l) => !l.upset && !upsetGames.has(l.game));
+  if (lossCandidates.length) {
+    const best = [...lossCandidates].sort((a, b) => (b.opponentStrength ?? 0) - (a.opponentStrength ?? 0))[0];
     stories.push({
       type: "notable_loss",
       headline: pick(rng, [
-        `Game ${loss.game}: Fall to ${loss.opponent}`,
-        `Game ${loss.game}: ${loss.opponent} Get the Win`,
-        `Game ${loss.game}: Battle Lost`,
+        `Game ${best.game}: Fall to ${best.opponent}`,
+        `Game ${best.game}: ${best.opponent} Get the Win`,
       ]),
-      body: pick(rng, [
-        `${loss.opponent} brought championship pedigree and won by ${loss.margin}. A measuring-stick loss.`,
-        `A ${loss.margin}-point defeat to ${loss.opponent}. ${starName} had ${20 + Math.floor(rng() * 15)} but needed more help.`,
-        `${loss.opponent} executed in crunch time. ${rosterLabel} left points on the floor.`,
-      ]),
+      body: lossBody(best, starName, rosterLabel, rng),
+      meta: { game: best.game, opponent: best.opponent },
     });
   }
 
-  for (const hl of (seasonHighlights || []).filter((h) => h.type !== "blowout").slice(0, 2)) {
+  const highlight = (seasonHighlights || []).find((h) => h.type !== "blowout");
+  if (highlight) {
     stories.push({
       type: "highlight",
-      headline: pick(rng, [
-        `Game ${hl.game}: Statement Win`,
-        `Game ${hl.game}: Dominant Performance`,
-        `Game ${hl.game}: ${hl.opponent} Routed`,
-      ]),
+      headline: pick(rng, [`Game ${highlight.game}: Statement Win`, `Game ${highlight.game}: Dominant Performance`]),
       body: pick(rng, [
-        `${rosterLabel} ran ${hl.opponent} out of the gym. The box score belongs in a museum.`,
-        `A signature win over ${hl.opponent}. ${starName} made it look effortless.`,
-        `Defensive clamps, transition threes, and ${starName} in the post — ${hl.opponent} had no answers.`,
+        `${rosterLabel} ran ${highlight.opponent} out of the gym. The box score belongs in a museum.`,
+        `A signature win over ${highlight.opponent}. ${starName} made it look effortless.`,
       ]),
+      meta: { game: highlight.game, opponent: highlight.opponent },
     });
   }
 
   if (teamStrength >= 90 && wins >= 55) {
     stories.push({
       type: "superteam",
-      headline: pick(rng, ["Superteam Confirmed", "Elite Tier Unlocked", "Historically Great?"]),
-      body: pick(rng, [
-        `Team strength rating of ${Math.round(teamStrength)} — this roster grades among the best simulations have ever seen.`,
-        `Opponents are calling ${starName} "unfair." The numbers back them up.`,
-        `${rosterLabel} aren't just winning — they're dictating how the game is played.`,
-      ]),
+      headline: pick(rng, ["Superteam Confirmed", "Elite Tier Unlocked"]),
+      body: `Team strength rating of ${Math.round(teamStrength)} — this roster grades among the best simulations have ever seen.`,
     });
   }
 
   if (wins >= 65) {
     stories.push({
       type: "elite_record",
-      headline: pick(rng, ["Elite Regular Season", "Top Seed Secured", "Home Court All the Way"]),
-      body: pick(rng, [
-        `${wins} wins. ${starName} enters the playoffs with the target on their back — and the talent to handle it.`,
-        `A ${wins}-${losses} masterpiece. ${rosterLabel} enter the postseason as the team to beat.`,
-        `${wins}-${losses} — only ${losses} losses all year. Who is beating this team ${losses} times?`,
-      ]),
+      headline: pick(rng, ["Elite Regular Season", "Top Seed Secured"]),
+      body: `${wins}-${losses}. ${starName} enters the playoffs with the target on their back — and the talent to handle it.`,
     });
   } else if (wins >= 55) {
     stories.push({
       type: "strong_record",
-      headline: pick(rng, ["50-Win Season", "Legitimate Contender", "Playoff Bound"]),
-      body: `${wins}-${losses} — a rock-solid campaign led by ${starName}. The postseason should be special.`,
+      headline: pick(rng, ["50-Win Season", "Legitimate Contender"]),
+      body: `${wins}-${losses} — a rock-solid campaign led by ${starName}.`,
     });
   } else if (wins >= 42) {
     stories.push({
       type: "playoff_clinch",
-      headline: pick(rng, ["Playoffs Clinched!", "Postseason Bound", "April Basketball Awaits"]),
-      body: pick(rng, [
-        `${wins}-${losses}. ${rosterLabel} punched their ticket. The real test starts now.`,
-        `Playoff basketball secured. ${starName} says the regular season was "just warm-ups."`,
-        `A ${wins}-win season ends with champagne in the locker room. Championship dreams live.`,
-      ]),
+      headline: pick(rng, ["Playoffs Clinched!", "Postseason Bound"]),
+      body: `${wins}-${losses}. ${rosterLabel} punched their ticket. The real test starts now.`,
     });
   } else if (wins >= 30) {
     stories.push({
       type: "missed_playoffs",
-      headline: pick(rng, ["Playoff Dreams Fade", "Short of the Dance", "What Could Have Been"]),
-      body: pick(rng, [
-        `${wins}-${losses} — talented on paper with ${starName}, but the wins didn't follow. Summer questions loom.`,
-        `A disappointing ${wins}-win finish. ${rosterLabel} underachieved relative to their star power.`,
-        `The math didn't work. ${starName} deserved a better supporting cast on some nights.`,
-      ]),
+      headline: pick(rng, ["Playoff Dreams Fade", "Short of the Dance"]),
+      body: `${wins}-${losses} — talented on paper with ${starName}, but the wins didn't follow.`,
     });
   } else {
     stories.push({
       type: "missed_playoffs",
-      headline: pick(rng, ["Season Ends in Disappointment", "Rebuild Mode?", "A Year to Forget"]),
-      body: pick(rng, [
-        `At ${wins}-${losses}, this experiment didn't pan out. Even ${starName} couldn't rescue it.`,
-        `A brutal ${wins}-win campaign. Fans expected more from ${rosterLabel}.`,
-        `The lottery looms. ${starName} deserves better than a ${wins}-win slog.`,
-      ]),
+      headline: pick(rng, ["Season Ends in Disappointment", "A Year to Forget"]),
+      body: `At ${wins}-${losses}, this experiment didn't pan out. Even ${starName} couldn't rescue it.`,
     });
   }
 
@@ -300,30 +388,22 @@ export function generatePlayoffStories(playoff, lineup, rng = () => Math.random(
     if (round.won) {
       stories.push({
         type: "playoff_win",
-        headline: pick(rng, [
-          `${round.round}: Past ${round.opponent}`,
-          `${round.round}: Series Won`,
-          `${round.round}: Moving On`,
-        ]),
+        headline: `${round.round}: Past ${round.opponent}`,
         body: pick(rng, [
           `${round.result} over ${round.opponent}. ${duo} carried the load when it mattered most.`,
-          `Survived ${round.opponent} in ${round.result}. ${star} elevated in the fourth quarter.`,
           `On to the next round. ${round.opponent} fought hard but this roster had too much firepower.`,
         ]),
+        meta: { opponent: round.opponent },
       });
     } else {
       stories.push({
         type: "playoff_elimination",
-        headline: pick(rng, [
-          `${round.round}: Eliminated by ${round.opponent}`,
-          `${round.round}: Season Over`,
-          `${round.round}: Heartbreak`,
-        ]),
+        headline: `${round.round}: Eliminated by ${round.opponent}`,
         body: pick(rng, [
           `The run ends in the ${round.round} (${round.result}). ${round.opponent} had the edge in execution.`,
           `${round.opponent} ended the dream in ${round.result}. ${star} left everything on the floor.`,
-          `A crushing ${round.result} loss to ${round.opponent}. This roster will wonder what-if for a long time.`,
         ]),
+        meta: { opponent: round.opponent },
       });
       break;
     }
@@ -332,10 +412,9 @@ export function generatePlayoffStories(playoff, lineup, rng = () => Math.random(
   if (playoff.champion) {
     stories.push({
       type: "championship",
-      headline: pick(rng, ["🏆 NBA CHAMPIONS!", "🏆 Banner Night!", "🏆 Dynasty Complete!"]),
+      headline: pick(rng, ["🏆 NBA CHAMPIONS!", "🏆 Banner Night!"]),
       body: pick(rng, [
         `${duo} cut down the nets. A roster for the ages just became immortal.`,
-        `Parade tomorrow. ${star} hoists the trophy — this is what the daily challenge is all about.`,
         `Champions. ${star} joins the legends who carried teams to the promised land.`,
       ]),
     });

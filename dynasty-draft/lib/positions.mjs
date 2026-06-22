@@ -34,6 +34,213 @@ const FIT_MULTIPLIERS = {
   C: { PF: 0.84 },
 };
 
+/** Known tall perimeter players — height alone must not strip SF */
+export const TALL_PERIMETER_WING_SLUGS = new Set([
+  "kevin-durant",
+  "larry-bird",
+  "julius-erving",
+  "james-worthy",
+  "toni-kukoc",
+  "carmelo-anthony",
+  "paul-pierce",
+  "kawhi-leonard",
+  "jayson-tatum",
+  "paul-george",
+  "brandon-ingram",
+  "michael-porter-jr",
+  "lauri-markkanen",
+  "tracy-mcgrady",
+  "scottie-pippen",
+  "kevin-durant",
+  "dirk-nowitzki",
+]);
+
+export const POINT_FORWARD_SLUGS = new Set([
+  "lebron-james",
+  "magic-johnson",
+  "ben-simmons",
+  "luka-doncic",
+  "giannis-antetokounmpo",
+  "larry-bird",
+  "james-harden",
+  "oscar-robertson",
+  "jason-kidd",
+  "draymond-green",
+  "kevin-durant",
+  "julius-erving",
+  "toni-kukoc",
+  "lamar-odom",
+  "scottie-pippen",
+]);
+
+const POINT_FORWARD_APG = 6.5;
+
+export { POINT_FORWARD_APG };
+
+export function playerSlugFromName(name, id = null) {
+  const fromName = String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (fromName) return fromName;
+  if (id) return String(id).replace(/-[^-]+-\d+$/, "");
+  return "";
+}
+
+/** Shared context for role-based position inference (browser + server safe) */
+export function buildPositionContext(player, careerHint = null) {
+  const ratings = player?.ratings || {};
+  const stats = player?.stats || {};
+  const gp = Math.max(1, Number(stats.GP ?? stats.gp ?? 1));
+  const rawAst = stats.AST ?? stats.ast ?? stats.apg;
+  const rawReb = stats.REB ?? stats.trb ?? stats.reb ?? stats.rpg;
+  let apg = stats.apg;
+  let rpg = stats.rpg;
+  if (apg == null && Number.isFinite(rawAst)) {
+    const n = Number(rawAst);
+    apg = n > gp * 2 ? n / gp : n;
+  }
+  if (rpg == null && Number.isFinite(rawReb)) {
+    const n = Number(rawReb);
+    rpg = n > gp * 2 ? n / gp : n;
+  }
+  if (apg == null && ratings.playmaking != null) apg = (ratings.playmaking - 40) / 6;
+  if (rpg == null && ratings.rebounding != null) rpg = (ratings.rebounding - 40) / 5;
+
+  const playerSlug = playerSlugFromName(player?.name, player?.id);
+  const labelPositions = player?.positions?.length
+    ? uniquePositions(player.positions)
+    : parsePositionLabel(player?.posLabel || player?.pos || player?.position || "F");
+
+  return {
+    height: parseHeight(player?.height ?? player?.hgt),
+    apg,
+    rpg,
+    rebRating: ratings.rebounding ?? null,
+    scoring: ratings.scoring ?? null,
+    shooting: ratings.shooting ?? null,
+    playmaking: ratings.playmaking ?? null,
+    playerSlug,
+    careerHint,
+    labelPositions,
+  };
+}
+
+export function isPointForwardProfile(ctx) {
+  if (POINT_FORWARD_SLUGS.has(ctx.playerSlug)) return true;
+  if (ctx.careerHint?.positions?.includes("PG") && ctx.careerHint?.positions?.some((p) => p === "SF" || p === "PF")) {
+    return true;
+  }
+  return (
+    ctx.height != null &&
+    ctx.height >= 78 &&
+    ctx.apg != null &&
+    ctx.apg >= POINT_FORWARD_APG &&
+    (ctx.labelPositions?.includes("SF") || ctx.labelPositions?.includes("PF"))
+  );
+}
+
+export function isPerimeterWingProfile(ctx) {
+  if (isReboundingBigProfile(ctx)) return false;
+  if (TALL_PERIMETER_WING_SLUGS.has(ctx.playerSlug)) return true;
+  if (ctx.careerHint?.primaryPosition === "SF") return true;
+  if (ctx.careerHint?.positions?.includes("SF")) return true;
+  if (ctx.labelPositions?.includes("SF")) return true;
+
+  const { shooting, scoring, rebRating, rpg, apg } = ctx;
+  if (shooting != null && shooting >= 78 && scoring != null && scoring >= 82) {
+    if ((rebRating == null || rebRating < 82) && (rpg == null || rpg < 8.5)) return true;
+  }
+  if (apg != null && apg >= 4.5 && shooting != null && shooting >= 76 && (rebRating == null || rebRating < 80)) {
+    return true;
+  }
+  return false;
+}
+
+export function isReboundingBigProfile(ctx) {
+  const { height, rpg, rebRating, shooting, playmaking, playerSlug } = ctx;
+  if (height == null || height < 80) return false;
+  if (TALL_PERIMETER_WING_SLUGS.has(playerSlug)) return false;
+  if (ctx.careerHint?.primaryPosition === "SF" || ctx.careerHint?.positions?.includes("SF")) return false;
+  if (
+    shooting != null &&
+    shooting >= 78 &&
+    ctx.scoring != null &&
+    ctx.scoring >= 82 &&
+    (rebRating == null || rebRating < 82) &&
+    (rpg == null || rpg < 8.5)
+  ) {
+    return false;
+  }
+
+  const postSkilled =
+    (shooting != null && shooting < 72) || (playmaking != null && playmaking < 62);
+  const strongRebounder =
+    (rpg != null && rpg >= 8) || (rebRating != null && rebRating >= 88);
+  const moderateRebounder =
+    rpg != null && rpg >= 6.5 && rebRating != null && rebRating >= 82;
+
+  if (strongRebounder && (rebRating == null || rebRating >= 78 || postSkilled)) return true;
+  if (height >= 82 && rpg != null && rpg >= 7 && postSkilled) return true;
+  if (moderateRebounder && height >= 81 && postSkilled) return true;
+  return false;
+}
+
+/** Hard physical limits only — never strip SF just for being tall */
+export function applyPhysicalPositionLimits(positions, ctx) {
+  const { height } = ctx;
+  if (height == null) return uniquePositions(positions);
+  let out = uniquePositions(positions);
+
+  const pointForward = isPointForwardProfile(ctx);
+  if (height >= 84) out = out.filter((pos) => pos !== "PG" || pointForward);
+  if (height >= 82) out = out.filter((pos) => pos !== "PG" || pointForward);
+  if (height >= 84 && !pointForward) out = out.filter((pos) => !isGuard(pos));
+
+  if (height <= 72) out = out.filter((pos) => pos !== "C");
+  if (height <= 74) out = out.filter((pos) => !isBig(pos));
+
+  return out;
+}
+
+/** Adjust positions from real-life role (rebounding big vs perimeter wing) */
+export function applyRolePositionAdjustments(positions, ctx) {
+  let out = uniquePositions(positions);
+  if (!out.length) return out;
+
+  if (isReboundingBigProfile(ctx)) {
+    out = out.filter((pos) => !isGuard(pos) && pos !== "SF");
+    if (!out.includes("PF")) out.unshift("PF");
+    const { height, rpg, rebRating } = ctx;
+    if (height >= 81 || (rpg != null && rpg >= 9) || (rebRating != null && rebRating >= 90)) {
+      if (!out.includes("C")) out.push("C");
+    }
+    if (!out.length) out = height != null && height >= 84 ? ["PF", "C"] : ["PF"];
+    return uniquePositions(out);
+  }
+
+  if (isPerimeterWingProfile(ctx)) {
+    if (!out.includes("SF") && (out.includes("PF") || out.includes("SG"))) out.unshift("SF");
+    if (ctx.height != null && ctx.height >= 80 && !out.includes("PF")) out.push("PF");
+    return uniquePositions(out);
+  }
+
+  return out;
+}
+
+export function pickPrimaryPositionFromRole(positions, ctx) {
+  const list = uniquePositions(positions);
+  if (!list.length) return "SF";
+  if (ctx.careerHint?.primaryPosition && list.includes(ctx.careerHint.primaryPosition)) {
+    return ctx.careerHint.primaryPosition;
+  }
+  if (isPerimeterWingProfile(ctx) && list.includes("SF")) return "SF";
+  if (isReboundingBigProfile(ctx) && list.includes("PF")) return "PF";
+  if (ctx.height != null && ctx.height >= 84 && list.includes("C") && !list.includes("SF")) return "C";
+  if (ctx.height != null && ctx.height >= 82 && list.includes("PF") && !list.includes("SF")) return "PF";
+  return list[0];
+}
+
 function isGuard(pos) {
   return pos === "PG" || pos === "SG";
 }
@@ -110,21 +317,33 @@ function isVagueGuardPair(positions) {
   return positions.length === 2 && positions.includes("PG") && positions.includes("SG");
 }
 
-/** Use height + ratings to collapse vague F/G labels */
-export function refinePositions(positions, { height = null, ratings = null } = {}) {
+/** Use role signals to collapse vague F/G labels */
+export function refinePositions(positions, options = {}) {
   let out = uniquePositions(positions);
+  const ratings = options.ratings || null;
   const reb = ratings?.rebounding ?? 62;
   const pm = ratings?.playmaking ?? 62;
+  const shooting = ratings?.shooting ?? 62;
+  const ctx = buildPositionContext(
+    {
+      height: options.height ?? null,
+      ratings,
+      stats: options.stats || null,
+      positions: out,
+      name: options.name,
+      id: options.id,
+    },
+    options.careerHint || null
+  );
 
   if (isVagueForwardPair(out)) {
-    if (height != null && height >= 84) out = ["PF", "C"];
-    else if (height != null && height >= 81) out = ["PF"];
-    else if (height != null && height <= 77) out = ["SF"];
-    else if (reb >= 88 || (height != null && height >= 84)) out = ["PF", "C"];
-    else if (reb >= 82) out = pm >= 78 ? ["SF", "PF"] : ["PF"];
+    if (isReboundingBigProfile(ctx)) out = ["PF", "C"];
+    else if (isPerimeterWingProfile(ctx)) out = ["SF", "PF"];
+    else if (reb >= 88 && shooting < 72) out = ["PF", "C"];
+    else if (reb >= 82) out = pm >= 78 || shooting >= 78 ? ["SF", "PF"] : ["PF"];
     else if (reb >= 74) out = ["PF"];
     else if (pm >= 78 && reb < 65) out = ["SF"];
-    else out = ["SF"];
+    else out = ["SF", "PF"];
   }
 
   if (isVagueGuardPair(out)) {
@@ -136,34 +355,36 @@ export function refinePositions(positions, { height = null, ratings = null } = {
   return uniquePositions(out);
 }
 
-function heightFallbackPositions(height) {
-  if (height == null) return ["SF"];
-  if (height >= 84) return ["PF", "C"];
-  if (height >= 82) return ["PF"];
-  if (height >= 80) return ["SF", "PF"];
-  if (height <= 74) return ["PG", "SG"];
-  if (height <= 76) return ["PG", "SG"];
+function roleAwareFallback(ctx) {
+  if (isPerimeterWingProfile(ctx)) return ["SF", "PF"];
+  if (isReboundingBigProfile(ctx)) {
+    return ctx.height != null && ctx.height >= 81 ? ["PF", "C"] : ["PF"];
+  }
+  if (ctx.height == null) return ["SF"];
+  if (ctx.height >= 84) return ["PF", "C"];
+  if (ctx.height >= 82) return ["PF"];
+  if (ctx.height >= 80) return ["SF", "PF"];
+  if (ctx.height <= 74) return ["PG", "SG"];
+  if (ctx.height <= 76) return ["PG", "SG"];
   return ["SF"];
 }
 
-/** Remove unrealistic positions based on height */
-export function applyHeightCaps(positions, height) {
-  if (height == null) return uniquePositions(positions);
-  let out = uniquePositions(positions);
-
-  if (height >= 84) out = out.filter((pos) => !isGuard(pos) && pos !== "SF");
-  else if (height >= 82) out = out.filter((pos) => !isGuard(pos));
-  else if (height >= 80) {
-    const keepPg = out.includes("PG") && out.some((p) => p === "SF" || p === "PF");
-    out = out.filter((pos) => pos !== "PG" || keepPg);
-  }
-
-  if (height <= 72) out = out.filter((pos) => pos !== "C");
-  if (height <= 74) out = out.filter((pos) => !isBig(pos));
-
-  if (!out.length) {
-    return heightFallbackPositions(height);
-  }
+/** Apply physical limits + real-life role adjustments */
+export function applyHeightCaps(positions, height, extra = {}) {
+  const ctx = buildPositionContext(
+    {
+      height: typeof height === "number" ? height : extra.height ?? null,
+      ratings: extra.ratings || null,
+      stats: extra.stats || null,
+      positions,
+      name: extra.name,
+      id: extra.id,
+    },
+    extra.careerHint || null
+  );
+  let out = applyPhysicalPositionLimits(positions, ctx);
+  out = applyRolePositionAdjustments(out, ctx);
+  if (!out.length) out = roleAwareFallback(ctx);
   return out;
 }
 
@@ -206,12 +427,8 @@ function blocksWingFlex(player, slot) {
   const explicit = listedPositions(player);
   if (explicit.includes("SF")) return false;
 
-  const height = parseHeight(player.height ?? player.hgt);
-  if (height != null && height >= 84) return true;
-
-  const reb = player.ratings?.rebounding ?? 0;
-  const pm = player.ratings?.playmaking ?? 0;
-  return explicit.every(isBig) && reb >= 84 && pm < 75;
+  const ctx = buildPositionContext(player);
+  return isReboundingBigProfile(ctx) && explicit.every(isBig);
 }
 
 /** Whether a player can be assigned to a lineup slot (server + client) */

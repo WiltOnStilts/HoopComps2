@@ -1,7 +1,7 @@
 import { lineupOverall } from "./players.mjs";
 import { getSimModifiers } from "./challenge.mjs";
 import { CLASSIC_OPPONENTS } from "./opponents.mjs";
-import { generateSeasonStories, generatePlayoffStories } from "./stories.mjs";
+import { generateSeasonStories, generatePlayoffStories, finalizeStories } from "./stories.mjs";
 import {
   createSeasonEventCollector,
   maybeInjuryEvent,
@@ -29,36 +29,57 @@ function winProbability(userStrength, oppStrength, bonus = 0) {
   const diff = userStrength - oppStrength;
   let wp = 1 / (1 + Math.exp(-diff / 3.2));
 
-  // Superteams should win 75+ — only elite historical teams give them real trouble
   if (userStrength >= 92) {
-    if (oppStrength < 72) wp = Math.max(wp, 0.995);
-    else if (oppStrength < 84) wp = Math.max(wp, 0.97);
-    else if (oppStrength < 92) wp = Math.max(wp, 0.88);
-    else wp = Math.max(wp, 0.72);
+    if (oppStrength < 75) wp = Math.max(wp, 0.9992);
+    else if (oppStrength < 82) wp = Math.max(wp, 0.985);
+    else if (oppStrength < 90) wp = Math.max(wp, 0.9);
+    else wp = Math.max(wp, 0.74);
   } else if (userStrength >= 88) {
-    if (oppStrength < 58) wp = Math.max(wp, 0.99);
-    else if (oppStrength < 72) wp = Math.max(wp, 0.96);
-    else if (oppStrength < 85) wp = Math.max(wp, 0.9);
-    else wp = Math.max(wp, 0.75);
+    if (oppStrength < 70) wp = Math.max(wp, 0.998);
+    else if (oppStrength < 78) wp = Math.max(wp, 0.975);
+    else if (oppStrength < 86) wp = Math.max(wp, 0.9);
+    else wp = Math.max(wp, 0.76);
   } else if (userStrength >= 84) {
-    if (oppStrength < 55) wp = Math.max(wp, 0.96);
-    else if (oppStrength < 70) wp = Math.max(wp, 0.9);
-  } else if (userStrength >= 78 && oppStrength < 52) {
-    wp = Math.max(wp, 0.88);
+    if (oppStrength < 65) wp = Math.max(wp, 0.99);
+    else if (oppStrength < 74) wp = Math.max(wp, 0.94);
+    else if (oppStrength < 82) wp = Math.max(wp, 0.86);
+  } else if (userStrength >= 78 && oppStrength < 58) {
+    wp = Math.max(wp, 0.92);
   }
 
   return Math.min(0.995, Math.max(0.04, wp + bonus));
 }
 
-function pickOpponent(rng, tier) {
-  const pool = CLASSIC_OPPONENTS.filter((o) => {
+function filterPoolForTier(tier) {
+  return CLASSIC_OPPONENTS.filter((o) => {
     if (tier === "lottery") return o.strength <= 58;
-    if (tier === "playin") return o.strength <= 72;
-    if (tier === "mid") return o.strength <= 82;
-    if (tier === "contender") return o.strength <= 94;
+    if (tier === "playin") return o.strength >= 60 && o.strength <= 72;
+    if (tier === "mid") return o.strength >= 68 && o.strength <= 86;
+    if (tier === "contender") return o.strength >= 80;
     return true;
   });
-  return pool[Math.floor(rng() * pool.length)] || CLASSIC_OPPONENTS[0];
+}
+
+function pickOpponent(rng, tier, { userStrength = 0, usedOpponents = null } = {}) {
+  let pool = filterPoolForTier(tier);
+  if (!pool.length) pool = [...CLASSIC_OPPONENTS];
+
+  if (userStrength >= 90) {
+    const respectable = pool.filter((o) => o.strength >= 74 && o.era !== "rebuild");
+    if (respectable.length) pool = respectable;
+  } else if (userStrength >= 86) {
+    const noRebuild = pool.filter((o) => o.era !== "rebuild" || o.strength >= 62);
+    if (noRebuild.length) pool = noRebuild;
+  }
+
+  if (usedOpponents?.size) {
+    const fresh = pool.filter((o) => !usedOpponents.has(o.name));
+    if (fresh.length >= 2) pool = fresh;
+  }
+
+  const pick = pool[Math.floor(rng() * pool.length)] || CLASSIC_OPPONENTS[0];
+  usedOpponents?.add(pick.name);
+  return pick;
 }
 
 function applySimModifiers(lineup, challenge, rng) {
@@ -86,12 +107,31 @@ function opponentStrength(opponent, rng, tier) {
   return opponent.strength + (rng() - 0.5) * variance;
 }
 
+function isUpsetLoss(strength, opponent, oppStrength) {
+  if (opponent.era === "rebuild") return false;
+  if (strength >= 88 && opponent.strength < 76) return false;
+  if (strength >= 84 && opponent.strength < 70) return false;
+  return oppStrength < strength - 12 && opponent.strength >= 72;
+}
+
+function lossEvent(game, opponent, margin, upset) {
+  return {
+    game,
+    opponent: opponent.name,
+    opponentStrength: opponent.strength,
+    opponentEra: opponent.era,
+    margin,
+    upset,
+  };
+}
+
 export function simulateSeason({ lineup, challenge, dayKey, userId }) {
   const seed = hashString(`${dayKey}-${userId}-sim`);
   const rng = seededRng(seed);
   const simBonus = applySimModifiers(lineup, challenge, rng);
   const strength = lineupOverall(lineup, true);
   const events = createSeasonEventCollector();
+  const usedOpponents = new Set();
 
   let wins = 0;
   let losses = 0;
@@ -103,7 +143,7 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
     if (game % 7 === 0) tier = "contender";
     if (game % 11 === 0) tier = "lottery";
 
-    const opponent = pickOpponent(rng, tier);
+    const opponent = pickOpponent(rng, tier, { userStrength: strength, usedOpponents });
     const oppStrength = opponentStrength(opponent, rng, tier);
     const wp = winProbability(strength, oppStrength, simBonus);
     const won = rng() < wp;
@@ -118,20 +158,26 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
       const margin = 8 + Math.floor(rng() * 28);
       const dominant = strength - oppStrength >= 18 || margin >= 22;
 
-      if (dominant && rng() < 0.4) {
+      if (dominant && rng() < 0.15 && events.blowouts.length < 2) {
         const blowout = {
           game,
           opponent: opponent.name,
+          opponentStrength: opponent.strength,
           margin,
           type: "blowout",
         };
         events.blowouts.push(blowout);
         seasonHighlights.push(blowout);
-      } else if (rng() < 0.06) {
-        seasonHighlights.push({ game, opponent: opponent.name, type: "win" });
+      } else if (rng() < 0.04 && seasonHighlights.length < 4) {
+        seasonHighlights.push({
+          game,
+          opponent: opponent.name,
+          opponentStrength: opponent.strength,
+          type: "win",
+        });
       }
 
-      if (rng() < 0.09) {
+      if (rng() < 0.07 && events.playerGames.length < 3) {
         const perf = pickStarPerformance(lineup, rng, "career");
         perf.game = game;
         perf.opponent = opponent.name;
@@ -139,28 +185,18 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
       }
     } else {
       losses++;
-      const upset = oppStrength < strength - 10;
-      const marquee = opponent.strength >= 88;
+      const upset = isUpsetLoss(strength, opponent, oppStrength);
+      const marquee = opponent.strength >= 84;
 
-      if (upset) {
-        const upsetEv = {
-          game,
-          opponent: opponent.name,
-          margin: 4 + Math.floor(rng() * 12),
-          upset: true,
-        };
+      if (upset && events.upsets.length < 2) {
+        const upsetEv = lossEvent(game, opponent, 4 + Math.floor(rng() * 12), true);
         events.upsets.push(upsetEv);
         notableLosses.push(upsetEv);
-      } else if (marquee || rng() < 0.2) {
-        notableLosses.push({
-          game,
-          opponent: opponent.name,
-          margin: 3 + Math.floor(rng() * 14),
-          upset: false,
-        });
+      } else if ((marquee || (rng() < 0.12 && opponent.strength >= 78)) && notableLosses.length < 6) {
+        notableLosses.push(lossEvent(game, opponent, 3 + Math.floor(rng() * 14), false));
       }
 
-      if (rng() < 0.07) {
+      if (rng() < 0.05 && events.playerGames.length < 3) {
         const perf = pickStarPerformance(lineup, rng, "cold");
         perf.game = game;
         perf.opponent = opponent.name;
@@ -176,7 +212,7 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
     playoff = simulatePlayoffs({ strength, simBonus, rng, wins, lineup });
   }
 
-  const stories = generateSeasonStories({
+  const seasonStories = generateSeasonStories({
     wins,
     losses,
     notableLosses,
@@ -186,14 +222,24 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
     events,
     rng,
   });
-  if (playoff) stories.push(...generatePlayoffStories(playoff, lineup, rng));
+  const playoffStories = playoff ? generatePlayoffStories(playoff, lineup, rng) : [];
+  const stories = finalizeStories(seasonStories, playoffStories);
+
+  const uniqueNotableLosses = [];
+  const seenLossOpponents = new Set();
+  for (const loss of notableLosses) {
+    if (seenLossOpponents.has(loss.opponent)) continue;
+    seenLossOpponents.add(loss.opponent);
+    uniqueNotableLosses.push(loss);
+    if (uniqueNotableLosses.length >= 5) break;
+  }
 
   return {
     record: { wins, losses },
     madePlayoffs,
     playoff,
-    notableLosses: notableLosses.slice(0, 8),
-    seasonHighlights: seasonHighlights.slice(0, 8),
+    notableLosses: uniqueNotableLosses,
+    seasonHighlights: seasonHighlights.slice(0, 4),
     stories,
     events,
     teamStrength: Math.round(strength * 10) / 10,
@@ -203,8 +249,8 @@ export function simulateSeason({ lineup, challenge, dayKey, userId }) {
 
 function simulatePlayoffs({ strength, simBonus, rng, wins, lineup }) {
   const rounds = [
-    { name: "First Round", key: "r1", tier: "playin", winsNeeded: 4 },
-    { name: "Conference Semifinals", key: "r2", tier: "mid", winsNeeded: 4 },
+    { name: "First Round", key: "r1", tier: "mid", winsNeeded: 4 },
+    { name: "Conference Semifinals", key: "r2", tier: "contender", winsNeeded: 4 },
     { name: "Conference Finals", key: "cf", tier: "contender", winsNeeded: 4 },
     { name: "NBA Finals", key: "finals", tier: "contender", winsNeeded: 4 },
   ];
@@ -214,9 +260,10 @@ function simulatePlayoffs({ strength, simBonus, rng, wins, lineup }) {
   let eliminatedBy = null;
   let champion = false;
   const playoffBoost = strength >= 92 ? 5 : strength >= 88 ? 4 : strength >= 85 ? 3 : wins > 60 ? 2 : 0;
+  const usedOpponents = new Set();
 
   for (const round of rounds) {
-    const opponent = pickOpponent(rng, round.tier);
+    const opponent = pickOpponent(rng, round.tier, { userStrength: strength, usedOpponents });
     const oppStrength = opponent.strength + 1 + rng() * 4;
     let roundWins = 0;
     let roundLosses = 0;

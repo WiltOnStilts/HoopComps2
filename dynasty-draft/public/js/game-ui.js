@@ -626,6 +626,7 @@ function renderResults(submission, grade, breakdown) {
     : `<p class="hint">Missed the playoffs at ${record.wins}-${record.losses}.</p>`;
 
   const storiesHtml = (sim.stories || [])
+    .slice(0, 7)
     .map(
       (s) => `
     <article class="dyn-story dyn-story-${escapeHtml(s.type || "default")}">

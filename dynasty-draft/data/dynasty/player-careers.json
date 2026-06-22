@@ -4845,6 +4845,177 @@
     "allStar": true
   },
   {
+    "id": "elvin-hayes",
+    "name": "Elvin Hayes",
+    "birthYear": 1945,
+    "debut": 1968,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 93,
+      "shooting": 45,
+      "defense": 42,
+      "playmaking": 58,
+      "rebounding": 99,
+      "health": 99,
+      "impact": 73
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "rockets",
+        "from": 1968,
+        "to": 1972
+      },
+      {
+        "teamId": "wizards",
+        "from": 1972,
+        "to": 1981
+      },
+      {
+        "teamId": "rockets",
+        "from": 1981,
+        "to": 1984
+      }
+    ],
+    "allStarYears": [
+      1970,
+      1971,
+      1972,
+      1973,
+      1974,
+      1975,
+      1976,
+      1977,
+      1978,
+      1979,
+      1980,
+      1981
+    ],
+    "allStar": true
+  },
+  {
+    "id": "wes-unseld",
+    "name": "Wes Unseld",
+    "birthYear": 1946,
+    "debut": 1968,
+    "primaryPosition": "C",
+    "positions": [
+      "C",
+      "PF"
+    ],
+    "peakRatings": {
+      "scoring": 72,
+      "shooting": 55,
+      "defense": 82,
+      "playmaking": 78,
+      "rebounding": 99,
+      "health": 92,
+      "impact": 86
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "wizards",
+        "from": 1968,
+        "to": 1981
+      }
+    ],
+    "allStarYears": [
+      1969,
+      1970,
+      1971,
+      1972,
+      1973,
+      1974,
+      1975,
+      1976,
+      1977,
+      1978,
+      1979,
+      1980,
+      1981
+    ],
+    "allStar": true
+  },
+  {
+    "id": "bob-mcadoo",
+    "name": "Bob McAdoo",
+    "birthYear": 1951,
+    "debut": 1972,
+    "primaryPosition": "PF",
+    "positions": [
+      "PF",
+      "C"
+    ],
+    "peakRatings": {
+      "scoring": 92,
+      "shooting": 78,
+      "defense": 68,
+      "playmaking": 62,
+      "rebounding": 88,
+      "health": 85,
+      "impact": 88
+    },
+    "peakAge": 27,
+    "stints": [
+      {
+        "teamId": "braves",
+        "from": 1972,
+        "to": 1976
+      },
+      {
+        "teamId": "knicks",
+        "from": 1976,
+        "to": 1979
+      },
+      {
+        "teamId": "celtics",
+        "from": 1979,
+        "to": 1980
+      },
+      {
+        "teamId": "pistons",
+        "from": 1980,
+        "to": 1981
+      },
+      {
+        "teamId": "nets",
+        "from": 1981,
+        "to": 1982
+      },
+      {
+        "teamId": "lakers",
+        "from": 1982,
+        "to": 1985
+      },
+      {
+        "teamId": "76ers",
+        "from": 1985,
+        "to": 1986
+      }
+    ],
+    "allStarYears": [
+      1973,
+      1974,
+      1975,
+      1976,
+      1977,
+      1978,
+      1979,
+      1980,
+      1981,
+      1982,
+      1983,
+      1984,
+      1985
+    ],
+    "allStar": true
+  },
+  {
     "id": "bill-russell",
     "name": "Bill Russell",
     "birthYear": 1934,

@@ -23,12 +23,20 @@ export function slug(name) {
     .replace(/^-|-$/g, "");
 }
 
-export function parseBBGMJson(text) {
+export function parseLenientJson(text) {
   try {
     return JSON.parse(text);
   } catch {
-    return JSON.parse(text.replace(/,\s*([}\]])/g, "$1"));
+    const cleaned = String(text)
+      .replace(/,\s*([}\]])/g, "$1")
+      .replace(/:\s*NaN\b/g, ": null")
+      .replace(/:\s*-?Infinity\b/g, ": null");
+    return JSON.parse(cleaned);
   }
+}
+
+export function parseBBGMJson(text) {
+  return parseLenientJson(text);
 }
 
 export function snapshotYear(startingSeason) {

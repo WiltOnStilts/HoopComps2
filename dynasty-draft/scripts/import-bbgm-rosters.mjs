@@ -16,47 +16,19 @@ import {
   extractRatingsHistory,
   mergeImportedPlayers,
   parseBBGMJson,
+  parseLenientJson,
 } from "../lib/bbgm-import.mjs";
+import { BBGM_BASE, SNAPSHOT_FILES, MEGA_FILES, bbgmCacheName } from "../lib/bbgm-sources.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const RAW_DIR = path.join(ROOT, "data", "dynasty", "raw", "bbgm");
 const OUT = path.join(ROOT, "data", "dynasty", "imported-bbgm.json");
 
-const BBGM_BASE =
-  "https://raw.githubusercontent.com/alexnoob/BasketBall-GM-Rosters/master";
-
-/** Season snapshot files — full ~12–15 man rosters per team */
-const SNAPSHOT_FILES = [
-  "1995-96.NBA.Roster.json",
-  "2009-10 Rosters.json",
-  "2015-16.NBA.Roster.json",
-  "2016-17.NBA.Roster.json",
-  "2017-18.NBA.Roster.json",
-  "2018-19.NBA.Roster.json",
-  "2019-20.NBA.Roster.json",
-  "2020-21.NBA.Roster.json",
-  "2021-22.NBA.Roster.json",
-  "2022-23.NBA.Roster.json",
-  "2023-24.NBA.Roster.json",
-  "2024-25.NBA.Roster.json",
-  "NBA Legacy 1985 23 teams.json",
-];
-
-/** Mega files — career stats + ratings history */
-const MEGA_FILES = [
-  "2019-20.NBA.Roster.json",
-  "2020-21.NBA.Roster.json",
-  "2021-22.NBA.Roster.json",
-  "2022-23.NBA.Roster.json",
-  "2023-24.NBA.Roster.json",
-  "2024-25.NBA.Roster.json",
-];
-
 const skipDownload = process.argv.includes("--skip-download");
 
 async function downloadFile(name) {
-  const dest = path.join(RAW_DIR, name.replace(/[^\w.-]+/g, "_"));
+  const dest = path.join(RAW_DIR, bbgmCacheName(name));
   if (skipDownload && fs.existsSync(dest)) return dest;
 
   fs.mkdirSync(RAW_DIR, { recursive: true });
@@ -115,11 +87,16 @@ async function main() {
 
   const nbaApiPath = path.join(ROOT, "data", "dynasty", "raw", "nba-api-rosters.json");
   if (fs.existsSync(nbaApiPath)) {
-    const data = JSON.parse(fs.readFileSync(nbaApiPath, "utf8"));
-    const before = merged.size;
-    mergeImportedPlayers(merged, data.players || []);
-    meta.nbaApi = { added: merged.size - before, rows: (data.players || []).length };
-    console.log(`  ✓ nba-api cache → +${merged.size - before} new`);
+    try {
+      const data = parseLenientJson(fs.readFileSync(nbaApiPath, "utf8"));
+      const before = merged.size;
+      mergeImportedPlayers(merged, data.players || []);
+      meta.nbaApi = { added: merged.size - before, rows: (data.players || []).length };
+      console.log(`  ✓ nba-api cache → +${merged.size - before} new`);
+    } catch (err) {
+      meta.errors.push({ file: "nba-api-rosters.json", error: err.message });
+      console.warn(`  ✗ nba-api cache: ${err.message}`);
+    }
   }
 
   const players = [...merged.values()].sort(

@@ -15,42 +15,17 @@ import {
   extractRatingsHistory,
   mergeImportedPlayers,
   parseBBGMJson,
+  parseLenientJson,
 } from "../lib/bbgm-import.mjs";
+import { SNAPSHOT_FILES, MEGA_FILES, bbgmCacheName } from "../lib/bbgm-sources.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const RAW_DIR = path.join(ROOT, "data", "dynasty", "raw", "bbgm");
 const OUT = path.join(ROOT, "data", "dynasty", "imported-bbgm.json");
 
-const SNAPSHOT_FILES = [
-  "1995-96.NBA.Roster.json",
-  "2009-10_Rosters.json",
-  "2015-16.NBA.Roster.json",
-  "2016-17.NBA.Roster.json",
-  "2017-18.NBA.Roster.json",
-  "2018-19.NBA.Roster.json",
-  "2019-20.NBA.Roster.json",
-  "2020-21.NBA.Roster.json",
-  "2021-22.NBA.Roster.json",
-  "2022-23.NBA.Roster.json",
-  "2023-24.NBA.Roster.json",
-  "2024-25.NBA.Roster.json",
-  "NBA_Legacy_1985_23_teams.json",
-];
-
-const MEGA_FILES = [
-  "2019-20.NBA.Roster.json",
-  "2020-21.NBA.Roster.json",
-  "2021-22.NBA.Roster.json",
-  "2022-23.NBA.Roster.json",
-  "2023-24.NBA.Roster.json",
-  "2024-25.NBA.Roster.json",
-  "2122.json",
-  "test_mega.json",
-];
-
 function resolveRaw(name) {
-  const safe = name.replace(/[^\w.-]+/g, "_");
+  const safe = bbgmCacheName(name);
   const direct = path.join(RAW_DIR, name);
   if (fs.existsSync(direct)) return direct;
   if (fs.existsSync(path.join(RAW_DIR, safe))) return path.join(RAW_DIR, safe);
@@ -82,9 +57,9 @@ for (const name of MEGA_FILES) {
 
 const nbaApiPath = path.join(ROOT, "data", "dynasty", "raw", "nba-api-rosters.json");
 if (fs.existsSync(nbaApiPath)) {
-  const data = JSON.parse(fs.readFileSync(nbaApiPath, "utf8"));
+  const data = parseLenientJson(fs.readFileSync(nbaApiPath, "utf8"));
   mergeImportedPlayers(merged, data.players || []);
-  console.log("merged nba-api cache (lower priority than bbgm-stats)");
+  console.log("merged nba-api cache");
 }
 
 const players = [...merged.values()].sort(

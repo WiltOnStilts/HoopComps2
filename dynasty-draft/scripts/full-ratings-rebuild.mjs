@@ -28,7 +28,7 @@ if (fetchNba) {
     console.error("Missing .venv — run: python3 -m venv .venv && .venv/bin/pip install nba_api");
     process.exit(1);
   }
-  run(py, [path.join(ROOT, "scripts", "fetch-nba-rosters.py"), "--from", "1970", "--to", "2024"], "NBA API fetch 1970–2024");
+  run(py, [path.join(ROOT, "scripts", "fetch-nba-rosters.py"), "--from", "1970", "--to", "2025"], "NBA API fetch 1970–2025");
 }
 
 run(process.execPath, [path.join(ROOT, "scripts", "import-bbgm-rosters.mjs"), "--skip-download"], "BBGM import");

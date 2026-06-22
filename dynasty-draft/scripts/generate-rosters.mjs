@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { expandCareerToSeason, expandExplicitEntry, ratingsForCareer } from "../lib/roster-builder.mjs";
 import { normalizePlayerPositions } from "../lib/position-normalize.mjs";
 import { applyCareerPositionHints, loadCareerPositionHints } from "../lib/position-inference.mjs";
+import { parseLenientJson } from "../lib/bbgm-import.mjs";
 import { ratingRowQuality } from "../lib/rating-quality.mjs";
 import { ratingsFromStatRow } from "../lib/ratings-from-stats.mjs";
 import { seasonRosters } from "./roster-snapshots.mjs";
@@ -265,7 +266,7 @@ function loadImportedPlayers() {
     : [];
   const nbaApi = path.join(__dirname, "..", "data", "dynasty", "raw", "nba-api-rosters.json");
   if (fs.existsSync(nbaApi)) {
-    const data = JSON.parse(fs.readFileSync(nbaApi, "utf8"));
+    const data = parseLenientJson(fs.readFileSync(nbaApi, "utf8"));
     const rawRows = data.players || data;
     const rawKeys = new Set(
       rawRows.map((p) => `${p.name.toLowerCase()}:${p.teamId}:${p.year}`)

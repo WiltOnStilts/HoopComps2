@@ -10,6 +10,7 @@ Output: data/dynasty/raw/nba-api-rosters.json
 
 import argparse
 import json
+import math
 import re
 import time
 import unicodedata
@@ -70,7 +71,33 @@ POSITION_MAP = {
 }
 
 
-def slug(name: str) -> str:
+def safe_float(val, default=0.0):
+    """Coerce pandas/numpy NaN and missing values to a JSON-safe float."""
+    try:
+        if val is None:
+            return default
+        if hasattr(val, "item"):
+            val = val.item()
+        if isinstance(val, str) and not val.strip():
+            return default
+        x = float(val)
+        if math.isnan(x) or math.isinf(x):
+            return default
+        return x
+    except (TypeError, ValueError):
+        return default
+
+
+def sanitize_for_json(obj):
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    return obj
+
+
     return re.sub(r"(^-|-$)", "", re.sub(r"[^a-z0-9]+", "-", name.lower()))
 
 
@@ -134,40 +161,40 @@ def rate_anchors(value, anchors):
 
 
 def normalize_stat_row(row):
-    gp = max(1, float(row.get("GP") or 1))
-    pts = float(row.get("PTS") or 0)
+    gp = max(1, safe_float(row.get("GP"), 1))
+    pts = safe_float(row.get("PTS"), 0)
     if pts <= gp * 4:
         return row
     return {
         **row,
         "GP": gp,
         "PTS": pts / gp,
-        "REB": float(row.get("REB") or 0) / gp,
-        "AST": float(row.get("AST") or 0) / gp,
-        "STL": float(row.get("STL") or 0) / gp,
-        "BLK": float(row.get("BLK") or 0) / gp,
-        "MIN": float(row.get("MIN") or gp * 20) / gp,
+        "REB": safe_float(row.get("REB"), 0) / gp,
+        "AST": safe_float(row.get("AST"), 0) / gp,
+        "STL": safe_float(row.get("STL"), 0) / gp,
+        "BLK": safe_float(row.get("BLK"), 0) / gp,
+        "MIN": safe_float(row.get("MIN"), gp * 20) / gp,
     }
 
 
 def ratings_from_stats(row, positions):
     row = normalize_stat_row(row)
-    gp = max(1, float(row.get("GP") or 1))
-    pts = float(row.get("PTS") or 0)
-    reb = float(row.get("REB") or 0)
-    ast = float(row.get("AST") or 0)
-    stl = float(row.get("STL") or 0)
-    blk = float(row.get("BLK") or 0)
-    fg = float(row.get("FG") or 0)
-    fga = float(row.get("FGA") or 0)
-    tp = float(row.get("FG3") or 0)
-    tpa = float(row.get("FG3A") or 0)
-    ft = float(row.get("FT") or 0)
-    fta = float(row.get("FTA") or 0)
-    fg_pct = float(row.get("FG_PCT") or (fg / fga if fga else 0.45))
-    fg3_pct = float(row.get("FG3_PCT") or (tp / tpa if tpa else 0))
-    ft_pct = float(row.get("FT_PCT") or (ft / fta if fta else 0.75))
-    mins = float(row.get("MIN") or gp * 20) / gp
+    gp = max(1, safe_float(row.get("GP"), 1))
+    pts = safe_float(row.get("PTS"), 0)
+    reb = safe_float(row.get("REB"), 0)
+    ast = safe_float(row.get("AST"), 0)
+    stl = safe_float(row.get("STL"), 0)
+    blk = safe_float(row.get("BLK"), 0)
+    fg = safe_float(row.get("FG"), 0)
+    fga = safe_float(row.get("FGA"), 0)
+    tp = safe_float(row.get("FG3"), 0)
+    tpa = safe_float(row.get("FG3A"), 0)
+    ft = safe_float(row.get("FT"), 0)
+    fta = safe_float(row.get("FTA"), 0)
+    fg_pct = safe_float(row.get("FG_PCT"), fg / fga if fga else 0.45)
+    fg3_pct = safe_float(row.get("FG3_PCT"), tp / tpa if tpa else 0)
+    ft_pct = safe_float(row.get("FT_PCT"), ft / fta if fta else 0.75)
+    mins = safe_float(row.get("MIN"), gp * 20) / gp
     ts_attempts = fga + 0.44 * fta
     ts_pct = (fg * 2 + tp + ft) / (2 * ts_attempts) if ts_attempts else fg_pct
     efg_pct = (fg + 0.5 * tp) / fga if fga else fg_pct
@@ -344,7 +371,7 @@ def fetch_season_stats(end_year: int):
 def fetch():
     parser = argparse.ArgumentParser()
     parser.add_argument("--from", dest="from_year", type=int, default=1970)
-    parser.add_argument("--to", dest="to_year", type=int, default=2024)
+    parser.add_argument("--to", dest="to_year", type=int, default=2025)
     args = parser.parse_args()
 
     teams = nba_teams.get_teams()
@@ -414,18 +441,18 @@ def fetch():
                 }
                 if stat_row:
                     normalized = normalize_stat_row(stat_row)
-                    gp = max(1, float(normalized.get("GP") or 1))
+                    gp = max(1, safe_float(normalized.get("GP"), 1))
                     row_payload["stats"] = {
                         "GP": gp,
-                        "PTS": float(normalized.get("PTS") or 0),
-                        "REB": float(normalized.get("REB") or 0),
-                        "AST": float(normalized.get("AST") or 0),
-                        "STL": float(normalized.get("STL") or 0),
-                        "BLK": float(normalized.get("BLK") or 0),
-                        "FG_PCT": float(normalized.get("FG_PCT") or 0.45),
-                        "FG3_PCT": float(normalized.get("FG3_PCT") or 0),
-                        "FT_PCT": float(normalized.get("FT_PCT") or 0.75),
-                        "MIN": float(normalized.get("MIN") or gp * 20),
+                        "PTS": safe_float(normalized.get("PTS"), 0),
+                        "REB": safe_float(normalized.get("REB"), 0),
+                        "AST": safe_float(normalized.get("AST"), 0),
+                        "STL": safe_float(normalized.get("STL"), 0),
+                        "BLK": safe_float(normalized.get("BLK"), 0),
+                        "FG_PCT": safe_float(normalized.get("FG_PCT"), 0.45),
+                        "FG3_PCT": safe_float(normalized.get("FG3_PCT"), 0),
+                        "FT_PCT": safe_float(normalized.get("FT_PCT"), 0.75),
+                        "MIN": safe_float(normalized.get("MIN"), gp * 20),
                     }
                 if height is not None:
                     row_payload["height"] = height
@@ -444,7 +471,7 @@ def fetch():
         "yearRange": [args.from_year, args.to_year],
         "players": players,
     }
-    OUT.write_text(json.dumps(payload, indent=2))
+    OUT.write_text(json.dumps(sanitize_for_json(payload), indent=2))
     print(f"\nWrote {len(players)} rows → {OUT}", flush=True)
 
 
